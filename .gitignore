@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# --- Project secrets ---
+.env
+.env.*
+.env.local
+*.env
+
