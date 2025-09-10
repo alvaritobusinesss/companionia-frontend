@@ -12,12 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Crown, Settings, User, Plus, Edit, Upload } from "lucide-react";
 
-// Datos locales de respaldo usando imágenes públicas
+// Datos locales de respaldo usando URLs absolutas de Vercel
 const localCompanions: Companion[] = [
   {
     id: "1",
     name: "Victoria",
-    image_url: "/models/victoria.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/victoria.jpg",
     description: "Una compañera virtual elegante y sofisticada, perfecta para conversaciones profundas y momentos íntimos.",
     category: "Románticas",
     tags: ["elegante", "sofisticada", "conversación"],
@@ -31,7 +31,7 @@ const localCompanions: Companion[] = [
   {
     id: "2",
     name: "Luna",
-    image_url: "/models/luna.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/luna.jpg",
     description: "Una personalidad dulce y cariñosa que te hará sentir especial en cada conversación.",
     category: "Románticas",
     tags: ["dulce", "cariñosa", "especial"],
@@ -45,7 +45,7 @@ const localCompanions: Companion[] = [
   {
     id: "3",
     name: "Ginger",
-    image_url: "/models/ginger.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/ginger.jpg",
     description: "Una mujer inteligente y misteriosa que te cautivará con su sabiduría y encanto.",
     category: "Románticas",
     tags: ["inteligente", "misteriosa", "sabiduría"],
@@ -59,7 +59,7 @@ const localCompanions: Companion[] = [
   {
     id: "4",
     name: "Beauty",
-    image_url: "/models/beauty.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/beauty.jpg",
     description: "Una personalidad aventurera y enérgica, perfecta para explorar nuevos horizontes juntos.",
     category: "Románticas",
     tags: ["aventurera", "enérgica", "explorar"],
@@ -73,7 +73,7 @@ const localCompanions: Companion[] = [
   {
     id: "5",
     name: "Blu",
-    image_url: "/models/Blu.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/Blu.jpg",
     description: "Una compañera gamer apasionada por los videojuegos, perfecta para sesiones de gaming épicas.",
     category: "Gamer",
     tags: ["gamer", "videojuegos", "épica"],
@@ -87,7 +87,7 @@ const localCompanions: Companion[] = [
   {
     id: "6",
     name: "Resha",
-    image_url: "/models/Resha.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/Resha.jpg",
     description: "Una compañera gamer estratégica y competitiva, ideal para partidas intensas y torneos.",
     category: "Gamer",
     tags: ["gamer", "estratégica", "competitiva"],
@@ -101,7 +101,7 @@ const localCompanions: Companion[] = [
   {
     id: "7",
     name: "Reyna",
-    image_url: "/models/Reyna.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/Reyna.jpg",
     description: "Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.",
     category: "Gamer",
     tags: ["gamer", "dominante", "líder"],
@@ -115,7 +115,7 @@ const localCompanions: Companion[] = [
   {
     id: "8",
     name: "Yu",
-    image_url: "/models/Yu.jpg",
+    image_url: "https://companion-ia-2.vercel.app/models/Yu.jpg",
     description: "Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.",
     category: "Gamer",
     tags: ["gamer", "indie", "aventuras"],
