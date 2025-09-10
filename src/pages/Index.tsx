@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { ModelCard } from "@/components/ModelCard";
+import { ModelCardWithAccess } from "@/components/ModelCardWithAccess";
+import { PurchaseModal } from "@/components/PurchaseModal";
 import { PersonalizationModal, ChatPreferences } from "@/components/PersonalizationModal";
 import { ChatInterface } from "@/components/ChatInterface";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Crown, Settings, User, Plus, Edit, Upload } from "lucide-react";
+import { useUserAccess, Model as UserAccessModel } from "@/hooks/useUserAccess";
 
 // Datos locales de respaldo usando URLs absolutas de Vercel
 const localCompanions: Companion[] = [
@@ -209,73 +211,161 @@ const companionToModel = (companion: Companion): Model => ({
 });
 
 const Index = () => {
-  const [companions, setCompanions] = useState<Companion[]>([]);
+  const [models, setModels] = useState<UserAccessModel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [selectedModel, setSelectedModel] = useState<UserAccessModel | null>(null);
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [chatPreferences, setChatPreferences] = useState<ChatPreferences | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showModelEditor, setShowModelEditor] = useState(false);
-  const [editingModel, setEditingModel] = useState<Model | null>(null);
-  const [userIsPremium, setUserIsPremium] = useState(false);
+  const [editingModel, setEditingModel] = useState<UserAccessModel | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseModel, setPurchaseModel] = useState<UserAccessModel | null>(null);
+  const [purchaseType, setPurchaseType] = useState<'premium' | 'one_time'>('premium');
+  
+  const { user, loading: userLoading, checkModelAccess, refreshUser } = useUserAccess();
 
-  // Cargar companions desde Supabase o usar datos locales
+  // Cargar modelos desde Supabase o usar datos locales
   useEffect(() => {
-    async function loadCompanions() {
-      console.log("🔍 DEBUG: Iniciando carga de companions");
-      console.log("🔍 DEBUG: Datos locales:", localCompanions);
+    async function loadModels() {
+      console.log("🔍 DEBUG: Iniciando carga de modelos");
       try {
-        const { data, error } = await supabase.from("companions").select("*");
+        const { data, error } = await supabase.from("models").select("*");
         if (error) {
-          console.warn("⚠️ Error cargando companions desde Supabase, usando datos locales:", error);
-          setCompanions(localCompanions);
+          console.warn("⚠️ Error cargando modelos desde Supabase, usando datos locales:", error);
+          // Convertir datos locales al nuevo formato
+          const localModels: UserAccessModel[] = localCompanions.map(companion => ({
+            id: companion.id,
+            name: companion.name,
+            category: companion.category,
+            type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
+            price: companion.price ? parseFloat(companion.price) : undefined,
+            image_url: companion.image_url,
+            description: companion.description,
+            tags: companion.tags,
+            rating: companion.rating,
+            conversations: companion.conversations
+          }));
+          setModels(localModels);
         } else if (data && data.length > 0) {
           console.log("✅ Datos de Supabase cargados:", data);
-          setCompanions(data);
+          setModels(data as UserAccessModel[]);
         } else {
           console.info("ℹ️ No hay datos en Supabase, usando datos locales");
-          setCompanions(localCompanions);
+          const localModels: UserAccessModel[] = localCompanions.map(companion => ({
+            id: companion.id,
+            name: companion.name,
+            category: companion.category,
+            type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
+            price: companion.price ? parseFloat(companion.price) : undefined,
+            image_url: companion.image_url,
+            description: companion.description,
+            tags: companion.tags,
+            rating: companion.rating,
+            conversations: companion.conversations
+          }));
+          setModels(localModels);
         }
       } catch (err) {
         console.warn("❌ Error inesperado, usando datos locales:", err);
-        setCompanions(localCompanions);
+        const localModels: UserAccessModel[] = localCompanions.map(companion => ({
+          id: companion.id,
+          name: companion.name,
+          category: companion.category,
+          type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
+          price: companion.price ? parseFloat(companion.price) : undefined,
+          image_url: companion.image_url,
+          description: companion.description,
+          tags: companion.tags,
+          rating: companion.rating,
+          conversations: companion.conversations
+        }));
+        setModels(localModels);
       } finally {
         setLoading(false);
         console.log("🏁 Carga completada");
       }
     }
-    loadCompanions();
+    loadModels();
   }, []);
 
-  // Filtrar companions por búsqueda
-  const filteredCompanions = companions.filter(companion => {
-    const matchesSearch = companion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         companion.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         companion.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Filtrar modelos por búsqueda
+  const filteredModels = models.filter(model => {
+    const matchesSearch = model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         model.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         model.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
 
   // Filtrar por categoría seleccionada
-  const companionsByCategory = filteredCompanions.filter(companion => 
-    selectedCategory === "all" || companion.category === selectedCategory
+  const modelsByCategory = filteredModels.filter(model => 
+    selectedCategory === "all" || model.category === selectedCategory
   );
 
   // Debug logs
-  console.log("🔍 DEBUG: Companions:", companions);
-  console.log("🔍 DEBUG: Filtered companions:", filteredCompanions);
-  console.log("🔍 DEBUG: Companions by category:", companionsByCategory);
+  console.log("🔍 DEBUG: Models:", models);
+  console.log("🔍 DEBUG: Filtered models:", filteredModels);
+  console.log("🔍 DEBUG: Models by category:", modelsByCategory);
   console.log("🔍 DEBUG: Selected category:", selectedCategory);
   console.log("🔍 DEBUG: Search term:", searchTerm);
 
-  const allModels = companions.map(companionToModel);
-
   const handleModelSelect = (modelId: string) => {
-    const model = allModels.find(m => m.id === modelId);
-    if (model && !model.isLocked) {
-      setSelectedModel(model);
-      setShowPersonalization(true);
+    const model = models.find(m => m.id === modelId);
+    if (model) {
+      const access = checkModelAccess(model);
+      if (access.hasAccess) {
+        setSelectedModel(model);
+        setShowPersonalization(true);
+      }
+    }
+  };
+
+  const handlePurchase = async (modelId: string) => {
+    const model = models.find(m => m.id === modelId);
+    if (!model || !user) return;
+
+    const access = checkModelAccess(model);
+    
+    if (access.reason === 'premium_required') {
+      setPurchaseType('premium');
+      setPurchaseModel(model);
+      setShowPurchaseModal(true);
+    } else if (access.reason === 'purchase_required') {
+      setPurchaseType('one_time');
+      setPurchaseModel(model);
+      setShowPurchaseModal(true);
+    }
+  };
+
+  const handlePurchaseConfirm = async (modelId: string) => {
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: purchaseType,
+          modelId: purchaseType === 'one_time' ? modelId : undefined,
+          userEmail: user?.email,
+        }),
+      });
+
+      const { sessionId } = await response.json();
+      
+      if (sessionId) {
+        // Redirigir a Stripe Checkout
+        const stripe = await import('@stripe/stripe-js');
+        const stripeInstance = await stripe.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+        
+        if (stripeInstance) {
+          await stripeInstance.redirectToCheckout({ sessionId });
+        }
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
     }
   };
 
@@ -296,23 +386,36 @@ const Index = () => {
   };
 
   const handleUpgrade = () => {
-    setUserIsPremium(true);
+    // Esta función se maneja ahora a través del modal de compra
+    setPurchaseType('premium');
+    setShowPurchaseModal(true);
     console.log("Usuario actualizado a Premium");
   };
 
-  const handleSaveModel = (model: Model) => {
+  const handleSaveModel = (model: any) => {
     console.log("Modelo guardado:", model);
     setShowModelEditor(false);
     setEditingModel(null);
   };
 
-  const handleEditModel = (model: Model) => {
+  const handleEditModel = (model: UserAccessModel) => {
     setEditingModel(model);
     setShowModelEditor(true);
   };
 
   const handleCreateModel = () => {
-    setEditingModel(null);
+    const newModel: UserAccessModel = {
+      id: Date.now().toString(),
+      name: "Nuevo Modelo",
+      category: "Románticas",
+      type: "free",
+      image_url: "/placeholder.svg",
+      description: "Descripción del nuevo modelo",
+      tags: ["nuevo"],
+      rating: 4.0,
+      conversations: 0
+    };
+    setEditingModel(newModel);
     setShowModelEditor(true);
   };
 
@@ -334,10 +437,10 @@ const Index = () => {
     return (
       <ChatInterface
         modelName={selectedModel.name}
-        modelImage={selectedModel.image}
+        modelImage={selectedModel.image_url}
         preferences={chatPreferences}
         onBack={handleBackToGallery}
-        isPremiumModel={selectedModel.isPremium}
+        isPremiumModel={selectedModel.type === 'premium'}
       />
     );
   }
@@ -360,7 +463,7 @@ const Index = () => {
             <div className="flex items-center gap-3">
               <Badge variant="secondary" className="hidden sm:flex">
                 <User className="w-3 h-3 mr-1" />
-                Usuario Gratuito
+                {user?.is_premium ? 'Usuario Premium' : 'Usuario Gratuito'}
               </Badge>
               <Button 
                 variant="outline" 
@@ -394,7 +497,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-2 mt-4">
             <Crown className="w-5 h-5 text-primary" />
             <span className="text-sm text-muted-foreground">
-              {categories.length} categorías con {companions.length} modelos
+              {categories.length} categorías con {models.length} modelos
             </span>
           </div>
         </div>
@@ -439,7 +542,12 @@ const Index = () => {
         {/* Galería por categorías */}
         <div className="space-y-12">
           {categories.map((category, categoryIndex) => {
-            const categoryCompanions = companions.filter(c => c.category === category.key);
+            const categoryModels = models.filter(m => m.category === category.key);
+            console.log(`🔍 DEBUG: Categoría "${category.title}" (key: "${category.key}")`, {
+              categoryModels,
+              totalModels: models.length,
+              models: models.map(m => ({ name: m.name, category: m.category }))
+            });
             
             return (
               <div 
@@ -458,20 +566,22 @@ const Index = () => {
                 </div>
 
                 {/* Grid de modelos */}
-                {categoryCompanions.length > 0 ? (
+                {categoryModels.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4">
-                    {categoryCompanions.slice(0, 4).map((companion, modelIndex) => {
-                      const model = companionToModel(companion);
+                    {categoryModels.slice(0, 4).map((model, modelIndex) => {
+                      const userAccess = checkModelAccess(model);
                       return (
                         <div 
-                          key={companion.id} 
+                          key={model.id} 
                           className="animate-fade-in relative group" 
                           style={{ animationDelay: `${(categoryIndex * 0.2) + (modelIndex * 0.05)}s` }}
                         >
                           <div className="relative">
-                            <ModelCard
-                              {...model}
+                            <ModelCardWithAccess
+                              model={model}
+                              userAccess={userAccess}
                               onSelect={handleModelSelect}
+                              onPurchase={handlePurchase}
                             />
                           </div>
                         </div>
@@ -497,7 +607,7 @@ const Index = () => {
         </div>
 
         {/* Mensaje si no hay resultados */}
-        {filteredCompanions.length === 0 && companions.length > 0 && (
+        {filteredModels.length === 0 && models.length > 0 && (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No se encontraron modelos</h3>
@@ -516,8 +626,8 @@ const Index = () => {
           }}
           onStartChat={handleStartChat}
           modelName={selectedModel.name}
-          modelImage={selectedModel.image}
-          userIsPremium={userIsPremium}
+          modelImage={selectedModel.image_url}
+          userIsPremium={user?.is_premium || false}
         />
       )}
 
@@ -529,7 +639,26 @@ const Index = () => {
           setEditingModel(null);
         }}
         onSave={handleSaveModel}
-        model={editingModel}
+        model={editingModel ? {
+          id: editingModel.id,
+          name: editingModel.name,
+          image: editingModel.image_url,
+          description: editingModel.description,
+          tags: editingModel.tags,
+          isPremium: editingModel.type === 'premium',
+          isLocked: editingModel.type !== 'free',
+          rating: editingModel.rating,
+          conversations: editingModel.conversations
+        } : null}
+      />
+
+      {/* Purchase Modal */}
+      <PurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        model={purchaseModel}
+        type={purchaseType}
+        onPurchase={handlePurchaseConfirm}
       />
 
     </div>
