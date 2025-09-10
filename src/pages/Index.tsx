@@ -102,20 +102,6 @@ const localCompanions: Companion[] = [
   },
   {
     id: "7",
-    name: "Reyna",
-    image_url: "https://companion-ia-2.vercel.app/models/Reyna.jpg",
-    description: "Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.",
-    category: "Gamer",
-    tags: ["gamer", "dominante", "líder"],
-    is_premium: false,
-    is_extra_premium: true,
-    is_locked: false,
-    rating: 4.8,
-    conversations: 1800,
-    price: "9.99"
-  },
-  {
-    id: "8",
     name: "Yu",
     image_url: "https://companion-ia-2.vercel.app/models/Yu.jpg",
     description: "Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.",
@@ -127,6 +113,20 @@ const localCompanions: Companion[] = [
     rating: 4.5,
     conversations: 720,
     price: undefined
+  },
+  {
+    id: "8",
+    name: "Reyna",
+    image_url: "https://companion-ia-2.vercel.app/models/Reyna.jpg",
+    description: "Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.",
+    category: "Gamer",
+    tags: ["gamer", "dominante", "líder"],
+    is_premium: false,
+    is_extra_premium: true,
+    is_locked: false,
+    rating: 4.8,
+    conversations: 1800,
+    price: "9.99"
   }
 ];
 

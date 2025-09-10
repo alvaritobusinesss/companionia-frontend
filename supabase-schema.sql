@@ -39,8 +39,8 @@ INSERT INTO models (name, category, type, price, image_url, description, tags, r
 -- Gamer
 ('Blu', 'Gamer', 'free', NULL, 'https://companion-ia-2.vercel.app/models/Blu.jpg', 'Una compañera gamer apasionada por los videojuegos, perfecta para sesiones de gaming épicas.', ARRAY['gamer', 'videojuegos', 'épica'], 4.4, 420),
 ('Resha', 'Gamer', 'premium', NULL, 'https://companion-ia-2.vercel.app/models/Resha.jpg', 'Una compañera gamer estratégica y competitiva, ideal para partidas intensas y torneos.', ARRAY['gamer', 'estratégica', 'competitiva'], 4.7, 1200),
-('Reyna', 'Gamer', 'one_time', 9.99, 'https://companion-ia-2.vercel.app/models/Reyna.jpg', 'Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.', ARRAY['gamer', 'dominante', 'líder'], 4.8, 1800),
-('Yu', 'Gamer', 'premium', NULL, 'https://companion-ia-2.vercel.app/models/Yu.jpg', 'Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.', ARRAY['gamer', 'indie', 'aventuras'], 4.5, 720);
+('Yu', 'Gamer', 'premium', NULL, 'https://companion-ia-2.vercel.app/models/Yu.jpg', 'Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.', ARRAY['gamer', 'indie', 'aventuras'], 4.5, 720),
+('Reyna', 'Gamer', 'one_time', 9.99, 'https://companion-ia-2.vercel.app/models/Reyna.jpg', 'Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.', ARRAY['gamer', 'dominante', 'líder'], 4.8, 1800);
 
 -- Crear índices para mejorar el rendimiento
 CREATE INDEX IF NOT EXISTS idx_models_category ON models(category);
