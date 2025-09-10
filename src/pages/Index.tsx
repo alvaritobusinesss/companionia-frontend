@@ -12,19 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Crown, Settings, User, Plus, Edit, Upload } from "lucide-react";
 
-// Import model images
-import modelAria from "@/assets/model-aria.jpg";
-import modelLuna from "@/assets/model-luna.jpg";
-import modelSofia from "@/assets/model-sofia.jpg";
-import modelJade from "@/assets/model-jade.jpg";
-import modelNova from "@/assets/model-nova.jpg";
-
-// Datos locales de respaldo
+// Datos locales de respaldo usando imágenes públicas
 const localCompanions: Companion[] = [
   {
     id: "1",
-    name: "Aria",
-    image_url: modelAria,
+    name: "Victoria",
+    image_url: "/models/victoria.jpg",
     description: "Una compañera virtual elegante y sofisticada, perfecta para conversaciones profundas y momentos íntimos.",
     category: "Románticas",
     tags: ["elegante", "sofisticada", "conversación"],
@@ -38,11 +31,11 @@ const localCompanions: Companion[] = [
   {
     id: "2",
     name: "Luna",
-    image_url: modelLuna,
+    image_url: "/models/luna.jpg",
     description: "Una personalidad dulce y cariñosa que te hará sentir especial en cada conversación.",
     category: "Románticas",
     tags: ["dulce", "cariñosa", "especial"],
-    is_premium: false,
+    is_premium: true,
     is_extra_premium: false,
     is_locked: false,
     rating: 4.7,
@@ -51,8 +44,8 @@ const localCompanions: Companion[] = [
   },
   {
     id: "3",
-    name: "Sofia",
-    image_url: modelSofia,
+    name: "Ginger",
+    image_url: "/models/ginger.jpg",
     description: "Una mujer inteligente y misteriosa que te cautivará con su sabiduría y encanto.",
     category: "Románticas",
     tags: ["inteligente", "misteriosa", "sabiduría"],
@@ -65,13 +58,13 @@ const localCompanions: Companion[] = [
   },
   {
     id: "4",
-    name: "Jade",
-    image_url: modelJade,
+    name: "Beauty",
+    image_url: "/models/beauty.jpg",
     description: "Una personalidad aventurera y enérgica, perfecta para explorar nuevos horizontes juntos.",
-    category: "Aventureras",
+    category: "Románticas",
     tags: ["aventurera", "enérgica", "explorar"],
     is_premium: false,
-    is_extra_premium: false,
+    is_extra_premium: true,
     is_locked: false,
     rating: 4.6,
     conversations: 750,
@@ -79,17 +72,59 @@ const localCompanions: Companion[] = [
   },
   {
     id: "5",
-    name: "Nova",
-    image_url: modelNova,
-    description: "Una compañera futurista y tecnológica, ideal para conversaciones sobre innovación y progreso.",
-    category: "Futuristas",
-    tags: ["futurista", "tecnológica", "innovación"],
+    name: "Blu",
+    image_url: "/models/Blu.jpg",
+    description: "Una compañera artística y creativa, perfecta para explorar el mundo del arte y la creatividad.",
+    category: "Artísticas",
+    tags: ["artística", "creativa", "arte"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.4,
+    conversations: 420,
+    price: undefined
+  },
+  {
+    id: "6",
+    name: "Resha",
+    image_url: "/models/Resha.jpg",
+    description: "Una compañera espiritual y sabia, ideal para conversaciones profundas sobre la vida.",
+    category: "Espirituales",
+    tags: ["espiritual", "sabia", "profunda"],
     is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.7,
+    conversations: 1200,
+    price: undefined
+  },
+  {
+    id: "7",
+    name: "Reyna",
+    image_url: "/models/Reyna.jpg",
+    description: "Una personalidad real y majestuosa que te hará sentir como un rey.",
+    category: "Reales",
+    tags: ["real", "majestuosa", "rey"],
+    is_premium: false,
     is_extra_premium: true,
     is_locked: false,
-    rating: 5.0,
-    conversations: 3500,
-    price: "9.99"
+    rating: 4.8,
+    conversations: 1800,
+    price: "4.99"
+  },
+  {
+    id: "8",
+    name: "Yu",
+    image_url: "/models/Yu.jpg",
+    description: "Una personalidad única y especial que te sorprenderá con su originalidad.",
+    category: "Únicas",
+    tags: ["única", "especial", "originalidad"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.5,
+    conversations: 720,
+    price: undefined
   }
 ];
 
