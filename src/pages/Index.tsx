@@ -164,32 +164,32 @@ const categories = [
   {
     title: "Románticas",
     description: "Dulces, cercanas, look clásico",
-    key: "romanticas"
+    key: "Románticas"
   },
   {
     title: "Calientes",
     description: "Sensuales, atrevidas, solo premium",
-    key: "calientes"
+    key: "Calientes"
   },
   {
     title: "Gamer",
     description: "Divertidas, outfit casual con headset",
-    key: "gamer"
+    key: "Gamer"
   },
   {
     title: "Elegantes",
     description: "Sofisticadas, ropa de noche",
-    key: "elegantes"
+    key: "Elegantes"
   },
   {
     title: "Intelectuales",
     description: "Con gafas, vibe de escritora/estudiante",
-    key: "intelectuales"
+    key: "Intelectuales"
   },
   {
     title: "Misteriosas",
     description: "Oscuras, estilo gótico",
-    key: "misteriosas"
+    key: "Misteriosas"
   }
 ];
 
