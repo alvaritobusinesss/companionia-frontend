@@ -112,7 +112,7 @@ const localCompanions: Companion[] = [
     is_locked: false,
     rating: 4.8,
     conversations: 1800,
-    price: "4.99"
+    price: "9.99"
   },
   {
     id: "8",
@@ -121,7 +121,7 @@ const localCompanions: Companion[] = [
     description: "Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.",
     category: "Gamer",
     tags: ["gamer", "indie", "aventuras"],
-    is_premium: false,
+    is_premium: true,
     is_extra_premium: false,
     is_locked: false,
     rating: 4.5,
