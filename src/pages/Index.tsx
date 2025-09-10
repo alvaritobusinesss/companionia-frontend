@@ -19,6 +19,80 @@ import modelSofia from "@/assets/model-sofia.jpg";
 import modelJade from "@/assets/model-jade.jpg";
 import modelNova from "@/assets/model-nova.jpg";
 
+// Datos locales de respaldo
+const localCompanions: Companion[] = [
+  {
+    id: "1",
+    name: "Aria",
+    image_url: modelAria,
+    description: "Una compañera virtual elegante y sofisticada, perfecta para conversaciones profundas y momentos íntimos.",
+    category: "Románticas",
+    tags: ["elegante", "sofisticada", "conversación"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.8,
+    conversations: 1250,
+    price: undefined
+  },
+  {
+    id: "2",
+    name: "Luna",
+    image_url: modelLuna,
+    description: "Una personalidad dulce y cariñosa que te hará sentir especial en cada conversación.",
+    category: "Románticas",
+    tags: ["dulce", "cariñosa", "especial"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.7,
+    conversations: 980,
+    price: undefined
+  },
+  {
+    id: "3",
+    name: "Sofia",
+    image_url: modelSofia,
+    description: "Una mujer inteligente y misteriosa que te cautivará con su sabiduría y encanto.",
+    category: "Románticas",
+    tags: ["inteligente", "misteriosa", "sabiduría"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.9,
+    conversations: 2100,
+    price: undefined
+  },
+  {
+    id: "4",
+    name: "Jade",
+    image_url: modelJade,
+    description: "Una personalidad aventurera y enérgica, perfecta para explorar nuevos horizontes juntos.",
+    category: "Aventureras",
+    tags: ["aventurera", "enérgica", "explorar"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.6,
+    conversations: 750,
+    price: undefined
+  },
+  {
+    id: "5",
+    name: "Nova",
+    image_url: modelNova,
+    description: "Una compañera futurista y tecnológica, ideal para conversaciones sobre innovación y progreso.",
+    category: "Futuristas",
+    tags: ["futurista", "tecnológica", "innovación"],
+    is_premium: true,
+    is_extra_premium: true,
+    is_locked: false,
+    rating: 5.0,
+    conversations: 3500,
+    price: "9.99"
+  }
+];
+
  
 
 interface Companion {
@@ -111,22 +185,24 @@ const Index = () => {
   const [showModelEditor, setShowModelEditor] = useState(false);
   const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [userIsPremium, setUserIsPremium] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Cargar companions desde Supabase
+  // Cargar companions desde Supabase o usar datos locales
   useEffect(() => {
     async function loadCompanions() {
       try {
         const { data, error } = await supabase.from("companions").select("*");
         if (error) {
-          console.error("Error cargando companions:", error);
-          setError("Error al cargar los modelos");
+          console.warn("Error cargando companions desde Supabase, usando datos locales:", error);
+          setCompanions(localCompanions);
+        } else if (data && data.length > 0) {
+          setCompanions(data);
         } else {
-          setCompanions(data || []);
+          console.info("No hay datos en Supabase, usando datos locales");
+          setCompanions(localCompanions);
         }
       } catch (err) {
-        console.error("Error inesperado:", err);
-        setError("Error inesperado al cargar los datos");
+        console.warn("Error inesperado, usando datos locales:", err);
+        setCompanions(localCompanions);
       } finally {
         setLoading(false);
       }
@@ -150,44 +226,27 @@ const Index = () => {
   const allModels = companions.map(companionToModel);
 
   const handleModelSelect = (modelId: string) => {
-    try {
-      setError(null);
-      const model = allModels.find(m => m.id === modelId);
-      if (model && !model.isLocked) {
-        setSelectedModel(model);
-        setShowPersonalization(true);
-      }
-    } catch (err) {
-      setError('Error al seleccionar modelo');
-      console.error('Error en handleModelSelect:', err);
+    const model = allModels.find(m => m.id === modelId);
+    if (model && !model.isLocked) {
+      setSelectedModel(model);
+      setShowPersonalization(true);
     }
   };
 
   const handleStartChat = (preferences: ChatPreferences) => {
-    try {
-      setError(null);
-      if (!selectedModel) {
-        throw new Error('No hay modelo seleccionado');
-      }
-      setChatPreferences(preferences);
-      setShowPersonalization(false);
-      setShowChat(true);
-    } catch (err) {
-      setError('Error al iniciar chat');
-      console.error('Error en handleStartChat:', err);
+    if (!selectedModel) {
+      console.error('No hay modelo seleccionado');
+      return;
     }
+    setChatPreferences(preferences);
+    setShowPersonalization(false);
+    setShowChat(true);
   };
 
   const handleBackToGallery = () => {
-    try {
-      setError(null);
-      setShowChat(false);
-      setSelectedModel(null);
-      setChatPreferences(null);
-    } catch (err) {
-      setError('Error al volver a la galería');
-      console.error('Error en handleBackToGallery:', err);
-    }
+    setShowChat(false);
+    setSelectedModel(null);
+    setChatPreferences(null);
   };
 
   const handleUpgrade = () => {
@@ -224,18 +283,6 @@ const Index = () => {
     );
   }
 
-  // Error boundary
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-foreground mb-2">¡Ups! Algo salió mal</h2>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Reintentar</Button>
-        </div>
-      </div>
-    );
-  }
 
   if (showChat && selectedModel && chatPreferences) {
     return (
