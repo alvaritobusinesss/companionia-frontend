@@ -224,22 +224,26 @@ const Index = () => {
   // Cargar companions desde Supabase o usar datos locales
   useEffect(() => {
     async function loadCompanions() {
+      console.log("🔍 DEBUG: Iniciando carga de companions");
+      console.log("🔍 DEBUG: Datos locales:", localCompanions);
       try {
         const { data, error } = await supabase.from("companions").select("*");
         if (error) {
-          console.warn("Error cargando companions desde Supabase, usando datos locales:", error);
+          console.warn("⚠️ Error cargando companions desde Supabase, usando datos locales:", error);
           setCompanions(localCompanions);
         } else if (data && data.length > 0) {
+          console.log("✅ Datos de Supabase cargados:", data);
           setCompanions(data);
         } else {
-          console.info("No hay datos en Supabase, usando datos locales");
+          console.info("ℹ️ No hay datos en Supabase, usando datos locales");
           setCompanions(localCompanions);
         }
       } catch (err) {
-        console.warn("Error inesperado, usando datos locales:", err);
+        console.warn("❌ Error inesperado, usando datos locales:", err);
         setCompanions(localCompanions);
       } finally {
         setLoading(false);
+        console.log("🏁 Carga completada");
       }
     }
     loadCompanions();
@@ -257,6 +261,13 @@ const Index = () => {
   const companionsByCategory = filteredCompanions.filter(companion => 
     selectedCategory === "all" || companion.category === selectedCategory
   );
+
+  // Debug logs
+  console.log("🔍 DEBUG: Companions:", companions);
+  console.log("🔍 DEBUG: Filtered companions:", filteredCompanions);
+  console.log("🔍 DEBUG: Companions by category:", companionsByCategory);
+  console.log("🔍 DEBUG: Selected category:", selectedCategory);
+  console.log("🔍 DEBUG: Search term:", searchTerm);
 
   const allModels = companions.map(companionToModel);
 
