@@ -152,7 +152,7 @@ export function ModelCardWithAccess({
             onClick={handleClick}
           >
             {userAccess.hasAccess ? (
-              model.type === 'free' ? 'Chat' : 'Desbloqueado'
+              model.type === 'free' ? `Habla con ${model.name}` : 'Desbloqueado'
             ) : model.type === 'premium' ? (
               <>
                 <Crown className="w-4 h-4 mr-2" />
