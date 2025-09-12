@@ -373,18 +373,22 @@ const Index = () => {
           setModels(data as UserAccessModel[]);
         } else {
           console.info("ℹ️ No hay datos en Supabase, usando datos locales");
-          const localModels: UserAccessModel[] = localCompanions.map(companion => ({
-            id: companion.id,
-            name: companion.name,
-            category: companion.category,
-            type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
-            price: companion.price ? parseFloat(companion.price) : undefined,
-            image_url: companion.image_url,
-            description: companion.description,
-            tags: companion.tags,
-            rating: companion.rating,
-            conversations: companion.conversations
-          }));
+          const localModels: UserAccessModel[] = localCompanions.map(companion => {
+            const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
+            console.log(`🔍 DEBUG: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
+            return {
+              id: companion.id,
+              name: companion.name,
+              category: companion.category,
+              type: type,
+              price: companion.price ? parseFloat(companion.price) : undefined,
+              image_url: companion.image_url,
+              description: companion.description,
+              tags: companion.tags,
+              rating: companion.rating,
+              conversations: companion.conversations
+            };
+          });
           setModels(localModels);
         }
       } catch (err) {
