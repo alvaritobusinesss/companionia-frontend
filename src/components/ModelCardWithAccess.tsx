@@ -2,12 +2,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Crown, Lock, Star, CreditCard, User } from "lucide-react";
-import { Model, UserAccess, User } from "@/hooks/useUserAccess";
+import { Model, UserAccess, User as UserType } from "@/hooks/useUserAccess";
 
 interface ModelCardWithAccessProps {
   model: Model;
   userAccess: UserAccess;
-  user: User | null;
+  user: UserType | null;
   onSelect: (modelId: string) => void;
   onPurchase: (modelId: string) => void;
 }
