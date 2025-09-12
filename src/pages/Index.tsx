@@ -184,6 +184,63 @@ const localCompanions: Companion[] = [
     rating: 5.0,
     conversations: 500,
     price: "299.00"
+  },
+  // Modelos Intelectuales
+  {
+    id: "13",
+    name: "Renata",
+    image_url: "https://companion-ia-2.vercel.app/models/Renata.jpg",
+    description: "Una compañera intelectual brillante y curiosa, perfecta para conversaciones profundas y debates estimulantes.",
+    category: "Intelectuales",
+    tags: ["intelectual", "brillante", "curiosa"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.6,
+    conversations: 1800,
+    price: undefined
+  },
+  {
+    id: "14",
+    name: "Bianca",
+    image_url: "https://companion-ia-2.vercel.app/models/Bianca.jpg",
+    description: "Una compañera intelectual sofisticada y analítica, ideal para explorar ideas complejas y teorías fascinantes.",
+    category: "Intelectuales",
+    tags: ["intelectual", "sofisticada", "analítica"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.8,
+    conversations: 1200,
+    price: undefined
+  },
+  {
+    id: "15",
+    name: "Aiko",
+    image_url: "https://companion-ia-2.vercel.app/models/Aiko.jpg",
+    description: "Una compañera intelectual creativa e innovadora, perfecta para proyectos artísticos y soluciones creativas.",
+    category: "Intelectuales",
+    tags: ["intelectual", "creativa", "innovadora"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.7,
+    conversations: 1500,
+    price: undefined
+  },
+  {
+    id: "16",
+    name: "Paris",
+    image_url: "https://companion-ia-2.vercel.app/models/Paris.jpg",
+    description: "Una compañera intelectual excepcional y única, experta en múltiples disciplinas. Perfecta para mentores y guías académicas.",
+    category: "Intelectuales",
+    tags: ["intelectual", "excepcional", "mentora"],
+    is_premium: false,
+    is_extra_premium: true,
+    is_locked: false,
+    rating: 4.9,
+    conversations: 800,
+    price: "99.00"
   }
 ];
 
