@@ -127,6 +127,63 @@ const localCompanions: Companion[] = [
     rating: 4.8,
     conversations: 1800,
     price: "9.99"
+  },
+  // Modelos Góticos
+  {
+    id: "9",
+    name: "Nocturne",
+    image_url: "https://companion-ia-2.vercel.app/models/Nocturne.jpg",
+    description: "Una compañera gótica misteriosa y elegante, perfecta para conversaciones nocturnas y momentos íntimos.",
+    category: "Góticas",
+    tags: ["gótica", "misteriosa", "elegante"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.9,
+    conversations: 2100,
+    price: undefined
+  },
+  {
+    id: "10",
+    name: "Erit",
+    image_url: "https://companion-ia-2.vercel.app/models/Erit.jpg",
+    description: "Una compañera gótica apasionada y intensa, ideal para explorar los rincones más oscuros de la imaginación.",
+    category: "Góticas",
+    tags: ["gótica", "apasionada", "intensa"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.7,
+    conversations: 1500,
+    price: undefined
+  },
+  {
+    id: "11",
+    name: "Vanth",
+    image_url: "https://companion-ia-2.vercel.app/models/Vanth.jpg",
+    description: "Una compañera gótica sabia y enigmática, perfecta para conversaciones profundas y reflexiones existenciales.",
+    category: "Góticas",
+    tags: ["gótica", "sabia", "enigmática"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.8,
+    conversations: 1800,
+    price: undefined
+  },
+  {
+    id: "12",
+    name: "Belladonna",
+    image_url: "https://companion-ia-2.vercel.app/models/Belladonna.jpg",
+    description: "Una compañera gótica excepcional y única, la más exclusiva de la colección. Perfecta para experiencias inolvidables.",
+    category: "Góticas",
+    tags: ["gótica", "excepcional", "única"],
+    is_premium: false,
+    is_extra_premium: true,
+    is_locked: false,
+    rating: 5.0,
+    conversations: 500,
+    price: "299.00"
   }
 ];
 
@@ -192,6 +249,11 @@ const categories = [
     title: "Misteriosas",
     description: "Oscuras, estilo gótico",
     key: "Misteriosas"
+  },
+  {
+    title: "Góticas",
+    description: "Misteriosas, elegantes, estilo gótico",
+    key: "Góticas"
   }
 ];
 
