@@ -613,6 +613,21 @@ const Index = () => {
     setShowModelEditor(true);
   };
 
+  const handleCategoryClick = (categoryKey: string) => {
+    setSelectedCategory(categoryKey);
+    
+    if (categoryKey === "all") {
+      // Si es "Todas", scroll al inicio
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Scroll a la sección específica
+      const element = document.getElementById(`category-${categoryKey}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
   const handleAuthSuccess = () => {
     // Refrescar datos del usuario después del login exitoso
     refreshUser();
@@ -720,7 +735,7 @@ const Index = () => {
           <div className="flex flex-wrap gap-2 justify-center">
             <Button
               variant={selectedCategory === "all" ? "default" : "outline"}
-              onClick={() => setSelectedCategory("all")}
+              onClick={() => handleCategoryClick("all")}
               size="sm"
             >
               Todas
@@ -729,7 +744,7 @@ const Index = () => {
               <Button
                 key={category.title}
                 variant={selectedCategory === category.key ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category.key)}
+                onClick={() => handleCategoryClick(category.key)}
                 size="sm"
               >
                 {category.title}
@@ -751,6 +766,7 @@ const Index = () => {
             return (
               <div 
                 key={category.title} 
+                id={`category-${category.key}`}
                 className="animate-fade-in"
                 style={{ animationDelay: `${categoryIndex * 0.2}s` }}
               >
