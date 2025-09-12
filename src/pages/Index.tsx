@@ -299,6 +299,63 @@ const localCompanions: Companion[] = [
     rating: 5.0,
     conversations: 600,
     price: "999.00"
+  },
+  // Modelos Intelectuales
+  {
+    id: "21",
+    name: "Ahri",
+    image_url: "https://companion-ia-2.vercel.app/models/Ahri.jpg",
+    description: "Una compañera intelectual brillante y curiosa, perfecta para conversaciones profundas y debates estimulantes.",
+    category: "Intelectuales",
+    tags: ["intelectual", "brillante", "curiosa"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.6,
+    conversations: 1800,
+    price: undefined
+  },
+  {
+    id: "22",
+    name: "Asuma",
+    image_url: "https://companion-ia-2.vercel.app/models/Asuma.jpg",
+    description: "Una compañera intelectual sofisticada y analítica, ideal para explorar ideas complejas y teorías fascinantes.",
+    category: "Intelectuales",
+    tags: ["intelectual", "sofisticada", "analítica"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.8,
+    conversations: 1200,
+    price: undefined
+  },
+  {
+    id: "23",
+    name: "Raven",
+    image_url: "https://companion-ia-2.vercel.app/models/Raven.jpg",
+    description: "Una compañera intelectual creativa e innovadora, perfecta para proyectos artísticos y soluciones creativas.",
+    category: "Intelectuales",
+    tags: ["intelectual", "creativa", "innovadora"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.7,
+    conversations: 1500,
+    price: undefined
+  },
+  {
+    id: "24",
+    name: "Arya",
+    image_url: "https://companion-ia-2.vercel.app/models/Arya.jpg",
+    description: "Una compañera intelectual excepcional y única, experta en múltiples disciplinas. Perfecta para mentores y guías académicas.",
+    category: "Intelectuales",
+    tags: ["intelectual", "excepcional", "mentora"],
+    is_premium: false,
+    is_extra_premium: true,
+    is_locked: false,
+    rating: 4.9,
+    conversations: 800,
+    price: "39.00"
   }
 ];
 
