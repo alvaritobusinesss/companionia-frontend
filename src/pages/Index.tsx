@@ -242,6 +242,63 @@ const localCompanions: Companion[] = [
     rating: 4.9,
     conversations: 800,
     price: "99.00"
+  },
+  // Modelos Calientes
+  {
+    id: "17",
+    name: "Chloe",
+    image_url: "https://companion-ia-2.vercel.app/models/Chloe.jpg",
+    description: "Una compañera sensual y atrevida, perfecta para conversaciones íntimas y momentos de pasión.",
+    category: "Calientes",
+    tags: ["sensual", "atrevida", "íntima"],
+    is_premium: false,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.7,
+    conversations: 2200,
+    price: undefined
+  },
+  {
+    id: "18",
+    name: "Sasha",
+    image_url: "https://companion-ia-2.vercel.app/models/Sasha.jpg",
+    description: "Una compañera ardiente y apasionada, ideal para explorar los límites de la sensualidad y el deseo.",
+    category: "Calientes",
+    tags: ["ardiente", "apasionada", "sensualidad"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.8,
+    conversations: 1800,
+    price: undefined
+  },
+  {
+    id: "19",
+    name: "Alessia",
+    image_url: "https://companion-ia-2.vercel.app/models/Alessia.jpg",
+    description: "Una compañera seductora y misteriosa, perfecta para experiencias intensas y momentos inolvidables.",
+    category: "Calientes",
+    tags: ["seductora", "misteriosa", "intensa"],
+    is_premium: true,
+    is_extra_premium: false,
+    is_locked: false,
+    rating: 4.9,
+    conversations: 2100,
+    price: undefined
+  },
+  {
+    id: "20",
+    name: "Rebecca",
+    image_url: "https://companion-ia-2.vercel.app/models/Rebecca.jpg",
+    description: "Una compañera excepcional y única, la más exclusiva de la categoría. Perfecta para experiencias premium inolvidables.",
+    category: "Calientes",
+    tags: ["excepcional", "única", "premium"],
+    is_premium: false,
+    is_extra_premium: true,
+    is_locked: false,
+    rating: 5.0,
+    conversations: 600,
+    price: "999.00"
   }
 ];
 
