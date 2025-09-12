@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { ModelCardWithAccess } from "@/components/ModelCardWithAccess";
 import { PurchaseModal } from "@/components/PurchaseModal";
+import { AuthModal } from "@/components/AuthModal";
 import { PersonalizationModal, ChatPreferences } from "@/components/PersonalizationModal";
 import { ChatInterface } from "@/components/ChatInterface";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
@@ -343,6 +344,7 @@ const Index = () => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchaseModel, setPurchaseModel] = useState<UserAccessModel | null>(null);
   const [purchaseType, setPurchaseType] = useState<'premium' | 'one_time'>('premium');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const { user, loading: userLoading, checkModelAccess, refreshUser } = useUserAccess();
 
@@ -449,13 +451,22 @@ const Index = () => {
       if (access.hasAccess) {
         setSelectedModel(model);
         setShowPersonalization(true);
+      } else if (!user) {
+        // Si no hay usuario, mostrar modal de login
+        setShowAuthModal(true);
       }
     }
   };
 
   const handlePurchase = async (modelId: string) => {
     const model = models.find(m => m.id === modelId);
-    if (!model || !user) return;
+    if (!model) return;
+
+    // Si no hay usuario, mostrar modal de login
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
 
     const access = checkModelAccess(model);
     
@@ -548,6 +559,11 @@ const Index = () => {
     };
     setEditingModel(newModel);
     setShowModelEditor(true);
+  };
+
+  const handleAuthSuccess = () => {
+    // Refrescar datos del usuario después del login exitoso
+    refreshUser();
   };
 
   // Loading state
@@ -791,6 +807,13 @@ const Index = () => {
         model={purchaseModel}
         type={purchaseType}
         onPurchase={handlePurchaseConfirm}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
       />
 
     </div>
