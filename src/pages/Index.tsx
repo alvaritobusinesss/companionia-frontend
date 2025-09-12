@@ -373,6 +373,7 @@ const Index = () => {
           setModels(data as UserAccessModel[]);
         } else {
           console.info("ℹ️ No hay datos en Supabase, usando datos locales");
+          console.log("🔍 DEBUG: Iniciando conversión de localCompanions");
           const localModels: UserAccessModel[] = localCompanions.map(companion => {
             const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
             console.log(`🔍 DEBUG: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
@@ -389,22 +390,29 @@ const Index = () => {
               conversations: companion.conversations
             };
           });
+          console.log("🔍 DEBUG: Modelos convertidos:", localModels);
           setModels(localModels);
         }
       } catch (err) {
         console.warn("❌ Error inesperado, usando datos locales:", err);
-        const localModels: UserAccessModel[] = localCompanions.map(companion => ({
-          id: companion.id,
-          name: companion.name,
-          category: companion.category,
-          type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
-          price: companion.price ? parseFloat(companion.price) : undefined,
-          image_url: companion.image_url,
-          description: companion.description,
-          tags: companion.tags,
-          rating: companion.rating,
-          conversations: companion.conversations
-        }));
+        console.log("🔍 DEBUG: Iniciando conversión en catch block");
+        const localModels: UserAccessModel[] = localCompanions.map(companion => {
+          const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
+          console.log(`🔍 DEBUG CATCH: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
+          return {
+            id: companion.id,
+            name: companion.name,
+            category: companion.category,
+            type: type,
+            price: companion.price ? parseFloat(companion.price) : undefined,
+            image_url: companion.image_url,
+            description: companion.description,
+            tags: companion.tags,
+            rating: companion.rating,
+            conversations: companion.conversations
+          };
+        });
+        console.log("🔍 DEBUG CATCH: Modelos convertidos:", localModels);
         setModels(localModels);
       } finally {
         setLoading(false);
