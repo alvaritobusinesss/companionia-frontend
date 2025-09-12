@@ -1,12 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Crown, Lock, Star, CreditCard } from "lucide-react";
-import { Model, UserAccess } from "@/hooks/useUserAccess";
+import { Crown, Lock, Star, CreditCard, User } from "lucide-react";
+import { Model, UserAccess, User } from "@/hooks/useUserAccess";
 
 interface ModelCardWithAccessProps {
   model: Model;
   userAccess: UserAccess;
+  user: User | null;
   onSelect: (modelId: string) => void;
   onPurchase: (modelId: string) => void;
 }
@@ -14,6 +15,7 @@ interface ModelCardWithAccessProps {
 export function ModelCardWithAccess({ 
   model, 
   userAccess, 
+  user,
   onSelect, 
   onPurchase 
 }: ModelCardWithAccessProps) {
@@ -153,6 +155,11 @@ export function ModelCardWithAccess({
           >
             {userAccess.hasAccess ? (
               model.type === 'free' ? `Habla con ${model.name}` : 'Desbloqueado'
+            ) : userAccess.reason === 'premium_required' && !user ? (
+              <>
+                <User className="w-4 h-4 mr-2" />
+                Iniciar Sesión
+              </>
             ) : model.type === 'premium' ? (
               <>
                 <Crown className="w-4 h-4 mr-2" />

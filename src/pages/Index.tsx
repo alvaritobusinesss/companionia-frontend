@@ -711,6 +711,7 @@ const Index = () => {
                             <ModelCardWithAccess
                               model={model}
                               userAccess={userAccess}
+                              user={user}
                               onSelect={handleModelSelect}
                               onPurchase={handlePurchase}
                             />

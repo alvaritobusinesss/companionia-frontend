@@ -77,23 +77,21 @@ export function useUserAccess() {
   }, []);
 
   const checkModelAccess = (model: Model): UserAccess => {
+    if (!user) {
+      return { hasAccess: false, reason: 'premium_required' };
+    }
+
     switch (model.type) {
       case 'free':
         return { hasAccess: true, reason: 'free' };
       
       case 'premium':
-        if (!user) {
-          return { hasAccess: false, reason: 'premium_required' };
-        }
         return { 
           hasAccess: user.is_premium, 
           reason: user.is_premium ? 'free' : 'premium_required' 
         };
       
       case 'one_time':
-        if (!user) {
-          return { hasAccess: false, reason: 'purchase_required', price: model.price };
-        }
         const hasPurchased = user.purchased_models.includes(model.id);
         return { 
           hasAccess: hasPurchased, 
