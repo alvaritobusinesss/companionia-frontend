@@ -18,6 +18,8 @@ export function ModelCardWithAccess({
   onPurchase 
 }: ModelCardWithAccessProps) {
   
+  console.log(`🔍 DEBUG ModelCard: ${model.name} - type: ${model.type}, hasAccess: ${userAccess.hasAccess}`);
+  
   const handleClick = () => {
     if (userAccess.hasAccess) {
       onSelect(model.id);
