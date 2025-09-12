@@ -304,11 +304,6 @@ const categories = [
     key: "Intelectuales"
   },
   {
-    title: "Misteriosas",
-    description: "Oscuras, estilo gótico",
-    key: "Misteriosas"
-  },
-  {
     title: "Góticas",
     description: "Misteriosas, elegantes, estilo gótico",
     key: "Góticas"
