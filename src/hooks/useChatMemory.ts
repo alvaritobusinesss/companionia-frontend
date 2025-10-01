@@ -1,11 +1,5 @@
-import { useState, useEffect } from 'react';
-
-export interface Memory {
-  key: string;
-  value: string;
-  importance: number;
-  timestamp: Date;
-}
+import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export interface ChatMessage {
   id: string;
@@ -14,132 +8,166 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export interface UserMemory {
-  modelId: string;
-  memories: Memory[];
-  recentMessages: ChatMessage[];
-}
+export function useChatMemory(sessionKey?: string, userId?: string, modelId?: string) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [memorySummary, setMemorySummary] = useState<string>('');
+  const [dailyCount, setDailyCount] = useState<number>(0);
+  const [limitReached, setLimitReached] = useState<boolean>(false);
 
-export const useChatMemory = (modelId: string) => {
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [recentMessages, setRecentMessages] = useState<ChatMessage[]>([]);
+  const addMessage = useCallback((message: ChatMessage) => {
+    setMessages(prev => [...prev, message]);
+  }, []);
 
-  // Cargar memoria del localStorage
-  useEffect(() => {
-    const savedMemory = localStorage.getItem(`chat_memory_${modelId}`);
-    if (savedMemory) {
-      try {
-        const parsed: UserMemory = JSON.parse(savedMemory);
-        setMemories(parsed.memories || []);
-        setRecentMessages(parsed.recentMessages || []);
-      } catch (error) {
-        console.error('Error parsing saved memory:', error);
-      }
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
+
+  // Obtener mensajes recientes (últimos 10)
+  const recentMessages = messages.slice(-10);
+
+  // Obtener contexto para la IA (últimos 5 mensajes)
+  const getContextForAI = useCallback(() => {
+    const recent = messages.slice(-5).map(msg => ({
+      role: msg.isUser ? 'user' : 'assistant',
+      content: msg.text
+    }));
+    if (memorySummary) {
+      return [
+        { role: 'system', content: `Memoria de largo plazo: ${memorySummary}` },
+        ...recent,
+      ];
     }
-  }, [modelId]);
+    return recent;
+  }, [messages]);
 
-  // Guardar memoria en localStorage
-  const saveMemory = (newMemories: Memory[], newMessages: ChatMessage[]) => {
-    const userMemory: UserMemory = {
-      modelId,
-      memories: newMemories.slice(-10), // Máximo 10 memorias
-      recentMessages: newMessages.slice(-20) // Últimos 20 mensajes
+  // Cargar/crear conversación persistente si tenemos userId+modelId
+  useEffect(() => {
+    const setup = async () => {
+      if (!userId || !modelId) return; // compatibilidad: modo local
+      try {
+        setIsLoading(true);
+        // upsert conversación (única por user/model)
+        const { data: convData, error: convErr } = await supabase
+          .from('conversations')
+          .upsert(
+            { user_id: userId, model_id: String(modelId) },
+            { onConflict: 'user_id,model_id' }
+          )
+          .select('*')
+          .single();
+
+        if (convErr) {
+          console.error('❌ upsert conversation error:', convErr);
+          return;
+        }
+
+        setConversationId(convData.id);
+        setMemorySummary(convData.memory_summary || '');
+
+        // cargar últimos 100 mensajes
+        const { data: msgs, error: msgsErr } = await supabase
+          .from('messages')
+          .select('id, role, content, created_at')
+          .eq('conversation_id', convData.id)
+          .order('created_at', { ascending: true })
+          .limit(100);
+
+        if (msgsErr) {
+          console.error('❌ load messages error:', msgsErr);
+        } else {
+          const mapped: ChatMessage[] = (msgs || []).map((m: any) => ({
+            id: m.id,
+            text: m.content,
+            isUser: m.role === 'user',
+            timestamp: new Date(m.created_at),
+          }));
+          setMessages(mapped);
+        }
+
+        // contador últimas 24h (coherente con las reglas del servidor)
+        try {
+          const { data: countRes, error: countErr } = await supabase
+            .rpc('count_user_messages', { u_id: userId });
+          if (!countErr && typeof countRes === 'number') {
+            setDailyCount(countRes);
+          }
+        } catch {}
+      } finally {
+        setIsLoading(false);
+      }
     };
-    localStorage.setItem(`chat_memory_${modelId}`, JSON.stringify(userMemory));
-  };
+    setup();
+  }, [userId, modelId]);
 
-  // Extraer información personal del mensaje usando regex
-  const extractMemories = (message: string): Memory[] => {
-    const newMemories: Memory[] = [];
-    const now = new Date();
-
-    // Patrones para extraer información
-    const patterns = [
-      { regex: /me llamo ([^.,!?]+)/i, key: 'nombre', importance: 10 },
-      { regex: /mi nombre es ([^.,!?]+)/i, key: 'nombre', importance: 10 },
-      { regex: /soy ([^.,!?]+)/i, key: 'descripcion', importance: 7 },
-      { regex: /vivo en ([^.,!?]+)/i, key: 'ciudad', importance: 9 },
-      { regex: /trabajo (?:de|como|en) ([^.,!?]+)/i, key: 'trabajo', importance: 8 },
-      { regex: /me gusta ([^.,!?]+)/i, key: 'gustos', importance: 6 },
-      { regex: /mi hobby es ([^.,!?]+)/i, key: 'hobby', importance: 7 },
-      { regex: /tengo (\d+) años/i, key: 'edad', importance: 8 },
-      { regex: /estoy (?:triste|deprimido|mal)/i, key: 'estado_emocional', importance: 5, value: 'triste' },
-      { regex: /estoy (?:feliz|contento|bien)/i, key: 'estado_emocional', importance: 5, value: 'feliz' },
-      { regex: /mañana (?:voy a|tengo) ([^.,!?]+)/i, key: 'evento_cercano', importance: 8 },
-      { regex: /el (?:lunes|martes|miércoles|jueves|viernes|sábado|domingo) ([^.,!?]+)/i, key: 'evento_semanal', importance: 6 }
-    ];
-
-    patterns.forEach(pattern => {
-      const match = message.match(pattern.regex);
-      if (match) {
-        const value = pattern.value || match[1]?.trim();
-        if (value) {
-          newMemories.push({
-            key: pattern.key,
-            value,
-            importance: pattern.importance,
-            timestamp: now
+  // Insertar mensaje también en Supabase (si hay conversación)
+  const persistMessage = useCallback(async (message: ChatMessage) => {
+    if (!conversationId) return;
+    try {
+      // Persistimos solo los mensajes del usuario; las respuestas del bot no cuentan para límite
+      if (message.isUser) {
+        const { error } = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            role: 'user',
+            content: message.text,
           });
+        if (error) {
+          if ((error as any).code === '42501' || (error as any).message?.includes('policy')) {
+            setLimitReached(true);
+          }
+          console.error('❌ insert message error:', error);
+        } else {
+          setDailyCount(prev => prev + 1);
         }
       }
-    });
-
-    return newMemories;
-  };
-
-  // Agregar mensaje y extraer memorias
-  const addMessage = (message: ChatMessage) => {
-    const newMessages = [...recentMessages, message];
-    setRecentMessages(newMessages);
-
-    if (message.isUser) {
-      const extractedMemories = extractMemories(message.text);
-      if (extractedMemories.length > 0) {
-        const updatedMemories = [...memories];
-        
-        extractedMemories.forEach(newMemory => {
-          // Reemplazar memoria existente del mismo tipo o agregar nueva
-          const existingIndex = updatedMemories.findIndex(m => m.key === newMemory.key);
-          if (existingIndex >= 0) {
-            updatedMemories[existingIndex] = newMemory;
-          } else {
-            updatedMemories.push(newMemory);
-          }
-        });
-
-        // Mantener solo las 10 memorias más importantes
-        const sortedMemories = updatedMemories
-          .sort((a, b) => b.importance - a.importance)
-          .slice(0, 10);
-        
-        setMemories(sortedMemories);
-        saveMemory(sortedMemories, newMessages);
-      } else {
-        saveMemory(memories, newMessages);
+      
+      if (message.isUser) {
+        // actualización simple de memoria cada 8 mensajes del usuario
+        const userMessages = [...messages, message].filter(m => m.isUser);
+        if (userMessages.length % 8 === 0) {
+          const lastWindow = [...messages, message].slice(-20)
+            .map(m => `${m.isUser ? 'Usuario' : 'Modelo'}: ${m.text}`)
+            .join(' \n');
+          const newSummary = `Notas acumuladas: recuerda gustos, temas y promesas. Últimos temas clave:\n${lastWindow}`;
+          try {
+            await supabase
+              .from('conversations')
+              .update({ memory_summary: newSummary })
+              .eq('id', conversationId);
+            setMemorySummary(newSummary);
+          } catch {}
+        }
       }
-    } else {
-      saveMemory(memories, newMessages);
+    } catch (e) {
+      console.error('❌ persistMessage exception:', e);
     }
-  };
+  }, [conversationId]);
 
-  // Obtener contexto para la IA
-  const getContextForAI = () => {
-    const topMemories = memories
-      .sort((a, b) => b.importance - a.importance)
-      .slice(0, 10);
-    
-    const recentContext = recentMessages.slice(-10);
-    
-    return {
-      memories: topMemories,
-      recentMessages: recentContext
-    };
-  };
+  // proxy que añade local y persiste
+  const addMessagePersist = useCallback((message: ChatMessage) => {
+    setMessages(prev => [...prev, message]);
+    persistMessage(message);
+  }, [persistMessage]);
 
   return {
-    memories,
+    messages,
     recentMessages,
-    addMessage,
-    getContextForAI
+    isLoading,
+    addMessage: conversationId ? addMessagePersist : addMessage,
+    clearMessages,
+    setIsLoading,
+    getContextForAI,
+    dailyCount,
+    dailyLimit: 20,
+    limitReached,
+    remainingMessages: Math.max(0, 20 - dailyCount),
   };
-};
+}
+
+
+
+
+

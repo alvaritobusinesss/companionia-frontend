@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Sparkles, MessageCircle, Image, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SubscriptionBannerProps {
   onUpgrade: () => void;
@@ -10,6 +11,7 @@ interface SubscriptionBannerProps {
 
 export function SubscriptionBanner({ onUpgrade }: SubscriptionBannerProps) {
   const [isVisible, setIsVisible] = useState(true);
+  const { t } = useTranslation();
 
   if (!isVisible) return null;
 
@@ -21,7 +23,7 @@ export function SubscriptionBanner({ onUpgrade }: SubscriptionBannerProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 text-premium-foreground hover:bg-premium/20"
+          className="absolute top-2 inline-end-2 text-premium-foreground hover:bg-premium/20"
           onClick={() => setIsVisible(false)}
         >
           <X className="w-4 h-4" />
@@ -33,10 +35,10 @@ export function SubscriptionBanner({ onUpgrade }: SubscriptionBannerProps) {
           </div>
           <div>
             <h3 className="font-semibold text-premium-foreground">
-              Desbloquea Compañeros Premium
+              {t('premium.unlockTitle')}
             </h3>
             <p className="text-sm text-premium-foreground/80">
-              Accede a modelos exclusivos y funciones especiales
+              {t('premium.unlockSubtitle')}
             </p>
           </div>
         </div>
@@ -44,29 +46,29 @@ export function SubscriptionBanner({ onUpgrade }: SubscriptionBannerProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div className="flex items-center gap-2">
             <Crown className="w-4 h-4 text-premium" />
-            <span className="text-sm text-premium-foreground">Modelos Premium</span>
+            <span className="text-sm text-premium-foreground">{t('premium.premiumModels')}</span>
           </div>
           <div className="flex items-center gap-2">
             <MessageCircle className="w-4 h-4 text-premium" />
-            <span className="text-sm text-premium-foreground">Chat Ilimitado</span>
+            <span className="text-sm text-premium-foreground">{t('premium.unlimitedChat')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Image className="w-4 h-4 text-premium" />
-            <span className="text-sm text-premium-foreground">Imágenes AI</span>
+            <span className="text-sm text-premium-foreground">{t('premium.aiImages')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-premium" />
-            <span className="text-sm text-premium-foreground">Funciones Especiales</span>
+            <span className="text-sm text-premium-foreground">{t('premium.specialFeatures')}</span>
           </div>
         </div>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge variant="premium" className="bg-premium text-premium-foreground">
-              Oferta Especial
+              {t('premium.specialOffer')}
             </Badge>
-            <span className="text-lg font-bold text-premium-foreground">€9.99/mes</span>
-            <span className="text-sm text-premium-foreground/60 line-through">€19.99</span>
+            <span className="text-lg font-bold text-premium-foreground">{t('premium.price')} {t('premium.pricePerMonth')}</span>
+            <span className="text-sm text-premium-foreground/60 line-through">{t('premium.originalPrice')}</span>
           </div>
           
           <Button 
@@ -74,7 +76,7 @@ export function SubscriptionBanner({ onUpgrade }: SubscriptionBannerProps) {
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
           >
             <Crown className="w-4 h-4 mr-2" />
-            Actualizar Ahora
+            {t('premium.updateNow')}
           </Button>
         </div>
       </CardContent>

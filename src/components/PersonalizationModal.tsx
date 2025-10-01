@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, MessageCircle, Sparkles, Coffee, ArrowLeft, ArrowRight, Flame, Zap } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PersonalizationModalProps {
   isOpen: boolean;
@@ -20,31 +21,31 @@ export interface ChatPreferences {
   style: string;
 }
 
-const moods = [
-  { id: "romantic", label: "Romántico", icon: Heart, description: "Dulce y cariñoso" },
-  { id: "friendly", label: "Amistoso", icon: Coffee, description: "Relajado y casual" },
-  { id: "flirty", label: "Coqueto", icon: Sparkles, description: "Juguetón y divertido" },
-  { id: "supportive", label: "Comprensivo", icon: MessageCircle, description: "Empático y gentil" },
-  { id: "aggressive", label: "Agresivo", icon: Zap, description: "Dominante y directo", isPremium: true },
-  { id: "sensual", label: "Sensual", icon: Flame, description: "Seductor y provocativo", isPremium: true },
+const getMoods = (t: any) => [
+  { id: "romantic", label: t('personalization.moods.romantic'), icon: Heart, description: t('personalization.moodDescriptions.romantic') },
+  { id: "friendly", label: t('personalization.moods.friendly'), icon: Coffee, description: t('personalization.moodDescriptions.friendly') },
+  { id: "flirty", label: t('personalization.moods.flirty'), icon: Sparkles, description: t('personalization.moodDescriptions.flirty') },
+  { id: "supportive", label: t('personalization.moods.supportive'), icon: MessageCircle, description: t('personalization.moodDescriptions.supportive') },
+  { id: "aggressive", label: t('personalization.moods.aggressive'), icon: Zap, description: t('personalization.moodDescriptions.aggressive'), isPremium: true },
+  { id: "sensual", label: t('personalization.moods.sensual'), icon: Flame, description: t('personalization.moodDescriptions.sensual'), isPremium: true },
 ];
 
-const topics = [
-  "Amor y romance",
-  "Compañía diaria", 
-  "Charla casual",
-  "Consejos de vida",
-  "Fantasías suaves",
-  "Humor y diversión",
-  "Apoyo emocional",
-  "Intereses personales",
+const getTopics = (t: any) => [
+  t('personalization.topics.love'),
+  t('personalization.topics.daily'), 
+  t('personalization.topics.casual'),
+  t('personalization.topics.advice'),
+  t('personalization.topics.fantasy'),
+  t('personalization.topics.humor'),
+  t('personalization.topics.support'),
+  t('personalization.topics.interests'),
 ];
 
-const styles = [
-  { id: "caring", label: "Cuidadoso", description: "Atento a tus necesidades" },
-  { id: "playful", label: "Juguetón", description: "Divertido y espontáneo" },
-  { id: "sophisticated", label: "Sofisticado", description: "Elegante e intelectual" },
-  { id: "passionate", label: "Apasionado", description: "Intenso y emocional" },
+const getStyles = (t: any) => [
+  { id: "caring", label: t('personalization.styles.caring'), description: t('personalization.styleDescriptions.caring') },
+  { id: "playful", label: t('personalization.styles.playful'), description: t('personalization.styleDescriptions.playful') },
+  { id: "sophisticated", label: t('personalization.styles.sophisticated'), description: t('personalization.styleDescriptions.sophisticated') },
+  { id: "passionate", label: t('personalization.styles.passionate'), description: t('personalization.styleDescriptions.passionate') },
 ];
 
 export function PersonalizationModal({ 
@@ -55,6 +56,7 @@ export function PersonalizationModal({
   modelImage,
   userIsPremium = false
 }: PersonalizationModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [selectedMood, setSelectedMood] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -71,7 +73,24 @@ export function PersonalizationModal({
     if (step < 3) {
       setStep(step + 1);
     } else {
-      handleStartChat();
+      console.log('🎯 BOTÓN COMENZAR CHAT CLICKEADO');
+      console.log('🎯 selectedStyle:', selectedStyle);
+      console.log('🎯 selectedMood:', selectedMood);
+      console.log('🎯 selectedTopics:', selectedTopics);
+      
+      // En el paso 3, si hay un estilo seleccionado, abrir chat automáticamente
+      if (selectedStyle) {
+        console.log('🎯 ABRIENDO CHAT CON ESTILO SELECCIONADO');
+        onStartChat({
+          mood: selectedMood,
+          topics: selectedTopics,
+          style: selectedStyle,
+        });
+        onClose();
+      } else {
+        console.log('🎯 NO HAY ESTILO SELECCIONADO, LLAMANDO handleStartChat');
+        handleStartChat();
+      }
     }
   };
 
@@ -102,9 +121,9 @@ export function PersonalizationModal({
                      (step === 3 && selectedStyle);
 
   const stepQuestions = [
-    "¿Cómo te gusta que te traten?",
-    "¿De qué te gusta hablar?",
-    "¿Qué estilo prefieres?"
+    t('personalization.questions.mood'),
+    t('personalization.questions.topics'),
+    t('personalization.questions.style')
   ];
 
   return (
@@ -112,10 +131,10 @@ export function PersonalizationModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">
-            Conoce mejor a {modelName}
+            {t('personalization.title', { name: modelName })}
           </DialogTitle>
           <p className="text-muted-foreground text-center text-sm">
-            3 preguntas rápidas para personalizar tu experiencia
+            {t('personalization.subtitle')}
           </p>
         </DialogHeader>
         
@@ -143,7 +162,7 @@ export function PersonalizationModal({
               {stepQuestions[step - 1]}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Paso {step} de 3
+              {t('personalization.step', { current: step })}
             </p>
           </div>
 
@@ -151,7 +170,7 @@ export function PersonalizationModal({
           {step === 1 && (
             <div className="animate-fade-in">
               <div className="grid grid-cols-2 gap-3">
-                {moods.map((mood) => {
+                {getMoods(t).map((mood) => {
                   const Icon = mood.icon;
                   const isLocked = mood.isPremium && !userIsPremium;
                   return (
@@ -173,7 +192,7 @@ export function PersonalizationModal({
                               ? 'bg-muted-foreground text-muted' 
                               : 'bg-gradient-to-r from-yellow-400 to-orange-500'
                           }`}>
-                            Premium
+                            {t('personalization.premium')}
                           </Badge>
                         )}
                         <Icon className={`w-6 h-6 mx-auto mb-2 ${
@@ -191,7 +210,7 @@ export function PersonalizationModal({
                         <p className="text-xs text-muted-foreground mt-1">{mood.description}</p>
                         {isLocked && (
                           <p className="text-xs text-primary mt-2 font-medium">
-                            Actualiza a Premium
+                            {t('personalization.upgradeToPremium')}
                           </p>
                         )}
                       </CardContent>
@@ -206,10 +225,10 @@ export function PersonalizationModal({
           {step === 2 && (
             <div className="animate-fade-in">
               <p className="text-sm text-muted-foreground text-center mb-4">
-                Selecciona los temas que más te interesen (puedes elegir varios)
+                {t('personalization.topicsHint')}
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {topics.map((topic) => (
+                {getTopics(t).map((topic) => (
                   <Badge
                     key={topic}
                     variant={selectedTopics.includes(topic) ? "default" : "secondary"}
@@ -226,7 +245,10 @@ export function PersonalizationModal({
               </div>
               {selectedTopics.length > 0 && (
                 <p className="text-center text-sm text-primary mt-3">
-                  {selectedTopics.length} tema{selectedTopics.length !== 1 ? 's' : ''} seleccionado{selectedTopics.length !== 1 ? 's' : ''}
+                  {t('personalization.topicsSelected', { 
+                    count: selectedTopics.length, 
+                    plural: selectedTopics.length !== 1 ? 's' : '' 
+                  })}
                 </p>
               )}
             </div>
@@ -236,7 +258,7 @@ export function PersonalizationModal({
           {step === 3 && (
             <div className="animate-fade-in">
               <div className="space-y-3">
-                {styles.map((style) => (
+                {getStyles(t).map((style) => (
                   <Card 
                     key={style.id}
                     className={`cursor-pointer transition-all border-2 hover:scale-102 ${
@@ -246,22 +268,6 @@ export function PersonalizationModal({
                     }`}
                     onClick={() => {
                       setSelectedStyle(style.id);
-                      // Auto-start chat when style is selected
-                      setTimeout(() => {
-                        if (selectedMood && selectedTopics.length > 0) {
-                          onStartChat({
-                            mood: selectedMood,
-                            topics: selectedTopics,
-                            style: style.id,
-                          });
-                          onClose();
-                          // Reset state
-                          setStep(1);
-                          setSelectedMood("");
-                          setSelectedTopics([]);
-                          setSelectedStyle("");
-                        }
-                      }, 300); // Small delay for visual feedback
                     }}
                   >
                     <CardContent className="p-4">
@@ -292,7 +298,7 @@ export function PersonalizationModal({
                 className="flex-1"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Anterior
+                {t('personalization.navigation.previous')}
               </Button>
             )}
             
@@ -304,18 +310,40 @@ export function PersonalizationModal({
                   canContinue ? 'shadow-glow-primary' : ''
                 }`}
               >
-                Siguiente
+                {t('personalization.navigation.next')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             )}
             
             {step === 3 && (
-              <div className="w-full text-center">
-                <p className="text-sm text-muted-foreground">
-                  Selecciona un estilo para comenzar automáticamente
-                </p>
-              </div>
+              <Button 
+                onClick={() => {
+                  console.log('🎯 COMENZAR CHAT CLICKEADO');
+                  console.log('🎯 DATOS:', { selectedMood, selectedTopics, selectedStyle });
+                  
+                  // Crear preferencias
+                  const preferences = {
+                    mood: selectedMood,
+                    topics: selectedTopics,
+                    style: selectedStyle,
+                  };
+                  
+                  console.log('🎯 LLAMANDO onStartChat con:', preferences);
+                  
+                  // Usar setTimeout para evitar conflictos de estado
+                  setTimeout(() => {
+                    onStartChat(preferences);
+                    onClose();
+                  }, 100);
+                }}
+                disabled={!selectedStyle}
+                className="w-full bg-primary hover:bg-primary/90 transition-all shadow-glow-primary"
+              >
+                Comenzar Chat
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             )}
+            
           </div>
         </div>
       </DialogContent>

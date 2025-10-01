@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { ensureUserRow } from '@/lib/auth';
 
 export interface User {
   id: string;
   email: string;
   is_premium: boolean;
   purchased_models: string[];
+  daily_message_count?: number;
 }
 
 export interface Model {
@@ -32,48 +34,51 @@ export function useUserAccess() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getUser() {
+    let isMounted = true;
+
+    async function initAuth() {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        
-        if (authUser) {
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', authUser.email)
-            .single();
-
-          if (error && error.code === 'PGRST116') {
-            // Usuario no existe, crearlo
-            const { data: newUser, error: createError } = await supabase
-              .from('users')
-              .insert({
-                email: authUser.email,
-                is_premium: false,
-                purchased_models: []
-              })
-              .select()
-              .single();
-
-            if (createError) {
-              console.error('Error creating user:', createError);
-            } else {
-              setUser(newUser);
-            }
-          } else if (error) {
-            console.error('Error fetching user:', error);
-          } else {
-            setUser(userData);
-          }
+        // Sesión actual (token + usuario)
+        const { data: sessionData } = await supabase.auth.getSession();
+        const authUser = sessionData?.session?.user;
+        if (authUser?.email) {
+          // Asegura fila en tabla `users`
+          await ensureUserRow(supabase as any, authUser.email);
+          await refreshUser(authUser.email);
+        } else {
+          setUser(null);
         }
       } catch (error) {
-        console.error('Error in useUserAccess:', error);
+        console.error('Error in useUserAccess initAuth:', error);
+        setUser(null);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
-    getUser();
+    initAuth();
+
+    // Suscripción a cambios de estado de autenticación
+    const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        try { localStorage.removeItem('user'); } catch {}
+      }
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        const email = session?.user?.email;
+        if (email) {
+          await ensureUserRow(supabase as any, email);
+          await refreshUser(email);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      try {
+        subscription?.subscription?.unsubscribe?.();
+      } catch {}
+    };
   }, []);
 
   const checkModelAccess = (model: Model): UserAccess => {
@@ -104,23 +109,51 @@ export function useUserAccess() {
     }
   };
 
-  const refreshUser = async () => {
+  const refreshUser = async (userEmail?: string) => {
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (authUser) {
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', authUser.email)
-          .single();
-
-        if (!error && userData) {
-          setUser(userData);
+      // Si no viene email, obtenerlo desde la sesión autenticada
+      if (!userEmail) {
+        const { data } = await supabase.auth.getSession();
+        const authUser = data?.session?.user;
+        if (!authUser?.email) {
+          setUser(null);
+          return;
         }
+        userEmail = authUser.email;
+      }
+
+      // Buscar usuario por email en nuestra tabla de negocio
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', userEmail)
+        .single();
+
+      if (userData && !error) {
+        // Cargar modelos comprados
+        const { data: purchases, error: purchasesError } = await supabase
+          .from('user_purchased_models')
+          .select('model_id')
+          .eq('user_id', userData.id);
+
+        const purchasedModels: string[] = purchasesError
+          ? []
+          : (purchases || []).map((p: any) => String(p.model_id));
+
+        const normalizedUser: User = {
+          id: userData.id,
+          email: userData.email,
+          is_premium: Boolean(userData.is_premium),
+          purchased_models: purchasedModels,
+        };
+
+        setUser(normalizedUser);
+      } else {
+        setUser(null);
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
+      console.error('❌ Error refreshing user:', error);
+      setUser(null);
     }
   };
 

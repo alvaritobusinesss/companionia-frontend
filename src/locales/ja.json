@@ -1,0 +1,194 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "and": " と "
+  },
+  "header": {
+    "title": "AI Companions",
+    "subtitle": "あなたの理想のデジタル相棒",
+    "freeUser": "無料ユーザー",
+    "premiumUser": "プレミアムユーザー",
+    "language": "言語"
+  },
+  "hero": {
+    "title": "コンパニオン・ギャラリー",
+    "subtitle": "コレクション可能な限定カードの中から理想のAIコンパニオンを見つけよう",
+    "categories": "カテゴリ /",
+    "models": "モデル"
+  },
+  "categories": {
+    "romantic": { "title": "ロマンチック", "description": "甘く、親しみやすく、クラシックな雰囲気" },
+    "hot": { "title": "ホット", "description": "官能的で大胆、プレミアム限定" },
+    "gamer": { "title": "ゲーマー", "description": "楽しく、ヘッドセットのカジュアルスタイル" },
+    "elegant": { "title": "エレガント", "description": "洗練された、イブニングドレス" },
+    "intellectual": { "title": "インテリ", "description": "眼鏡、作家/学生風" },
+    "gothic": { "title": "ゴシック", "description": "神秘的でエレガント、ゴシックスタイル" }
+  },
+  "search": {
+    "placeholder": "名前・説明・タグで検索...",
+    "noResults": "モデルが見つかりません",
+    "noResultsDescription": "別のキーワードでお試しください",
+    "all": "すべて"
+  },
+  "model": {
+    "talkWith": "話す",
+    "buyFor": "購入",
+    "buy": "購入",
+    "login": "ログイン",
+    "premium": "プレミアム",
+    "free": "無料",
+    "unlocked": "解放済み",
+    "locked": "ロック",
+    "oneTime": "買い切り",
+    "premiumRequired": "プレミアムが必要",
+    "purchaseRequired": "購入が必要"
+  },
+  "models": {
+    "1": { "description": "上品で洗練されたバーチャル・コンパニオン。深い会話や親密な時間に最適です。", "tags": ["エレガント", "洗練", "会話"] },
+    "2": { "description": "甘く思いやりのある性格。どんな会話でもあなたを特別な気分にしてくれます。", "tags": ["優しい", "思いやり", "特別"] },
+    "3": { "description": "知的で神秘的な女性。知恵と魅力であなたを惹きつけます。", "tags": ["知的", "神秘", "知恵"] },
+    "4": { "description": "冒険的でエネルギッシュな性格。新しい地平を一緒に切り開きましょう。", "tags": ["冒険", "エネルギー", "探検"] },
+    "5": { "description": "情熱的なゲーマーの相棒。熱いゲームセッションに最適。", "tags": ["ゲーマー", "ゲーム", "エピック"] },
+    "6": { "description": "戦略的で競争心のあるゲーマー。白熱した試合や大会に最適。", "tags": ["ゲーマー", "戦略", "競争"] },
+    "7": { "description": "個性的で専門的なゲーマー。インディーゲームや独特な冒険が得意。", "tags": ["ゲーマー", "インディー", "冒険"] },
+    "8": { "description": "支配的でパワフルなゲーマー。チームを率い、仮想世界を制覇します。", "tags": ["ゲーマー", "支配", "リーダー"] },
+    "9": { "description": "神秘的でエレガントなゴシック。夜の会話や親密な時間に最適。", "tags": ["ゴシック", "神秘", "エレガント"] },
+    "10": { "description": "情熱的で強烈なゴシック。想像力の深淵を探るのに最適。", "tags": ["ゴシック", "情熱", "強烈"] },
+    "11": { "description": "賢明で謎めいたゴシック。深い会話や存在論的な思索に。", "tags": ["ゴシック", "賢明", "謎"] },
+    "12": { "description": "特別で唯一無二のゴシック。コレクションで最も独占的、忘れられない体験を。", "tags": ["ゴシック", "特別", "唯一"] },
+    "13": { "description": "エレガントで洗練されたコンパニオン。上質な会話やラグジュアリーな時間に。", "tags": ["エレガント", "洗練", "上質"] },
+    "14": { "description": "エレガントで気品あるコンパニオン。ガラや特別な場に最適。", "tags": ["エレガント", "気品", "ガラ"] },
+    "15": { "description": "エレガントで芸術的なコンパニオン。文化的なイベントや洗練された体験に。", "tags": ["エレガント", "芸術", "文化"] },
+    "16": { "description": "エチケットとプロトコルの達人。ハイソサエティの場にふさわしい唯一無二の存在。", "tags": ["エレガント", "特別", "プロトコル"] },
+    "17": { "description": "官能的で大胆。親密な会話や情熱的な瞬間に最適。", "tags": ["官能", "大胆", "親密"] },
+    "18": { "description": "燃えるように情熱的。官能と欲望の限界を探求。", "tags": ["炎", "情熱", "官能"] },
+    "19": { "description": "魅惑的で神秘的。強烈で忘れられない体験へと誘います。", "tags": ["魅惑", "神秘", "強烈"] },
+    "20": { "description": "このカテゴリで最も独占的で特別な存在。忘れられないプレミアム体験を。", "tags": ["特別", "唯一", "プレミアム"] },
+    "21": { "description": "聡明で好奇心旺盛な知的タイプ。深い会話や刺激的な議論に最適。", "tags": ["知的", "聡明", "好奇心"] },
+    "22": { "description": "洗練され分析的な知的タイプ。複雑なアイデアや理論の探求に。", "tags": ["知的", "洗練", "分析"] },
+    "23": { "description": "創造的で革新的な知的タイプ。芸術的プロジェクトやクリエイティブな解決に。", "tags": ["知的", "創造", "革新"] },
+    "24": { "description": "多分野に精通した例外的な知的タイプ。学術的なメンターとして最適。", "tags": ["知的", "例外", "メンター"] }
+  },
+  "premium": {
+    "title": "プレミアムにアップグレード",
+    "advantages": "プレミアムの特典",
+    "unlimitedMessages": "無制限メッセージ",
+    "accessAllModels": "全モデルにアクセス",
+    "intimateConversations": "より親密な会話",
+    "noAds": "広告なし",
+    "price": "€19.99",
+    "pricePerMonth": "/月",
+    "originalPrice": "通常 €49.99",
+    "save": "今なら€30.00お得",
+    "buy": "購入",
+    "unlockTitle": "プレミアム・コンパニオンを解放",
+    "unlockSubtitle": "限定モデルと特別機能にアクセス",
+    "premiumModels": "プレミアムモデル",
+    "unlimitedChat": "無制限チャット",
+    "aiImages": "AIイメージ",
+    "specialFeatures": "特別機能",
+    "specialOffer": "特別オファー",
+    "updateNow": "今すぐアップグレード"
+  },
+  "chat": {
+    "messagesLabel": "メッセージ:",
+    "remaining": "残り{{count}}",
+    "initialMessage": "こんにちは！私は{{name}}です。お会いできて嬉しいです。あなたが{{mood}}な扱いを好み、{{topics}}などのトピックに興味があることを知りました。今日はどうでしたか？",
+    "typeMessage": "メッセージを入力...",
+    "send": "送信",
+    "messageLimit": "メッセージ上限に達しました",
+    "upgradeToPremium": "プレミアムにアップグレード",
+    "upgradeToPremiumCta": "プレミアム - €19.99/月",
+    "donate": "寄付",
+    "donationAmounts": "寄付金額",
+    "typing": "入力中...",
+    "online": "オンライン",
+    "initialMessage": "こんにちは！私は{{name}}。{{mood}}な雰囲気が好きで、{{topics}}のような話題に興味があるみたいだね。今日はどうだった？",
+    "limitReachedTitle": "メッセージ上限に達しました！",
+    "limitReachedDescription": "全モデルと無制限にチャットするにはプレミアムへ",
+    "limitReachedModal": "1日に使える無料メッセージ5件を使い切りました。プレミアムで無制限にチャットしましょう。"
+  },
+  "auth": {
+    "welcome": "AI Companionsへようこそ",
+    "login": "ログイン",
+    "register": "登録",
+    "email": "メール",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "emailPlaceholder": "you@email.com",
+    "passwordPlaceholder": "••••••••",
+    "loggingIn": "ログイン中...",
+    "registering": "登録中...",
+    "createAccount": "アカウント作成",
+    "invalidCredentials": "認証情報が正しくありません",
+    "loginSuccess": "ログインに成功しました！",
+    "unexpectedError": "予期せぬエラーが発生しました。もう一度お試しください。",
+    "passwordsDontMatch": "パスワードが一致しません",
+    "passwordTooShort": "パスワードは6文字以上で入力してください",
+    "registerSuccess": "登録に成功しました。ログインできます。",
+    "termsAcceptance": "登録により、利用規約とプライバシーポリシーに同意したものとみなされます。"
+  },
+  "personalization": {
+    "title": "{{name}}をもっと知ろう",
+    "subtitle": "体験をパーソナライズするための3つの質問",
+    "step": "3つ中{{current}}",
+    "questions": {
+      "mood": "どのように接してほしい？",
+      "topics": "どんな話題が好き？",
+      "style": "好みのスタイルは？"
+    },
+    "moods": {
+      "romantic": "ロマンチック",
+      "friendly": "フレンドリー",
+      "flirty": "チャーミング",
+      "supportive": "サポート",
+      "aggressive": "アグレッシブ",
+      "sensual": "センシュアル"
+    },
+    "moodDescriptions": {
+      "romantic": "甘くて優しい",
+      "friendly": "リラックスしてカジュアル",
+      "flirty": "遊び心があって楽しい",
+      "supportive": "共感的で穏やか",
+      "aggressive": "堂々として率直",
+      "sensual": "魅惑的で官能的"
+    },
+    "topics": {
+      "love": "恋愛",
+      "daily": "日常の寄り添い",
+      "casual": "雑談",
+      "advice": "人生のアドバイス",
+      "fantasy": "ソフトな空想",
+      "humor": "ユーモア",
+      "support": "感情サポート",
+      "interests": "興味・関心"
+    },
+    "styles": {
+      "caring": "思いやり",
+      "playful": "遊び心",
+      "sophisticated": "上品",
+      "passionate": "情熱"
+    },
+    "styleDescriptions": {
+      "caring": "あなたのニーズに寄り添う",
+      "playful": "楽しくて自発的",
+      "sophisticated": "エレガントで知的",
+      "passionate": "強く情熱的"
+    },
+    "topicsHint": "興味のあるトピックを選んでください（複数可）",
+    "topicsSelected": "{{count}}件選択",
+    "premium": "プレミアム",
+    "upgradeToPremium": "プレミアムにアップグレード",
+    "selectStyleHint": "スタイルを選ぶと自動開始します",
+    "navigation": { "previous": "戻る", "next": "次へ" }
+  }
+}
+
+

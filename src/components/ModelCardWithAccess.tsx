@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Crown, Lock, Star, CreditCard, User } from "lucide-react";
 import { Model, UserAccess, User as UserType } from "@/hooks/useUserAccess";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ModelCardWithAccessProps {
   model: Model;
@@ -19,6 +20,7 @@ export function ModelCardWithAccess({
   onSelect, 
   onPurchase 
 }: ModelCardWithAccessProps) {
+  const { t, ta } = useTranslation();
   
   console.log(`🔍 DEBUG ModelCard: ${model.name} - type: ${model.type}, hasAccess: ${userAccess.hasAccess}`);
   
@@ -39,16 +41,16 @@ export function ModelCardWithAccess({
 
   const getBadgeText = () => {
     if (userAccess.hasAccess) {
-      return model.type === 'free' ? 'Gratis' : 'Desbloqueado';
+      return model.type === 'free' ? t('model.free') : t('model.unlocked');
     }
     
     switch (model.type) {
       case 'premium':
-        return 'Premium';
+        return t('model.premium');
       case 'one_time':
-        return `€${model.price}`;
+        return model.price ? `€${model.price}` : t('model.oneTime');
       default:
-        return 'Bloqueado';
+        return t('model.free');
     }
   };
 
@@ -68,15 +70,38 @@ export function ModelCardWithAccess({
   };
 
   return (
-    <Card 
-      className={`relative group cursor-pointer transition-all duration-300 hover:scale-105 ${
-        userAccess.hasAccess 
-          ? 'hover:shadow-lg' 
-          : 'opacity-75 hover:opacity-90'
+    <div className="relative group">
+      {/* Glow continuo siempre activo para premium y one_time */}
+      {(model.type === 'premium' || model.type === 'one_time') && (
+        <div
+          className={`pointer-events-none absolute -inset-6 rounded-3xl blur-3xl z-0 transition-transform duration-300 group-hover:scale-105 ${
+            model.type === 'premium'
+              ? 'bg-fuchsia-500/35 opacity-70' /* premium: sin animación */
+              : 'bg-amber-300/50 opacity-80 animate-none group-hover:animate-[pulse_2.6s_ease-in-out_infinite]'
+          }`}
+          aria-hidden="true"
+        />
+      )}
+      {(model.type === 'premium' || model.type === 'one_time') && (
+        <div
+          className={`pointer-events-none absolute -inset-2 rounded-2xl z-0 transition-transform duration-300 group-hover:scale-105 ${
+            model.type === 'premium'
+              ? 'ring-4 ring-fuchsia-400/50'
+              : 'ring-4 ring-yellow-300/60'
+          }`}
+        />
+      )}
+      <Card 
+        className={`relative z-10 cursor-pointer transition-transform duration-300 group-hover:scale-105 hover:shadow-lg ${
+        !userAccess.hasAccess && model.type === 'premium' 
+          ? 'shadow-[0_0_50px_20px_rgba(147,51,234,0.4)]' 
+          : !userAccess.hasAccess && model.type === 'one_time'
+          ? 'shadow-[0_0_50px_20px_rgba(251,191,36,0.4)]'
+          : ''
       }`}
       onClick={handleClick}
     >
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex flex-col h-full">
         {/* Imagen del modelo */}
         <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
           <img 
@@ -85,24 +110,40 @@ export function ModelCardWithAccess({
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
           
-          {/* Overlay de bloqueo */}
-          {!userAccess.hasAccess && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="text-center text-white">
+          {/* Overlay de bloqueo - solo para modelos premium y one_time */}
+          {!userAccess.hasAccess && model.type !== 'free' && (
+            <div className={`absolute inset-0 flex items-center justify-center ${model.type === 'premium' ? 'bg-gradient-to-br from-purple-900 via-fuchsia-900 to-purple-950 backdrop-blur-0 shadow-[0_0_90px_30px_rgba(147,51,234,0.55)_inset]' : model.type === 'one_time' ? 'bg-gradient-to-br from-yellow-900 via-amber-900 to-yellow-950 backdrop-blur-0 shadow-[0_0_90px_30px_rgba(251,191,36,0.55)_inset]' : 'bg-black/80'} rounded-t-lg overflow-hidden`}>
+              {model.type === 'premium' && (
+                <>
+                  {/* Halo exterior brillante y animado */}
+                  <div className="pointer-events-none absolute -inset-6 rounded-2xl bg-purple-600/30 blur-3xl" />
+                  {/* Borde glow animado */}
+                  <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-2 ring-fuchsia-400/30" />
+                </>
+              )}
+              {model.type === 'one_time' && (
+                <>
+                  {/* Halo exterior dorado y animado */}
+                  <div className="pointer-events-none absolute -inset-6 rounded-2xl bg-yellow-600/35 blur-3xl animate-none group-hover:animate-[pulse_2.2s_ease-in-out_infinite]" />
+                  {/* Borde glow dorado animado */}
+                  <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-2 ring-yellow-400/35 animate-none group-hover:animate-[pulse_2.2s_ease-in-out_infinite]" />
+                </>
+              )}
+              <div className="relative text-center text-white z-10">
                 {model.type === 'premium' ? (
-                  <Crown className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
+                  <Crown className="w-8 h-8 mx-auto mb-2 text-yellow-300" />
                 ) : (
                   <Lock className="w-8 h-8 mx-auto mb-2 text-red-400" />
                 )}
                 <p className="text-sm font-medium">
-                  {model.type === 'premium' ? 'Premium' : `€${model.price}`}
+                  {model.type === 'premium' ? t('model.premium') : model.price ? `€${model.price}` : t('model.locked')}
                 </p>
               </div>
             </div>
           )}
 
           {/* Badge de tipo */}
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 inline-start-2">
             <Badge 
               variant={getBadgeVariant()}
               className="flex items-center gap-1 text-xs"
@@ -113,67 +154,82 @@ export function ModelCardWithAccess({
           </div>
 
           {/* Rating */}
-          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
+          <div className="absolute bottom-2 inline-end-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
             <Star className="w-3 h-3 text-primary fill-current" />
             <span className="text-xs font-medium">{model.rating}</span>
           </div>
         </div>
 
         {/* Información del modelo */}
-        <div className="p-4">
+        <div className="p-4 flex flex-col h-full">
           <h3 className="font-bold text-lg text-foreground uppercase tracking-wide mb-2">
             {model.name}
           </h3>
           
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-            {model.description}
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-3 min-h-[48px]">
+            {(() => {
+              const key = `models.${model.id}.description`;
+              const localized = t(key);
+              return localized === key ? model.description : localized;
+            })()}
           </p>
           
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1 mb-3">
-            {model.tags.slice(0, 3).map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="secondary" 
-                className="text-xs px-2 py-1"
-              >
-                {tag}
-              </Badge>
-            ))}
+          {/* Tags traducidos */}
+          <div className="flex flex-wrap gap-1 mb-3 min-h-[28px]">
+            {(() => {
+              const localized = ta(`models.${model.id}.tags`);
+              const tags = (localized && localized.length > 0) ? localized : model.tags;
+              return (tags as string[]).slice(0, 3).map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="text-xs px-2 py-1"
+                >
+                  {tag}
+                </Badge>
+              ));
+            })()}
           </div>
 
           {/* Botón de acción */}
           <Button 
             className={`w-full ${
               userAccess.hasAccess 
-                ? 'bg-primary hover:bg-primary/90' 
+                ? 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-200 shadow'
                 : model.type === 'premium'
-                  ? 'bg-yellow-500 hover:bg-yellow-600'
-                  : 'bg-green-500 hover:bg-green-600'
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg'
+                  : model.type === 'one_time'
+                    ? 'relative bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white shadow-lg'
+                    : 'bg-yellow-500 hover:bg-yellow-600 text-white'
             }`}
             onClick={handleClick}
           >
             {userAccess.hasAccess ? (
-              model.type === 'free' ? `Habla con ${model.name}` : 'Desbloqueado'
-            ) : userAccess.reason === 'premium_required' && !user ? (
+              `${t('model.talkWith')} ${model.name}`
+            ) : model.type === 'free' && !user ? (
               <>
                 <User className="w-4 h-4 mr-2" />
-                Iniciar Sesión
+                {t('model.login')}
               </>
             ) : model.type === 'premium' ? (
               <>
                 <Crown className="w-4 h-4 mr-2" />
-                Hazte Premium
+                {t('chat.upgradeToPremium')}
               </>
             ) : (
               <>
                 <CreditCard className="w-4 h-4 mr-2" />
-                Comprar por €{model.price}
+                {model.price ? `${t('model.buyFor')} €${model.price}` : t('model.buy')}
               </>
             )}
           </Button>
+          {/* Glow para pago único */}
+          {!userAccess.hasAccess && model.type === 'one_time' && (
+            <div className="pointer-events-none absolute inset-x-4 -bottom-1 h-8 blur-xl rounded-full bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-300 opacity-70 animate-pulse"></div>
+          )}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

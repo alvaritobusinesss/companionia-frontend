@@ -1,140 +1,175 @@
-import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2024-12-18.acacia',
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export async function POST(request: NextRequest) {
+export async function handleStripeWebhook(event: Stripe.Event) {
   try {
-    const body = await request.text();
-    const signature = request.headers.get('stripe-signature')!;
-
-    let event: Stripe.Event;
-
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err);
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-    }
-
-    // Manejar diferentes tipos de eventos
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
         break;
       
-      case 'invoice.payment_succeeded':
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
         break;
       
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
       
+      case 'invoice.payment_succeeded':
+        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        break;
+      
+      case 'invoice.payment_failed':
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+      
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
-
-    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json({ error: 'Webhook error' }, { status: 500 });
+    console.error('Error handling webhook:', error);
+    throw error;
   }
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-  const { type, modelId, userEmail } = session.metadata || {};
-
+  const { type, userEmail, modelId } = session.metadata || {};
+  
   if (!userEmail) {
     console.error('No user email in session metadata');
     return;
   }
 
-  try {
-    if (type === 'premium') {
-      // Actualizar usuario a premium
-      const { error } = await supabase
-        .from('users')
-        .update({ is_premium: true })
-        .eq('email', userEmail);
+  // Buscar usuario por email
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', userEmail)
+    .single();
 
-      if (error) {
-        console.error('Error updating user to premium:', error);
-      } else {
-        console.log(`User ${userEmail} upgraded to premium`);
-      }
-    } else if (type === 'one_time' && modelId) {
-      // Añadir modelo comprado al usuario
-      const { data: user, error: fetchError } = await supabase
-        .from('users')
-        .select('purchased_models')
-        .eq('email', userEmail)
-        .single();
+  if (userError || !user) {
+    console.error('User not found:', userError);
+    return;
+  }
 
-      if (fetchError) {
-        console.error('Error fetching user:', fetchError);
-        return;
-      }
+  if (type === 'premium') {
+    // Actualizar usuario a premium
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        is_premium: true,
+        premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
 
-      const currentModels = user.purchased_models || [];
-      const updatedModels = [...currentModels, modelId];
-
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ purchased_models: updatedModels })
-        .eq('email', userEmail);
-
-      if (updateError) {
-        console.error('Error updating purchased models:', updateError);
-      } else {
-        console.log(`Model ${modelId} purchased by ${userEmail}`);
-      }
+    if (updateError) {
+      console.error('Error updating user to premium:', updateError);
+    } else {
+      console.log(`User ${userEmail} upgraded to premium`);
     }
-  } catch (error) {
-    console.error('Error handling checkout session completed:', error);
+  } else if (type === 'one_time' && modelId) {
+    // Agregar modelo comprado al usuario
+    const { error: insertError } = await supabase
+      .from('user_purchased_models')
+      .insert({
+        user_id: user.id,
+        model_id: modelId,
+        purchased_at: new Date().toISOString()
+      });
+
+    if (insertError) {
+      console.error('Error adding purchased model:', insertError);
+    } else {
+      console.log(`User ${userEmail} purchased model ${modelId}`);
+    }
   }
 }
 
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  // Manejar renovación de suscripción premium
-  if (invoice.subscription) {
-    const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-    const customerEmail = subscription.metadata?.userEmail;
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  // Buscar usuario por customer ID
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('stripe_customer_id', subscription.customer)
+    .single();
 
-    if (customerEmail) {
-      const { error } = await supabase
-        .from('users')
-        .update({ is_premium: true })
-        .eq('email', customerEmail);
+  if (userError || !user) {
+    console.error('User not found for subscription update:', userError);
+    return;
+  }
 
-      if (error) {
-        console.error('Error renewing premium subscription:', error);
-      } else {
-        console.log(`Premium subscription renewed for ${customerEmail}`);
-      }
-    }
+  const isActive = subscription.status === 'active';
+  const expiresAt = isActive 
+    ? new Date(subscription.current_period_end * 1000).toISOString()
+    : null;
+
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({
+      is_premium: isActive,
+      premium_expires_at: expiresAt,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error('Error updating subscription:', updateError);
+  } else {
+    console.log(`Subscription updated for user ${user.email}: ${subscription.status}`);
   }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  // Manejar cancelación de suscripción
-  const customerEmail = subscription.metadata?.userEmail;
+  // Buscar usuario por customer ID
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('stripe_customer_id', subscription.customer)
+    .single();
 
-  if (customerEmail) {
-    const { error } = await supabase
-      .from('users')
-      .update({ is_premium: false })
-      .eq('email', customerEmail);
+  if (userError || !user) {
+    console.error('User not found for subscription deletion:', userError);
+    return;
+  }
 
-    if (error) {
-      console.error('Error canceling premium subscription:', error);
-    } else {
-      console.log(`Premium subscription canceled for ${customerEmail}`);
-    }
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({
+      is_premium: false,
+      premium_expires_at: null,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error('Error removing premium status:', updateError);
+  } else {
+    console.log(`Premium status removed for user ${user.email}`);
+  }
+}
+
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  if (invoice.subscription) {
+    // La suscripción se renovó exitosamente
+    console.log(`Invoice payment succeeded for subscription ${invoice.subscription}`);
+  }
+}
+
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  if (invoice.subscription) {
+    // El pago de la suscripción falló
+    console.log(`Invoice payment failed for subscription ${invoice.subscription}`);
+    // Aquí podrías implementar lógica para notificar al usuario o suspender el servicio
   }
 }

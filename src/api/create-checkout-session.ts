@@ -1,33 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-export async function POST(request: NextRequest) {
+export async function createCheckoutSession(
+  type: 'premium' | 'one_time',
+  modelId?: string,
+  userEmail?: string
+) {
   try {
-    const { type, modelId, userEmail } = await request.json();
-
-    if (!userEmail) {
-      return NextResponse.json({ error: 'User email is required' }, { status: 400 });
-    }
-
-    let session;
+    let sessionConfig: Stripe.Checkout.SessionCreateParams;
 
     if (type === 'premium') {
-      // Crear sesión para suscripción premium
-      session = await stripe.checkout.sessions.create({
+      // Suscripción premium mensual
+      sessionConfig = {
         payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
               currency: 'eur',
               product_data: {
-                name: 'AI Companions Premium',
-                description: 'Acceso a todos los modelos premium y funciones especiales',
+                name: 'Suscripción Premium AI Companions',
+                description: 'Acceso completo a todos los modelos premium',
+                images: ['https://companion-ia-2.vercel.app/favicon.ico'],
               },
-              unit_amount: 999, // €9.99
+              unit_amount: 1999, // €19.99 en centavos
               recurring: {
                 interval: 'month',
               },
@@ -36,48 +32,65 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'subscription',
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel`,
-        customer_email: userEmail,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/cancel`,
         metadata: {
           type: 'premium',
-          userEmail,
         },
-      });
-    } else if (type === 'one_time' && modelId) {
-      // Crear sesión para compra única
-      session = await stripe.checkout.sessions.create({
+      };
+    } else {
+      // Compra única de modelo
+      if (!modelId) {
+        throw new Error('Model ID is required for one-time purchases');
+      }
+
+      // Obtener información del modelo desde la base de datos
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { data: model, error } = await supabase
+        .from('models')
+        .select('*')
+        .eq('id', modelId)
+        .single();
+
+      if (error || !model) {
+        throw new Error('Model not found');
+      }
+
+      sessionConfig = {
         payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
               currency: 'eur',
               product_data: {
-                name: `Modelo ${modelId}`,
-                description: 'Compra única de modelo AI Companion',
+                name: `${model.name} - AI Companion`,
+                description: model.description,
+                images: [model.image_url],
               },
-              unit_amount: 499, // €4.99 (precio por defecto, debería venir del modelo)
+              unit_amount: Math.round((model.price || 0) * 100), // Convertir a centavos
             },
             quantity: 1,
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel`,
-        customer_email: userEmail,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/cancel`,
         metadata: {
           type: 'one_time',
-          modelId,
-          userEmail,
+          modelId: modelId,
         },
-      });
-    } else {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+      };
     }
 
-    return NextResponse.json({ sessionId: session.id });
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+    return { sessionId: session.id };
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    throw error;
   }
 }

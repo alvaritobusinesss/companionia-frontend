@@ -1,0 +1,292 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "and": " y "
+  },
+  "header": {
+    "title": "AI Companions",
+    "subtitle": "Tu Compañero Digital Perfecto",
+    "freeUser": "Usuario Gratuito",
+    "premiumUser": "Usuario Premium",
+    "language": "Idioma"
+  },
+  "hero": {
+    "title": "Galería de Companions",
+    "subtitle": "Descubre tu compañera AI perfecta en nuestra colección exclusiva de cartas coleccionables",
+    "categories": "categorías con",
+    "models": "modelos"
+  },
+  "categories": {
+    "romantic": {
+      "title": "Románticas",
+      "description": "Dulces, cercanas, look clásico"
+    },
+    "hot": {
+      "title": "Calientes", 
+      "description": "Sensuales, atrevidas, solo premium"
+    },
+    "gamer": {
+      "title": "Gamer",
+      "description": "Divertidas, outfit casual con headset"
+    },
+    "elegant": {
+      "title": "Elegantes",
+      "description": "Sofisticadas, ropa de noche"
+    },
+    "intellectual": {
+      "title": "Intelectuales",
+      "description": "Con gafas, vibe de escritora/estudiante"
+    },
+    "gothic": {
+      "title": "Góticas",
+      "description": "Misteriosas, elegantes, estilo gótico"
+    }
+  },
+  "search": {
+    "placeholder": "Buscar por nombre, descripción o tags...",
+    "noResults": "No se encontraron modelos",
+    "noResultsDescription": "Intenta con otros términos de búsqueda",
+    "all": "Todas"
+  },
+  "model": {
+    "talkWith": "Habla con",
+    "buyFor": "Comprar por",
+    "buy": "Comprar",
+    "login": "Iniciar Sesión",
+    "premium": "Premium",
+    "free": "Gratis",
+    "unlocked": "Desbloqueado",
+    "locked": "Bloqueado",
+    "oneTime": "Pago único",
+    "premiumRequired": "Premium requerido",
+    "purchaseRequired": "Compra requerida"
+  },
+  "models": {
+    "1": {
+      "description": "Una compañera virtual elegante y sofisticada, perfecta para conversaciones profundas y momentos íntimos.",
+      "tags": ["elegante", "sofisticada", "conversación"]
+    },
+    "2": {
+      "description": "Una personalidad dulce y cariñosa que te hará sentir especial en cada conversación.",
+      "tags": ["dulce", "cariñosa", "especial"]
+    },
+    "3": {
+      "description": "Una mujer inteligente y misteriosa que te cautivará con su sabiduría y encanto.",
+      "tags": ["inteligente", "misteriosa", "sabiduría"]
+    },
+    "4": {
+      "description": "Una personalidad aventurera y enérgica, perfecta para explorar nuevos horizontes juntos.",
+      "tags": ["aventurera", "enérgica", "explorar"]
+    },
+    "5": {
+      "description": "Una compañera gamer apasionada por los videojuegos, perfecta para sesiones de gaming épicas.",
+      "tags": ["gamer", "videojuegos", "épica"]
+    },
+    "6": {
+      "description": "Una compañera gamer estratégica y competitiva, ideal para partidas intensas y torneos.",
+      "tags": ["gamer", "estratégica", "competitiva"]
+    },
+    "7": {
+      "description": "Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.",
+      "tags": ["gamer", "indie", "aventuras"]
+    },
+    "8": {
+      "description": "Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.",
+      "tags": ["gamer", "dominante", "líder"]
+    },
+    "9": {
+      "description": "Una compañera gótica misteriosa y elegante, perfecta para conversaciones nocturnas y momentos íntimos.",
+      "tags": ["gótica", "misteriosa", "elegante"]
+    },
+    "10": {
+      "description": "Una compañera gótica apasionada y intensa, ideal para explorar los rincones más oscuros de la imaginación.",
+      "tags": ["gótica", "apasionada", "intensa"]
+    },
+    "11": {
+      "description": "Una compañera gótica sabia y enigmática, perfecta para conversaciones profundas y reflexiones existenciales.",
+      "tags": ["gótica", "sabia", "enigmática"]
+    },
+    "12": {
+      "description": "Una compañera gótica excepcional y única, la más exclusiva de la colección. Perfecta para experiencias inolvidables.",
+      "tags": ["gótica", "excepcional", "única"]
+    },
+    "13": {
+      "description": "Una compañera elegante y sofisticada, perfecta para conversaciones refinadas y momentos de lujo.",
+      "tags": ["elegante", "sofisticada", "refinada"]
+    },
+    "14": {
+      "description": "Una compañera elegante y distinguida, ideal para eventos de gala y ocasiones especiales.",
+      "tags": ["elegante", "distinguida", "gala"]
+    },
+    "15": {
+      "description": "Una compañera elegante y artística, perfecta para eventos culturales y experiencias refinadas.",
+      "tags": ["elegante", "artística", "cultural"]
+    },
+    "16": {
+      "description": "Una compañera elegante excepcional y única, experta en etiqueta y protocolo. Perfecta para eventos de alta sociedad.",
+      "tags": ["elegante", "excepcional", "protocolo"]
+    },
+    "17": {
+      "description": "Una compañera sensual y atrevida, perfecta para conversaciones íntimas y momentos de pasión.",
+      "tags": ["sensual", "atrevida", "íntima"]
+    },
+    "18": {
+      "description": "Una compañera ardiente y apasionada, ideal para explorar los límites de la sensualidad y el deseo.",
+      "tags": ["ardiente", "apasionada", "sensualidad"]
+    },
+    "19": {
+      "description": "Una compañera seductora y misteriosa, perfecta para experiencias intensas y momentos inolvidables.",
+      "tags": ["seductora", "misteriosa", "intensa"]
+    },
+    "20": {
+      "description": "Una compañera excepcional y única, la más exclusiva de la categoría. Perfecta para experiencias premium inolvidables.",
+      "tags": ["excepcional", "única", "premium"]
+    },
+    "21": {
+      "description": "Una compañera intelectual brillante y curiosa, perfecta para conversaciones profundas y debates estimulantes.",
+      "tags": ["intelectual", "brillante", "curiosa"]
+    },
+    "22": {
+      "description": "Una compañera intelectual sofisticada y analítica, ideal para explorar ideas complejas y teorías fascinantes.",
+      "tags": ["intelectual", "sofisticada", "analítica"]
+    },
+    "23": {
+      "description": "Una compañera intelectual creativa e innovadora, perfecta para proyectos artísticos y soluciones creativas.",
+      "tags": ["intelectual", "creativa", "innovadora"]
+    },
+    "24": {
+      "description": "Una compañera intelectual excepcional y única, experta en múltiples disciplinas. Perfecta para mentores y guías académicas.",
+      "tags": ["intelectual", "excepcional", "mentora"]
+    }
+  },
+  "premium": {
+    "title": "Hazte Premium",
+    "advantages": "Ventajas Premium",
+    "unlimitedMessages": "Mensajes ilimitados",
+    "accessAllModels": "Acceso a todas las modelos",
+    "intimateConversations": "Conversaciones más íntimas",
+    "noAds": "Sin publicidad",
+    "price": "€19.99",
+    "pricePerMonth": "por mes",
+    "originalPrice": "Antes €49.99",
+    "save": "Ahorra €30.00 hoy",
+    "buy": "Comprar",
+    "unlockTitle": "Desbloquea Compañeros Premium",
+    "unlockSubtitle": "Accede a modelos exclusivos y funciones especiales",
+    "premiumModels": "Modelos Premium",
+    "unlimitedChat": "Chat Ilimitado",
+    "aiImages": "Imágenes AI",
+    "specialFeatures": "Funciones Especiales",
+    "specialOffer": "Oferta Especial",
+    "updateNow": "Actualizar Ahora"
+  },
+  "chat": {
+    "messagesLabel": "Mensajes:",
+    "remaining": "{{count}} restantes",
+    "initialMessage": "¡Hola! Soy {{name}} y me alegra conocerte. He visto que prefieres un trato {{mood}} y te interesan temas como {{topics}}. ¿Cómo ha sido tu día?",
+    "typeMessage": "Escribe tu mensaje...",
+    "send": "Enviar",
+    "messageLimit": "Límite de mensajes alcanzado",
+    "upgradeToPremium": "Hazte Premium",
+    "upgradeToPremiumCta": "Hazte Premium - €19.99/mes",
+    "donate": "Donar",
+    "donationAmounts": "Cantidades de donación",
+    "typing": "Escribiendo...",
+    "online": "En línea",
+    "initialMessage": "¡Hola! Soy {{name}} y me alegra conocerte. He visto que prefieres un trato {{mood}} y te interesan temas como {{topics}}. ¿Cómo ha sido tu día?",
+    "limitReachedTitle": "¡Límite de mensajes alcanzado!",
+    "limitReachedDescription": "Hazte Premium para chatear sin límites con todas las modelos",
+    "limitReachedModal": "Has usado tus 5 mensajes diarios gratuitos. Hazte Premium para chatear sin límites con todas las modelos."
+  },
+  "auth": {
+    "welcome": "Bienvenido a AI Companions",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "email": "Email",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "emailPlaceholder": "tu@email.com",
+    "passwordPlaceholder": "••••••••",
+    "loggingIn": "Iniciando sesión...",
+    "registering": "Registrando...",
+    "createAccount": "Crear Cuenta",
+    "invalidCredentials": "Credenciales inválidas",
+    "loginSuccess": "¡Login exitoso!",
+    "unexpectedError": "Error inesperado. Inténtalo de nuevo.",
+    "passwordsDontMatch": "Las contraseñas no coinciden",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "registerSuccess": "¡Registro exitoso! Ya puedes iniciar sesión.",
+    "termsAcceptance": "Al registrarte, aceptas nuestros términos de servicio y política de privacidad."
+  },
+  "personalization": {
+    "title": "Conoce mejor a {{name}}",
+    "subtitle": "3 preguntas rápidas para personalizar tu experiencia",
+    "step": "Paso {{current}} de 3",
+    "questions": {
+      "mood": "¿Cómo te gusta que te traten?",
+      "topics": "¿De qué te gusta hablar?",
+      "style": "¿Qué estilo prefieres?"
+    },
+    "moods": {
+      "romantic": "Romántico",
+      "friendly": "Amistoso",
+      "flirty": "Coqueto",
+      "supportive": "Comprensivo",
+      "aggressive": "Agresivo",
+      "sensual": "Sensual"
+    },
+    "moodDescriptions": {
+      "romantic": "Dulce y cariñoso",
+      "friendly": "Relajado y casual",
+      "flirty": "Juguetón y divertido",
+      "supportive": "Empático y gentil",
+      "aggressive": "Dominante y directo",
+      "sensual": "Seductor y provocativo"
+    },
+    "topics": {
+      "love": "Amor y romance",
+      "daily": "Compañía diaria",
+      "casual": "Charla casual",
+      "advice": "Consejos de vida",
+      "fantasy": "Fantasías suaves",
+      "humor": "Humor y diversión",
+      "support": "Apoyo emocional",
+      "interests": "Intereses personales"
+    },
+    "styles": {
+      "caring": "Cuidadoso",
+      "playful": "Juguetón",
+      "sophisticated": "Sofisticado",
+      "passionate": "Apasionado"
+    },
+    "styleDescriptions": {
+      "caring": "Atento a tus necesidades",
+      "playful": "Divertido y espontáneo",
+      "sophisticated": "Elegante e intelectual",
+      "passionate": "Intenso y emocional"
+    },
+    "topicsHint": "Selecciona los temas que más te interesen (puedes elegir varios)",
+    "topicsSelected": "{{count}} tema{{plural}} seleccionado{{plural}}",
+    "premium": "Premium",
+    "upgradeToPremium": "Actualiza a Premium",
+    "selectStyleHint": "Selecciona un estilo para comenzar automáticamente",
+    "navigation": {
+      "previous": "Anterior",
+      "next": "Siguiente"
+    }
+  },
+  "footer": {
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos y Condiciones", 
+    "cookiePolicy": "Política de Cookies",
+    "legalNotice": "Aviso Legal",
+    "copyright": "© 2024 AI Companions. Todos los derechos reservados."
+  }
+}

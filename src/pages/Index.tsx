@@ -6,14 +6,16 @@ import { AuthModal } from "@/components/AuthModal";
 import { PersonalizationModal, ChatPreferences } from "@/components/PersonalizationModal";
 import { ChatInterface } from "@/components/ChatInterface";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
-import { SaveStatus } from "@/components/SaveStatus";
 import { ModelEditor } from "@/components/ModelEditor";
-import { ImageUpload } from "@/components/ImageUpload";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { UserMenu } from "@/components/UserMenu";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Crown, Settings, User, Plus, Edit, Upload } from "lucide-react";
+import { Search, Filter, Crown, Settings, User, Plus, Edit, Upload, Heart, Globe } from "lucide-react";
 import { useUserAccess, Model as UserAccessModel } from "@/hooks/useUserAccess";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Datos locales de respaldo usando URLs absolutas de Vercel
 const localCompanions: Companion[] = [
@@ -71,7 +73,7 @@ const localCompanions: Companion[] = [
     is_locked: false,
     rating: 4.6,
     conversations: 750,
-    price: undefined
+    price: "79.00"
   },
   {
     id: "5",
@@ -127,7 +129,7 @@ const localCompanions: Companion[] = [
     is_locked: false,
     rating: 4.8,
     conversations: 1800,
-    price: "9.99"
+    price: "49.00"
   },
   // Modelos Góticos
   {
@@ -390,36 +392,36 @@ interface Model {
   price?: string;
 }
 
-// Categorías de modelos
-const categories = [
+// Categorías de modelos - se actualizarán dinámicamente con traducciones
+const getCategories = (t: (key: string) => string) => [
   {
-    title: "Románticas",
-    description: "Dulces, cercanas, look clásico",
+    title: t('categories.romantic.title'),
+    description: t('categories.romantic.description'),
     key: "Románticas"
   },
   {
-    title: "Calientes",
-    description: "Sensuales, atrevidas, solo premium",
+    title: t('categories.hot.title'),
+    description: t('categories.hot.description'),
     key: "Calientes"
   },
   {
-    title: "Gamer",
-    description: "Divertidas, outfit casual con headset",
+    title: t('categories.gamer.title'),
+    description: t('categories.gamer.description'),
     key: "Gamer"
   },
   {
-    title: "Elegantes",
-    description: "Sofisticadas, ropa de noche",
+    title: t('categories.elegant.title'),
+    description: t('categories.elegant.description'),
     key: "Elegantes"
   },
   {
-    title: "Intelectuales",
-    description: "Con gafas, vibe de escritora/estudiante",
+    title: t('categories.intellectual.title'),
+    description: t('categories.intellectual.description'),
     key: "Intelectuales"
   },
   {
-    title: "Góticas",
-    description: "Misteriosas, elegantes, estilo gótico",
+    title: t('categories.gothic.title'),
+    description: t('categories.gothic.description'),
     key: "Góticas"
   }
 ];
@@ -454,8 +456,33 @@ const Index = () => {
   const [purchaseModel, setPurchaseModel] = useState<UserAccessModel | null>(null);
   const [purchaseType, setPurchaseType] = useState<'premium' | 'one_time'>('premium');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   
   const { user, loading: userLoading, checkModelAccess, refreshUser } = useUserAccess();
+  const { t, isLoading: translationLoading } = useTranslation();
+
+  // Identificador para control global de límite diario
+  const getSubjectId = () => {
+    if (user?.id) return user.id;
+    try {
+      let devId = localStorage.getItem('deviceId');
+      if (!devId) {
+        devId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('deviceId', devId);
+      }
+      return devId;
+    } catch {
+      return 'anon-device';
+    }
+  };
+
+  // Verificar si ya se seleccionó un idioma
+  useEffect(() => {
+    const hasSelectedLanguage = localStorage.getItem('selectedLanguage');
+    if (!hasSelectedLanguage) {
+      setShowLanguageSelector(true);
+    }
+  }, []);
 
   // Cargar modelos desde Supabase o usar datos locales
   useEffect(() => {
@@ -553,17 +580,42 @@ const Index = () => {
   console.log("🔍 DEBUG: Selected category:", selectedCategory);
   console.log("🔍 DEBUG: Search term:", searchTerm);
 
-  const handleModelSelect = (modelId: string) => {
+  const handleModelSelect = async (modelId: string) => {
     const model = models.find(m => m.id === modelId);
-    if (model) {
-      const access = checkModelAccess(model);
-      if (access.hasAccess) {
-        setSelectedModel(model);
-        setShowPersonalization(true);
-      } else if (!user) {
-        // Si no hay usuario, mostrar modal de login
-        setShowAuthModal(true);
+    if (!model) return;
+
+    // Usuarios premium deben saltarse el límite global
+    if (!user?.is_premium) {
+      // Consultar límite global del día en el backend
+      try {
+        const subjectId = getSubjectId();
+        const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
+        const res = await fetch(`${API_BASE}/api/usage-status?subjectId=${encodeURIComponent(subjectId)}`);
+        if (res.ok) {
+          const info = await res.json();
+          const remaining = typeof info?.remaining === 'number' ? info.remaining : null;
+          const isPremiumServer = Boolean(info?.premium);
+          if (!isPremiumServer && typeof remaining === 'number' && remaining <= 0) {
+            // Sin mensajes disponibles: abrir modal de compra (premium por defecto)
+            const access = checkModelAccess(model);
+            setPurchaseType(access.reason === 'purchase_required' ? 'one_time' : 'premium');
+            setPurchaseModel(model);
+            setShowPurchaseModal(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo verificar usage-status:', e);
       }
+    }
+
+    const access = checkModelAccess(model);
+    if (access.hasAccess) {
+      setSelectedModel(model);
+      setShowPersonalization(true);
+    } else if (!user) {
+      // Si no hay usuario, mostrar modal de login
+      setShowAuthModal(true);
     }
   };
 
@@ -592,7 +644,8 @@ const Index = () => {
 
   const handlePurchaseConfirm = async (modelId: string) => {
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -604,16 +657,18 @@ const Index = () => {
         }),
       });
 
-      const { sessionId } = await response.json();
+      const { sessionId, url } = await response.json();
       
+      if (url) {
+        window.location.href = url;
+        return;
+      }
+
       if (sessionId) {
-        // Redirigir a Stripe Checkout
+        // Redirigir a Stripe Checkout (usando Vite env o helper compartido)
         const stripe = await import('@stripe/stripe-js');
-        const stripeInstance = await stripe.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-        
-        if (stripeInstance) {
-          await stripeInstance.redirectToCheckout({ sessionId });
-        }
+        const stripeInstance = await stripe.loadStripe((import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY!);
+        if (stripeInstance) await stripeInstance.redirectToCheckout({ sessionId });
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -621,26 +676,39 @@ const Index = () => {
   };
 
   const handleStartChat = (preferences: ChatPreferences) => {
-    if (!selectedModel) {
-      console.error('No hay modelo seleccionado');
-      return;
-    }
-    setChatPreferences(preferences);
-    setShowPersonalization(false);
-    setShowChat(true);
+      console.log('🚀 handleStartChat EJECUTÁNDOSE con:', preferences);
+      console.log('🚀 selectedModel:', selectedModel);
+      
+      // Forzar apertura del chat
+      setChatPreferences(preferences);
+      setShowPersonalization(false);
+      setShowChat(true);
+      
+      console.log('🚀 CHAT ABIERTO');
   };
 
   const handleBackToGallery = () => {
-    setShowChat(false);
-    setSelectedModel(null);
-    setChatPreferences(null);
+      setShowChat(false);
+      setSelectedModel(null);
+      setChatPreferences(null);
   };
 
   const handleUpgrade = () => {
-    // Esta función se maneja ahora a través del modal de compra
+    console.log('🔥 ABRIENDO MODAL PREMIUM');
     setPurchaseType('premium');
+    setPurchaseModel({
+      id: 'premium',
+      name: 'Premium Subscription',
+      category: 'premium',
+      type: 'premium',
+      price: 19.99,
+      image_url: '/placeholder.svg',
+      description: 'Acceso ilimitado a todas las modelos',
+      tags: ['premium', 'unlimited'],
+      rating: 5,
+      conversations: 0
+    });
     setShowPurchaseModal(true);
-    console.log("Usuario actualizado a Premium");
   };
 
   const handleSaveModel = (model: any) => {
@@ -685,18 +753,40 @@ const Index = () => {
     }
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = (userEmail?: string) => {
     // Refrescar datos del usuario después del login exitoso
-    refreshUser();
+    if (userEmail) {
+      refreshUser(userEmail);
+    } else {
+      refreshUser();
+    }
   };
 
+  const handleRefreshUser = () => {
+    console.log('🔄 Refrescando usuario manualmente...');
+    if (user?.email) {
+      refreshUser(user.email);
+    } else {
+      refreshUser();
+    }
+  };
+
+  // Mostrar selector de idioma si es necesario
+  if (showLanguageSelector) {
+    return (
+      <LanguageSelector 
+        onLanguageSelected={() => setShowLanguageSelector(false)} 
+      />
+    );
+  }
+
   // Loading state
-  if (loading) {
+  if (loading || translationLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Cargando modelos...</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">{t('common.loading')}</h2>
           <p className="text-muted-foreground">Conectando con la base de datos</p>
         </div>
       </div>
@@ -704,15 +794,51 @@ const Index = () => {
   }
 
 
+  console.log('🔍 DIAGNÓSTICO:', {
+    showChat,
+    selectedModel: !!selectedModel,
+    chatPreferences: !!chatPreferences,
+    selectedModelName: selectedModel?.name,
+    chatPreferencesData: chatPreferences,
+    user: user,
+    userId: user?.id,
+    userLoading: userLoading
+  });
+  
   if (showChat && selectedModel && chatPreferences) {
+    console.log('✅ TODAS LAS CONDICIONES CUMPLIDAS - MOSTRANDO CHAT');
+    const donationUrl = import.meta.env.VITE_DONATION_URL || 'https://buy.stripe.com/test_14k02bJxGe040i0V8w';
     return (
+      <div className="relative">
       <ChatInterface
         modelName={selectedModel.name}
-        modelImage={selectedModel.image_url}
+          modelImage={selectedModel.image_url}
+          modelVideo={(function(){
+            const slug = selectedModel.name
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/\p{Diacritic}/gu, '')
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+            return `/videos/${slug}-loop.mp4`;
+          })()}
         preferences={chatPreferences}
         onBack={handleBackToGallery}
-        isPremiumModel={selectedModel.type === 'premium'}
-      />
+          isPremiumModel={selectedModel.type === 'premium'}
+          userId={user?.id}
+          modelId={selectedModel.id}
+          userIsPremium={user?.is_premium || false}
+          unlimitedForThisModel={(() => {
+            const access = checkModelAccess(selectedModel);
+            return access.hasAccess && selectedModel.type === 'one_time';
+          })()}
+          dailyMessageCount={user?.daily_message_count || 0}
+          dailyLimit={5}
+          onUpgradeToPremium={handleUpgrade}
+        />
+
+        {/* Donaciones rápidas eliminadas del header, ahora están dentro del área de modelo */}
+      </div>
     );
   }
 
@@ -727,30 +853,31 @@ const Index = () => {
                 <Crown className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                AI Companions
+                {t('header.title')}
               </h1>
             </div>
             
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="hidden sm:flex">
-                <User className="w-3 h-3 mr-1" />
-                {user?.is_premium ? 'Usuario Premium' : 'Usuario Gratuito'}
-              </Badge>
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => window.location.reload()}
+                onClick={() => setShowLanguageSelector(true)}
                 className="text-xs"
               >
-                Recargar
+                <Globe className="w-3 h-3 mr-1" />
+                {t('header.language')}
               </Button>
-              <Button variant="outline" size="sm" onClick={handleCreateModel}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo Modelo
-              </Button>
-              <Button variant="outline" size="icon">
-                <Settings className="w-4 h-4" />
-              </Button>
+              
+              {/* User Menu - Solo mostrar si hay usuario autenticado */}
+              {user && (
+                <UserMenu 
+                  user={user} 
+                  onSignOut={() => {
+                    // Refrescar el estado del usuario después del logout
+                    refreshUser();
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -760,28 +887,30 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center space-y-4 py-8">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Galería de Companions
+            {t('hero.title')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Descubre tu compañera AI perfecta en nuestra colección exclusiva de cartas coleccionables
+            {t('hero.subtitle')}
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
             <Crown className="w-5 h-5 text-primary" />
             <span className="text-sm text-muted-foreground">
-              {categories.length} categorías con {models.length} modelos
+              {getCategories(t).length} {t('hero.categories')} {models.length} {t('hero.models')}
             </span>
           </div>
         </div>
 
-        {/* Subscription Banner */}
+        {/* Subscription Banner (hidden for premium users) */}
+        {!user?.is_premium && (
         <SubscriptionBanner onUpgrade={handleUpgrade} />
+        )}
 
         {/* Search and Filters */}
         <div className="flex flex-col gap-4 max-w-4xl mx-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Buscar por nombre, descripción o tags..."
+              placeholder={t('search.placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-input border-border"
@@ -795,9 +924,9 @@ const Index = () => {
               onClick={() => handleCategoryClick("all")}
               size="sm"
             >
-              Todas
+              {t('search.all')}
             </Button>
-            {categories.map((category) => (
+            {getCategories(t).map((category) => (
               <Button
                 key={category.title}
                 variant={selectedCategory === category.key ? "default" : "outline"}
@@ -812,7 +941,7 @@ const Index = () => {
 
         {/* Galería por categorías */}
         <div className="space-y-12">
-          {categories.map((category, categoryIndex) => {
+          {getCategories(t).map((category, categoryIndex) => {
             const categoryModels = models.filter(m => m.category === category.key);
             console.log(`🔍 DEBUG: Categoría "${category.title}" (key: "${category.key}")`, {
               categoryModels,
@@ -883,8 +1012,8 @@ const Index = () => {
         {filteredModels.length === 0 && models.length > 0 && (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No se encontraron modelos</h3>
-            <p className="text-muted-foreground">Intenta con otros términos de búsqueda</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('search.noResults')}</h3>
+            <p className="text-muted-foreground">{t('search.noResultsDescription')}</p>
           </div>
         )}
       </main>
@@ -895,7 +1024,6 @@ const Index = () => {
           isOpen={showPersonalization}
           onClose={() => {
             setShowPersonalization(false);
-            setSelectedModel(null);
           }}
           onStartChat={handleStartChat}
           modelName={selectedModel.name}
@@ -931,6 +1059,7 @@ const Index = () => {
         onClose={() => setShowPurchaseModal(false)}
         model={purchaseModel}
         type={purchaseType}
+        user={user}
         onPurchase={handlePurchaseConfirm}
       />
 
@@ -940,6 +1069,49 @@ const Index = () => {
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />
+
+      {/* Footer Legal */}
+      <footer className="bg-gray-900/50 backdrop-blur-sm border-t border-gray-700/50 mt-16">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-2">
+              <Crown className="w-6 h-6 text-purple-400" />
+              <span className="text-xl font-bold text-white">AI Companions</span>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
+              <a 
+                href="/privacy-policy" 
+                className="hover:text-white transition-colors"
+              >
+                {t('footer.privacyPolicy')}
+              </a>
+              <a 
+                href="/terms-of-service" 
+                className="hover:text-white transition-colors"
+              >
+                {t('footer.termsOfService')}
+              </a>
+              <a 
+                href="/cookie-policy" 
+                className="hover:text-white transition-colors"
+              >
+                {t('footer.cookiePolicy')}
+              </a>
+              <a 
+                href="/legal-notice" 
+                className="hover:text-white transition-colors"
+              >
+                {t('footer.legalNotice')}
+              </a>
+            </div>
+            
+            <div className="text-sm text-gray-500">
+              {t('footer.copyright')}
+            </div>
+          </div>
+        </div>
+      </footer>
 
     </div>
   );

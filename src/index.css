@@ -152,6 +152,16 @@
     scroll-behavior: smooth;
   }
 
+  /* RTL support for Arabic */
+  html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Logical positioning helpers for LTR/RTL */
+  .inline-start-2 { inset-inline-start: 0.5rem; }
+  .inline-end-2 { inset-inline-end: 0.5rem; }
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
