@@ -8,8 +8,7 @@
     "api/stripe-webhook.ts": {
       "runtime": "nodejs18.x",
       "memory": 256,
-      "maxDuration": 10,
-      "encoding": "raw"
+      "maxDuration": 10
     }
   }
 }
