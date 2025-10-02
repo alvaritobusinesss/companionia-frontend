@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,14 +16,14 @@ interface ModelCardWithAccessProps {
 
 export function ModelCardWithAccess({ 
   model, 
-  userAccess, 
+  userAccess,
   user,
   onSelect, 
   onPurchase 
 }: ModelCardWithAccessProps) {
   const { t, ta } = useTranslation();
-  
-  console.log(`🔍 DEBUG ModelCard: ${model.name} - type: ${model.type}, hasAccess: ${userAccess.hasAccess}`);
+  const [visible, setVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   
   const handleClick = () => {
     if (userAccess.hasAccess) {
@@ -69,8 +70,22 @@ export function ModelCardWithAccess({
     }
   };
 
+  // Cargar imagen solo cuando el card entra en viewport
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        setVisible(true);
+        obs.disconnect();
+      }
+    }, { root: null, rootMargin: '100px', threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <div className="relative group">
+    <div className="relative group" ref={cardRef}>
       {/* Glow continuo siempre activo para premium y one_time */}
       {(model.type === 'premium' || model.type === 'one_time') && (
         <div
@@ -104,11 +119,23 @@ export function ModelCardWithAccess({
       <CardContent className="p-0 flex flex-col h-full">
         {/* Imagen del modelo */}
         <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
-          <img 
-            src={model.image_url} 
-            alt={model.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
+          <picture>
+            {/* WebP si existe: reemplazamos .jpg por .webp dinámicamente */}
+            <source
+              type="image/webp"
+              srcSet={visible ? model.image_url.replace(/\.jpg$/i, '.webp') : undefined}
+            />
+            <img 
+              src={visible ? model.image_url : undefined}
+              alt={model.name}
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
+              width={600}
+              height={800}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+          </picture>
           
           {/* Overlay de bloqueo - solo para modelos premium y one_time */}
           {!userAccess.hasAccess && model.type !== 'free' && (

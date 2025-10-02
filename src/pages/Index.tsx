@@ -507,14 +507,14 @@ const Index = () => {
           }));
           setModels(localModels);
         } else if (data && data.length > 0) {
-          console.log("✅ Datos de Supabase cargados:", data);
+          if (import.meta.env.DEV) console.log("✅ Datos de Supabase cargados:", data);
           setModels(data as UserAccessModel[]);
         } else {
           console.info("ℹ️ No hay datos en Supabase, usando datos locales");
-          console.log("🔍 DEBUG: Iniciando conversión de localCompanions");
+          if (import.meta.env.DEV) console.log("🔍 DEBUG: Iniciando conversión de localCompanions");
           const localModels: UserAccessModel[] = localCompanions.map(companion => {
             const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
-            console.log(`🔍 DEBUG: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
+            if (import.meta.env.DEV) console.log(`🔍 DEBUG: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
             return {
               id: companion.id,
               name: companion.name,
@@ -528,15 +528,15 @@ const Index = () => {
               conversations: companion.conversations
             };
           });
-          console.log("🔍 DEBUG: Modelos convertidos:", localModels);
+          if (import.meta.env.DEV) console.log("🔍 DEBUG: Modelos convertidos:", localModels);
           setModels(localModels);
         }
       } catch (err) {
         console.warn("❌ Error inesperado, usando datos locales:", err);
-        console.log("🔍 DEBUG: Iniciando conversión en catch block");
+        if (import.meta.env.DEV) console.log("🔍 DEBUG: Iniciando conversión en catch block");
         const localModels: UserAccessModel[] = localCompanions.map(companion => {
           const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
-          console.log(`🔍 DEBUG CATCH: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
+          if (import.meta.env.DEV) console.log(`🔍 DEBUG CATCH: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
           return {
             id: companion.id,
             name: companion.name,
@@ -550,11 +550,11 @@ const Index = () => {
             conversations: companion.conversations
           };
         });
-        console.log("🔍 DEBUG CATCH: Modelos convertidos:", localModels);
+        if (import.meta.env.DEV) console.log("🔍 DEBUG CATCH: Modelos convertidos:", localModels);
         setModels(localModels);
       } finally {
         setLoading(false);
-        console.log("🏁 Carga completada");
+        if (import.meta.env.DEV) console.log("🏁 Carga completada");
       }
     }
     loadModels();
@@ -573,12 +573,14 @@ const Index = () => {
     selectedCategory === "all" || model.category === selectedCategory
   );
 
-  // Debug logs
-  console.log("🔍 DEBUG: Models:", models);
-  console.log("🔍 DEBUG: Filtered models:", filteredModels);
-  console.log("🔍 DEBUG: Models by category:", modelsByCategory);
-  console.log("🔍 DEBUG: Selected category:", selectedCategory);
-  console.log("🔍 DEBUG: Search term:", searchTerm);
+  // Debug logs solo en DEV
+  if (import.meta.env.DEV) {
+    console.log("🔍 DEBUG: Models:", models);
+    console.log("🔍 DEBUG: Filtered models:", filteredModels);
+    console.log("🔍 DEBUG: Models by category:", modelsByCategory);
+    console.log("🔍 DEBUG: Selected category:", selectedCategory);
+    console.log("🔍 DEBUG: Search term:", searchTerm);
+  }
 
   const handleModelSelect = async (modelId: string) => {
     const model = models.find(m => m.id === modelId);
@@ -589,8 +591,7 @@ const Index = () => {
       // Consultar límite global del día en el backend
       try {
         const subjectId = getSubjectId();
-        const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
-        const res = await fetch(`${API_BASE}/api/usage-status?subjectId=${encodeURIComponent(subjectId)}`);
+        const res = await fetch(`/api/usage-status?subjectId=${encodeURIComponent(subjectId)}`);
         if (res.ok) {
           const info = await res.json();
           const remaining = typeof info?.remaining === 'number' ? info.remaining : null;
@@ -644,8 +645,7 @@ const Index = () => {
 
   const handlePurchaseConfirm = async (modelId: string) => {
     try {
-      const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
+      const response = await fetch(`/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
