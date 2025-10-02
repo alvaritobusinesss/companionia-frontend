@@ -119,23 +119,16 @@ export function ModelCardWithAccess({
       <CardContent className="p-0 flex flex-col h-full">
         {/* Imagen del modelo */}
         <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
-          <picture>
-            {/* WebP si existe: reemplazamos .jpg por .webp dinámicamente */}
-            <source
-              type="image/webp"
-              srcSet={visible ? model.image_url.replace(/\.jpg$/i, '.webp') : undefined}
-            />
-            <img 
-              src={visible ? model.image_url : undefined}
-              alt={model.name}
-              loading="lazy"
-              decoding="async"
-              fetchPriority="low"
-              width={600}
-              height={800}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-          </picture>
+          <img 
+            src={model.image_url}
+            alt={model.name}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            width={600}
+            height={800}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
           
           {/* Overlay de bloqueo - solo para modelos premium y one_time */}
           {!userAccess.hasAccess && model.type !== 'free' && (
