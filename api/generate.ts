@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// Using untyped req/res to avoid dependency on @vercel/node types in build
 import { createClient } from '@supabase/supabase-js';
 
 // Helpers locales
@@ -8,7 +8,7 @@ import { getUserMemory, upsertUserMemory } from '../src/lib/memory';
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
     }
 
-    const { userId, userMessage, modelName, modelPersona, tone, topics } = req.body || {};
+    const { userId, userMessage, modelName, modelPersona, tone, topics, stream } = req.body || {};
     if (!userId || !userMessage || !modelName) {
       return res.status(400).json({ error: 'Missing fields' });
     }
@@ -45,7 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       memory,
     });
 
-    // 4) Llamada a OpenAI
+    // 4) Llamada a OpenAI (con opción de streaming)
     const oaRes = await fetch(OPENAI_URL, {
       method: 'POST',
       headers: {
@@ -58,6 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         top_p: 0.9,
         presence_penalty: 0.3,
         messages: [{ role: 'user', content: prompt }],
+        stream: !!stream,
       }),
     });
 
@@ -66,6 +67,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'OpenAI error', details: txt });
     }
 
+    // Si el cliente pidió streaming, reenviamos SSE tal cual
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      try {
+        // Proxy de SSE: pasar chunks directamente
+        // @ts-ignore - oaRes.body es un ReadableStream en Node en Vercel
+        for await (const chunk of oaRes.body as any) {
+          res.write(chunk);
+        }
+      } finally {
+        res.end();
+      }
+      // Guardado de memoria de forma best-effort (no bloqueante)
+      try {
+        const snippet = extractSnippet(userMessage);
+        if (snippet) await upsertUserMemory(supabase, userId, snippet);
+      } catch {}
+      return;
+    }
+
+    // Fallback: respuesta no streaming
     const data = await oaRes.json();
     const reply: string = data?.choices?.[0]?.message?.content?.trim() || '';
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,6 +57,9 @@ export function ChatInterface({
   const [localMessageCount, setLocalMessageCount] = useState(dailyMessageCount);
   const [showLimitBanner, setShowLimitBanner] = useState(false);
   const [showDonationPanel, setShowDonationPanel] = useState(false);
+  // Lazy video
+  const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
+  const videoWrapperRef = useRef<HTMLDivElement>(null);
 
   // Precios fijos opcionales (Stripe Price IDs) por importe
   const DONATE_5_PRICE = (import.meta as any).env?.VITE_DONATE_5_PRICE as string | undefined;
@@ -110,6 +113,50 @@ export function ChatInterface({
     const suggestion = buildSuggestedPrompt();
     setInputMessage(suggestion);
   };
+
+  // Lazy-load del video del modelo cuando entra en viewport
+  useEffect(() => {
+    if (!modelVideo) return;
+    const el = videoWrapperRef.current;
+    if (!el) return;
+    let observer: IntersectionObserver | null = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry && entry.isIntersecting) {
+        setVideoSrc(modelVideo);
+        if (observer) observer.disconnect();
+      }
+    }, { root: null, rootMargin: '0px', threshold: 0.2 });
+    observer.observe(el);
+    return () => { if (observer) observer.disconnect(); };
+  }, [modelVideo]);
+
+  // Item de mensaje memoizado para reducir re-renders
+  const MessageItem = memo(function MessageItem({ message, modelImage, modelName }: { message: Message; modelImage: string; modelName: string; }) {
+    return (
+      <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex gap-2 max-w-[85%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+          {message.role === 'assistant' && (
+            <Avatar className="w-6 h-6 mt-1">
+              <AvatarImage src={modelImage} alt={modelName} />
+              <AvatarFallback className="text-xs">{modelName[0]}</AvatarFallback>
+            </Avatar>
+          )}
+          <Card className={`${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted border-border'}`}>
+            <CardContent className="p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  <span className={`text-xs mt-1 block ${message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  });
 
   // Reiniciar chat: borra conversación en servidor y local
   const handleClearConversation = async () => {
@@ -360,7 +407,7 @@ export function ChatInterface({
       if ((import.meta as any).env?.DEV) {
         console.log('Calling API...');
       }
-      // Llamada al endpoint local /api/generate
+      // Llamada al endpoint local /api/generate con streaming
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -373,26 +420,62 @@ export function ChatInterface({
           tone: preferences.mood,
           topics: preferences.topics,
           style: preferences.style,
+          stream: true,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if ((import.meta as any).env?.DEV) {
-          console.log('API response:', data);
+      if (response.ok && (response.headers.get('content-type') || '').includes('text/event-stream')) {
+        // Crear mensaje del asistente vacío y actualizarlo según llegan chunks
+        let streamedContent = '';
+        const aiMessage: Message = { role: 'assistant', content: '', timestamp: new Date() };
+        setMessages(prev => [...prev, aiMessage]);
+
+        const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            if (trimmed.startsWith('data:')) {
+              const payload = trimmed.slice(5).trim();
+              if (payload === '[DONE]') {
+                buffer = '';
+                break;
+              }
+              try {
+                const json = JSON.parse(payload);
+                const delta = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || '';
+                if (delta) {
+                  streamedContent += delta;
+                  const updated: Message = { role: 'assistant', content: streamedContent, timestamp: aiMessage.timestamp };
+                  setMessages(prev => {
+                    const copy = prev.slice();
+                    copy[copy.length - 1] = updated;
+                    return copy;
+                  });
+                }
+              } catch {}
+            }
+          }
         }
+        // Guardar mensajes tras terminar el stream
+        saveMessages([...newMessages, { role: 'assistant', content: streamedContent || '...', timestamp: new Date() }]);
+      } else if (response.ok) {
+        // Fallback no-stream
+        const data = await response.json();
         const aiMessage: Message = {
           role: 'assistant',
           content: data.reply || 'Lo siento, no puedo responder en este momento.',
-            timestamp: new Date(),
-          };
-        if ((import.meta as any).env?.DEV) {
-          console.log('Adding AI message to state');
-        }
+          timestamp: new Date(),
+        };
         const finalMessages = [...newMessages, aiMessage];
         setMessages(finalMessages);
-        
-        // Guardar mensajes después de la respuesta de la IA
         saveMessages(finalMessages);
       } else if (response.status === 429) {
         // Límite alcanzado desde el servidor: activar banner y fijar contador
@@ -515,17 +598,18 @@ export function ChatInterface({
 
         {/* Model Display */}
         <div className="flex-1 flex items-center justify-center p-6 min-h-0">
-          <div className="relative w-full max-w-lg h-full flex items-center justify-center">
+          <div ref={videoWrapperRef} className="relative w-full max-w-lg h-full flex items-center justify-center">
             <div className={`transition-all duration-500 w-full h-full max-h-[75vh] ${
               isAITyping ? 'scale-105 shadow-2xl shadow-primary/20' : 'scale-100'
             }`}>
               {modelVideo ? (
                 <video
-                  src={modelVideo}
+                  src={videoSrc}
                   autoPlay
                   loop
                   muted
                   playsInline
+                  preload="none"
                   poster={modelImage}
                   className="object-cover w-full h-full min-h-[450px] max-h-[75vh] rounded-2xl shadow-xl"
                 />
@@ -631,38 +715,7 @@ export function ChatInterface({
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex gap-2 max-w-[85%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                {message.role === 'assistant' && (
-                  <Avatar className="w-6 h-6 mt-1">
-                    <AvatarImage src={modelImage} alt={modelName} />
-                    <AvatarFallback className="text-xs">{modelName[0]}</AvatarFallback>
-                  </Avatar>
-                )}
-                
-                <Card className={`${
-                  message.role === 'user' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted border-border'
-                }`}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <p className="text-sm leading-relaxed">{message.content}</p>
-                        <span className={`text-xs mt-1 block ${
-                          message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            <MessageItem key={index} message={message} modelImage={modelImage} modelName={modelName} />
           ))}
           
           {/* Typing indicator */}
