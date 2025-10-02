@@ -24,6 +24,10 @@ export function ModelCardWithAccess({
   const { t, ta } = useTranslation();
   const [visible, setVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [imgSrc, setImgSrc] = useState(() => {
+    const url = model.image_url || '';
+    return url.endsWith('.jpg') ? url.replace(/\.jpg$/i, '.webp') : url;
+  });
   
   const handleClick = () => {
     if (userAccess.hasAccess) {
@@ -118,9 +122,9 @@ export function ModelCardWithAccess({
     >
       <CardContent className="p-0 flex flex-col h-full">
         {/* Imagen del modelo */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg" style={{ contentVisibility: 'auto', containIntrinsicSize: '600px 800px' }}>
           <img 
-            src={model.image_url}
+            src={imgSrc}
             alt={model.name}
             loading="lazy"
             decoding="async"
@@ -128,6 +132,12 @@ export function ModelCardWithAccess({
             width={600}
             height={800}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            onError={(e) => {
+              const url = model.image_url || '';
+              if ((e.currentTarget as HTMLImageElement).src !== url) {
+                setImgSrc(url);
+              }
+            }}
           />
           
           {/* Overlay de bloqueo - solo para modelos premium y one_time */}
