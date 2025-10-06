@@ -8,23 +8,31 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export async function ensureUserRow(supabase: SupabaseClient, email: string) {
   if (!email) return;
   try {
-    // Buscar por email
+    // Obtener usuario autenticado para conocer su UID
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData?.user?.id;
+    const userEmail = userData?.user?.email || email;
+    if (!uid) {
+      console.warn('ensureUserRow: no auth.uid() available, aborting');
+      return;
+    }
+
+    // Buscar por id (RLS de users usa id = auth.uid())
     const { data: existing, error: searchErr } = await supabase
       .from('users')
       .select('id, email')
-      .eq('email', email)
+      .eq('id', uid)
       .maybeSingle();
 
-    if (searchErr) {
-      // Si el error es que no existe, seguiremos intentando crear
+    if (searchErr && searchErr.code !== 'PGRST116') {
       console.warn('ensureUserRow search warning:', searchErr.message);
     }
 
     if (!existing) {
-      // Crear fila mínima
+      // Crear fila con id = auth.uid() para cumplir RLS
       const { error: insertErr } = await supabase
         .from('users')
-        .insert({ email, is_premium: false })
+        .insert({ id: uid, email: userEmail, is_premium: false })
         .select('id')
         .single();
       if (insertErr) {

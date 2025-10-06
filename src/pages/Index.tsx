@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { ModelCardWithAccess } from "@/components/ModelCardWithAccess";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { AuthModal } from "@/components/AuthModal";
@@ -484,80 +483,22 @@ const Index = () => {
     }
   }, []);
 
-  // Cargar modelos desde Supabase o usar datos locales
+  // Cargar modelos desde datos locales (sin Supabase)
   useEffect(() => {
-    async function loadModels() {
-      console.log("🔍 DEBUG: Iniciando carga de modelos");
-      try {
-        const { data, error } = await supabase.from("models").select("*");
-        if (error) {
-          console.warn("⚠️ Error cargando modelos desde Supabase, usando datos locales:", error);
-          // Convertir datos locales al nuevo formato
-          const localModels: UserAccessModel[] = localCompanions.map(companion => ({
-            id: companion.id,
-            name: companion.name,
-            category: companion.category,
-            type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
-            price: companion.price ? parseFloat(companion.price) : undefined,
-            image_url: companion.image_url,
-            description: companion.description,
-            tags: companion.tags,
-            rating: companion.rating,
-            conversations: companion.conversations
-          }));
-          setModels(localModels);
-        } else if (data && data.length > 0) {
-          if (import.meta.env.DEV) console.log("✅ Datos de Supabase cargados:", data);
-          setModels(data as UserAccessModel[]);
-        } else {
-          console.info("ℹ️ No hay datos en Supabase, usando datos locales");
-          if (import.meta.env.DEV) console.log("🔍 DEBUG: Iniciando conversión de localCompanions");
-          const localModels: UserAccessModel[] = localCompanions.map(companion => {
-            const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
-            if (import.meta.env.DEV) console.log(`🔍 DEBUG: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
-            return {
-              id: companion.id,
-              name: companion.name,
-              category: companion.category,
-              type: type,
-              price: companion.price ? parseFloat(companion.price) : undefined,
-              image_url: companion.image_url,
-              description: companion.description,
-              tags: companion.tags,
-              rating: companion.rating,
-              conversations: companion.conversations
-            };
-          });
-          if (import.meta.env.DEV) console.log("🔍 DEBUG: Modelos convertidos:", localModels);
-          setModels(localModels);
-        }
-      } catch (err) {
-        console.warn("❌ Error inesperado, usando datos locales:", err);
-        if (import.meta.env.DEV) console.log("🔍 DEBUG: Iniciando conversión en catch block");
-        const localModels: UserAccessModel[] = localCompanions.map(companion => {
-          const type = companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free';
-          if (import.meta.env.DEV) console.log(`🔍 DEBUG CATCH: ${companion.name} - is_premium: ${companion.is_premium}, is_extra_premium: ${companion.is_extra_premium}, type: ${type}`);
-          return {
-            id: companion.id,
-            name: companion.name,
-            category: companion.category,
-            type: type,
-            price: companion.price ? parseFloat(companion.price) : undefined,
-            image_url: companion.image_url,
-            description: companion.description,
-            tags: companion.tags,
-            rating: companion.rating,
-            conversations: companion.conversations
-          };
-        });
-        if (import.meta.env.DEV) console.log("🔍 DEBUG CATCH: Modelos convertidos:", localModels);
-        setModels(localModels);
-      } finally {
-        setLoading(false);
-        if (import.meta.env.DEV) console.log("🏁 Carga completada");
-      }
-    }
-    loadModels();
+    const localModels: UserAccessModel[] = localCompanions.map(companion => ({
+      id: companion.id,
+      name: companion.name,
+      category: companion.category,
+      type: companion.is_premium ? 'premium' : companion.is_extra_premium ? 'one_time' : 'free',
+      price: companion.price ? parseFloat(companion.price) : undefined,
+      image_url: companion.image_url,
+      description: companion.description,
+      tags: companion.tags,
+      rating: companion.rating,
+      conversations: companion.conversations
+    }));
+    setModels(localModels);
+    setLoading(false);
   }, []);
 
   // Filtrar modelos por búsqueda
@@ -753,22 +694,14 @@ const Index = () => {
     }
   };
 
-  const handleAuthSuccess = (userEmail?: string) => {
-    // Refrescar datos del usuario después del login exitoso
-    if (userEmail) {
-      refreshUser(userEmail);
-    } else {
-      refreshUser();
-    }
+  const handleAuthSuccess = (_userEmail?: string) => {
+    // Refrescar datos del usuario después del login exitoso (local)
+    refreshUser();
   };
 
   const handleRefreshUser = () => {
     console.log('🔄 Refrescando usuario manualmente...');
-    if (user?.email) {
-      refreshUser(user.email);
-    } else {
-      refreshUser();
-    }
+    refreshUser();
   };
 
   // Mostrar selector de idioma si es necesario
@@ -787,7 +720,7 @@ const Index = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <h2 className="text-xl font-bold text-foreground mb-2">{t('common.loading')}</h2>
-          <p className="text-muted-foreground">Conectando con la base de datos</p>
+          <p className="text-muted-foreground">Cargando datos locales</p>
         </div>
       </div>
     );

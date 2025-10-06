@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, ArrowLeft, Settings, Crown, Heart, Sparkles, Lightbulb } from "lucide-react";
 import { ChatPreferences } from "./PersonalizationModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { supabase } from "@/lib/supabase";
 import stripePromise from "@/lib/stripe";
 
 // Tipos simplificados
@@ -165,8 +164,8 @@ export function ChatInterface({
     try {
       // Borrar en backend si hay usuario y modelo
       if (userId && modelId) {
-        await fetch(`/api/conversations-delete`, {
-          method: 'POST',
+        await fetch(`${API_BASE}/api/conversations`, {
+          method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: userId, model_id: modelId })
         });
@@ -232,7 +231,7 @@ export function ChatInterface({
         timestamp: m.timestamp.toISOString(),
       }));
       if (userId && modelId) {
-        const res = await fetch(`/api/conversations-upsert`, {
+        const res = await fetch(`${API_BASE}/api/conversations/upsert`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -305,7 +304,7 @@ export function ChatInterface({
 
       try {
         // Cargar desde backend (service role)
-        const res = await fetch(`/api/conversations-get?user_id=${encodeURIComponent(userId)}&model_id=${encodeURIComponent(String(modelId))}`);
+        const res = await fetch(`${API_BASE}/api/conversations/get?user_id=${encodeURIComponent(userId)}&model_id=${encodeURIComponent(String(modelId))}`);
         if (res.ok) {
           const { messages: serverMessages } = await res.json();
           if (Array.isArray(serverMessages) && serverMessages.length) {
@@ -408,7 +407,7 @@ export function ChatInterface({
         console.log('Calling API...');
       }
       // Llamada al endpoint local /api/generate con streaming
-      const response = await fetch('/api/generate', {
+      const response = await fetch(`${API_BASE}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -519,7 +518,7 @@ export function ChatInterface({
     const confirmClear = window.confirm('¿Seguro que quieres borrar la memoria guardada? Esta acción no se puede deshacer.');
     if (!confirmClear) return;
     try {
-      const res = await fetch('/api/memory-delete', {
+      const res = await fetch(`${API_BASE}/api/memory-delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })

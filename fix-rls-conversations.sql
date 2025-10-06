@@ -28,3 +28,4 @@ WHERE table_name = 'conversations'
 ORDER BY ordinal_position;
 
 
+

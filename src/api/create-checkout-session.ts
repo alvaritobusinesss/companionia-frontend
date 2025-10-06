@@ -39,28 +39,8 @@ export async function createCheckoutSession(
         },
       };
     } else {
-      // Compra única de modelo
-      if (!modelId) {
-        throw new Error('Model ID is required for one-time purchases');
-      }
-
-      // Obtener información del modelo desde la base de datos
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { data: model, error } = await supabase
-        .from('models')
-        .select('*')
-        .eq('id', modelId)
-        .single();
-
-      if (error || !model) {
-        throw new Error('Model not found');
-      }
-
+      // Compra única genérica sin base de datos
+      const defaultEuro = Number(process.env.ONE_TIME_DEFAULT_EUR || 79);
       sessionConfig = {
         payment_method_types: ['card'],
         line_items: [
@@ -68,11 +48,11 @@ export async function createCheckoutSession(
             price_data: {
               currency: 'eur',
               product_data: {
-                name: `${model.name} - AI Companion`,
-                description: model.description,
-                images: [model.image_url],
+                name: 'AI Companion (compra única)',
+                description: 'Acceso ilimitado al modelo seleccionado en este dispositivo.',
+                images: ['https://companion-ia-2.vercel.app/favicon.ico'],
               },
-              unit_amount: Math.round((model.price || 0) * 100), // Convertir a centavos
+              unit_amount: Math.round(defaultEuro * 100),
             },
             quantity: 1,
           },
@@ -81,14 +61,13 @@ export async function createCheckoutSession(
         success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/cancel`,
         metadata: {
-          type: 'one_time',
           modelId: modelId,
         },
       };
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
-    return { sessionId: session.id };
+    return { sessionId: session.id, url: session.url };
   } catch (error) {
     console.error('Error creating checkout session:', error);
     throw error;

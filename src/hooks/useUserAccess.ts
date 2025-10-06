@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { ensureUserRow } from '@/lib/auth';
+import { getLocalUser } from '@/lib/auth-local';
 
 export interface User {
   id: string;
@@ -36,48 +35,22 @@ export function useUserAccess() {
   useEffect(() => {
     let isMounted = true;
 
-    async function initAuth() {
-      try {
-        // Sesión actual (token + usuario)
-        const { data: sessionData } = await supabase.auth.getSession();
-        const authUser = sessionData?.session?.user;
-        if (authUser?.email) {
-          // Asegura fila en tabla `users`
-          await ensureUserRow(supabase as any, authUser.email);
-          await refreshUser(authUser.email);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error in useUserAccess initAuth:', error);
-        setUser(null);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+    const local = getLocalUser();
+    if (local && isMounted) {
+      setUser({
+        id: local.id,
+        email: local.email,
+        is_premium: Boolean(local.is_premium),
+        purchased_models: Array.isArray(local.purchased_models) ? local.purchased_models : [],
+        daily_message_count: local.daily_message_count,
+      });
+    } else {
+      setUser(null);
     }
-
-    initAuth();
-
-    // Suscripción a cambios de estado de autenticación
-    const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        try { localStorage.removeItem('user'); } catch {}
-      }
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        const email = session?.user?.email;
-        if (email) {
-          await ensureUserRow(supabase as any, email);
-          await refreshUser(email);
-        }
-      }
-    });
+    if (isMounted) setLoading(false);
 
     return () => {
       isMounted = false;
-      try {
-        subscription?.subscription?.unsubscribe?.();
-      } catch {}
     };
   }, []);
 
@@ -109,50 +82,18 @@ export function useUserAccess() {
     }
   };
 
-  const refreshUser = async (userEmail?: string) => {
-    try {
-      // Si no viene email, obtenerlo desde la sesión autenticada
-      if (!userEmail) {
-        const { data } = await supabase.auth.getSession();
-        const authUser = data?.session?.user;
-        if (!authUser?.email) {
-          setUser(null);
-          return;
-        }
-        userEmail = authUser.email;
-      }
-
-      // Buscar usuario por email en nuestra tabla de negocio
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', userEmail)
-        .single();
-
-      if (userData && !error) {
-        // Cargar modelos comprados
-        const { data: purchases, error: purchasesError } = await supabase
-          .from('user_purchased_models')
-          .select('model_id')
-          .eq('user_id', userData.id);
-
-        const purchasedModels: string[] = purchasesError
-          ? []
-          : (purchases || []).map((p: any) => String(p.model_id));
-
-        const normalizedUser: User = {
-          id: userData.id,
-          email: userData.email,
-          is_premium: Boolean(userData.is_premium),
-          purchased_models: purchasedModels,
-        };
-
-        setUser(normalizedUser);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('❌ Error refreshing user:', error);
+  const refreshUser = async () => {
+    const local = getLocalUser();
+    if (local) {
+      const normalized: User = {
+        id: local.id,
+        email: local.email,
+        is_premium: Boolean(local.is_premium),
+        purchased_models: Array.isArray(local.purchased_models) ? local.purchased_models : [],
+        daily_message_count: local.daily_message_count,
+      };
+      setUser(normalized);
+    } else {
       setUser(null);
     }
   };

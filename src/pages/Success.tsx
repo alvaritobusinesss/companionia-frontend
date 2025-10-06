@@ -6,6 +6,7 @@ import { CheckCircle, Crown, CreditCard, ArrowLeft } from 'lucide-react';
 import { useUserAccess } from '@/hooks/useUserAccess';
 
 export default function Success() {
+  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
   const [searchParams] = useSearchParams();
   const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ export default function Success() {
       // Verificar el estado de la sesión con el backend
       const checkPaymentStatus = async () => {
         try {
-          const response = await fetch(`/api/check-payment-status/${sessionId}`);
+          const response = await fetch(`${API_BASE}/api/check-payment-status/${sessionId}`);
           if (response.ok) {
             const data = await response.json();
             setSessionData(data);
@@ -30,7 +31,7 @@ export default function Success() {
               // Simular actualización del usuario
               setTimeout(async () => {
                 try {
-                  const updateResponse = await fetch('/api/simulate-payment', {
+                  const updateResponse = await fetch(`${API_BASE}/api/simulate-payment`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -45,11 +46,7 @@ export default function Success() {
                   if (updateResponse.ok) {
                     console.log('✅ Usuario actualizado automáticamente');
                     // Refrescar acceso en la app inmediatamente
-                    if (data.customerEmail) {
-                      await refreshUser(data.customerEmail);
-                    } else {
-                      await refreshUser();
-                    }
+                    await refreshUser();
                   }
                 } catch (error) {
                   console.error('Error updating user:', error);

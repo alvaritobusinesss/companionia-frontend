@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { signInLocal, signUpLocal } from '@/lib/auth-local';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface AuthModalProps {
@@ -39,31 +39,19 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setError(null);
 
     try {
-      console.log('🔍 DEBUG: Intentando login en public.users:', loginData.email);
-      
-      // Buscar usuario en nuestra tabla public.users
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', loginData.email)
-        .single();
+      // Watchdog para evitar que la UI se quede bloqueada si la red se cuelga
+      const watchdog = setTimeout(() => {
+        setError('La solicitud de inicio de sesión está tardando demasiado. Inténtalo de nuevo.');
+        setLoading(false);
+      }, 12000);
 
-      console.log('🔍 DEBUG: Respuesta de login:', { data, error });
-
-      if (error) {
-        console.error('❌ Error en login:', error);
-        setError(t('auth.invalidCredentials'));
-        return;
-      }
-
-      if (data) {
-        console.log('✅ Usuario encontrado en public.users:', data);
-        setSuccess(t('auth.loginSuccess'));
-        setTimeout(() => {
-          onSuccess(data.email);
-          onClose();
-        }, 1000);
-      }
+      // Autenticación local (mock)
+      const user = await signInLocal(loginData.email, loginData.password);
+      clearTimeout(watchdog);
+      const authedEmail = user.email;
+      setSuccess(t('auth.loginSuccess'));
+      onSuccess(authedEmail);
+      onClose();
     } catch (err) {
       console.error('❌ Error inesperado en login:', err);
       setError(t('auth.unexpectedError'));
@@ -91,37 +79,16 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     }
 
     try {
-      console.log('🔍 DEBUG: Intentando registro directo en public.users:', registerData.email);
-      
-      // Crear usuario directamente en nuestra tabla public.users
-      const { data, error } = await supabase
-        .from('users')
-        .insert({
-          id: crypto.randomUUID(), // Generar ID único
-          email: registerData.email,
-          is_premium: false,
-          purchased_models: []
-        })
-        .select()
-        .single();
 
-      console.log('🔍 DEBUG: Respuesta de inserción:', { data, error });
+      // Registro local (mock)
+      const u = await signUpLocal(registerData.email, registerData.password);
+      const authedEmail = u.email;
 
-      if (error) {
-        console.error('❌ Error en registro directo:', error);
-        setError(error.message);
-        return;
-      }
-
-      if (data) {
-        console.log('✅ Usuario creado exitosamente en public.users:', data);
-        setSuccess(t('auth.registerSuccess'));
-        setTimeout(() => {
-          setActiveTab('login');
-          setSuccess(null);
-          setRegisterData({ email: '', password: '', confirmPassword: '' });
-        }, 2000);
-      }
+      setSuccess(t('auth.registerSuccess'));
+      onSuccess(authedEmail);
+      onClose();
+      setSuccess(null);
+      setRegisterData({ email: '', password: '', confirmPassword: '' });
     } catch (err) {
       console.error('❌ Error inesperado en Magic Link:', err);
       setError(t('auth.unexpectedError'));

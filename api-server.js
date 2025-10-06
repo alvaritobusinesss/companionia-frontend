@@ -20,6 +20,23 @@ function todayStr() {
 app.use(cors());
 app.use(express.json());
 
+// Health check env presence
+app.get('/api/health/env', (req, res) => {
+  try {
+    const payload = {
+      SUPABASE_URL_present: Boolean(process.env.SUPABASE_URL),
+      SUPABASE_SERVICE_ROLE_KEY_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      VITE_SUPABASE_URL_present: Boolean(process.env.VITE_SUPABASE_URL),
+      VITE_SUPABASE_ANON_KEY_present: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+      VITE_API_URL: process.env.VITE_API_URL || null,
+      NODE_ENV: process.env.NODE_ENV || null,
+    };
+    return res.json(payload);
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'env error' });
+  }
+});
+
 // Inicializar Stripe y Supabase
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
@@ -390,8 +407,28 @@ app.get('/api/check-payment-status/:sessionId', async (req, res) => {
   }
 });
 
+app.get('/api/health/env', (req, res) => {
+  try {
+    const payload = {
+      SUPABASE_URL_present: Boolean(process.env.SUPABASE_URL),
+      SUPABASE_SERVICE_ROLE_KEY_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      VITE_SUPABASE_URL_present: Boolean(process.env.VITE_SUPABASE_URL),
+      VITE_SUPABASE_ANON_KEY_present: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+      VITE_API_URL: process.env.VITE_API_URL || null,
+      NODE_ENV: process.env.NODE_ENV || null,
+    };
+    return res.json(payload);
+  } catch (e) {
+    return res.status(500).json({ error: e?.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 API Server running on http://localhost:${PORT}`);
+  console.log('🔧 ENV presence:', {
+    SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+    SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+  });
 });
 
 // ===== Conversations: service-role endpoints =====

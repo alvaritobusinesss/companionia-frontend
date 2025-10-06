@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ interface ModelCardWithAccessProps {
   onPurchase: (modelId: string) => void;
 }
 
-export function ModelCardWithAccess({ 
+function ModelCardWithAccessComponent({ 
   model, 
   userAccess,
   user,
@@ -91,19 +91,19 @@ export function ModelCardWithAccess({
   return (
     <div className="relative group" ref={cardRef}>
       {/* Glow continuo siempre activo para premium y one_time */}
-      {(model.type === 'premium' || model.type === 'one_time') && (
+      {visible && (model.type === 'premium' || model.type === 'one_time') && (
         <div
-          className={`pointer-events-none absolute -inset-6 rounded-3xl blur-3xl z-0 transition-transform duration-300 group-hover:scale-105 ${
+          className={`pointer-events-none absolute -inset-6 rounded-3xl blur-2xl z-0 transition-transform duration-200 group-hover:scale-[1.02] ${
             model.type === 'premium'
               ? 'bg-fuchsia-500/35 opacity-70' /* premium: sin animación */
-              : 'bg-amber-300/50 opacity-80 animate-none group-hover:animate-[pulse_2.6s_ease-in-out_infinite]'
+              : 'bg-amber-300/40 opacity-70'
           }`}
           aria-hidden="true"
         />
       )}
-      {(model.type === 'premium' || model.type === 'one_time') && (
+      {visible && (model.type === 'premium' || model.type === 'one_time') && (
         <div
-          className={`pointer-events-none absolute -inset-2 rounded-2xl z-0 transition-transform duration-300 group-hover:scale-105 ${
+          className={`pointer-events-none absolute -inset-2 rounded-2xl z-0 transition-transform duration-200 group-hover:scale-[1.02] ${
             model.type === 'premium'
               ? 'ring-4 ring-fuchsia-400/50'
               : 'ring-4 ring-yellow-300/60'
@@ -111,26 +111,27 @@ export function ModelCardWithAccess({
         />
       )}
       <Card 
-        className={`relative z-10 cursor-pointer transition-transform duration-300 group-hover:scale-105 hover:shadow-lg ${
+        className={`relative z-10 cursor-pointer transition-transform duration-200 group-hover:scale-[1.02] hover:shadow-md ${
         !userAccess.hasAccess && model.type === 'premium' 
-          ? 'shadow-[0_0_50px_20px_rgba(147,51,234,0.4)]' 
+          ? 'shadow-[0_0_30px_12px_rgba(147,51,234,0.28)]' 
           : !userAccess.hasAccess && model.type === 'one_time'
-          ? 'shadow-[0_0_50px_20px_rgba(251,191,36,0.4)]'
+          ? 'shadow-[0_0_30px_12px_rgba(251,191,36,0.28)]'
           : ''
       }`}
       onClick={handleClick}
     >
       <CardContent className="p-0 flex flex-col h-full">
         {/* Imagen del modelo */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg" style={{ contentVisibility: 'auto', containIntrinsicSize: '600px 800px' }}>
+        <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg" style={{ contentVisibility: 'auto', containIntrinsicSize: '400px 533px' }}>
           <img 
             src={imgSrc}
             alt={model.name}
             loading="lazy"
             decoding="async"
             fetchPriority="low"
-            width={600}
-            height={800}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+            width={400}
+            height={533}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
             onError={(e) => {
               const url = model.image_url || '';
@@ -141,22 +142,22 @@ export function ModelCardWithAccess({
           />
           
           {/* Overlay de bloqueo - solo para modelos premium y one_time */}
-          {!userAccess.hasAccess && model.type !== 'free' && (
-            <div className={`absolute inset-0 flex items-center justify-center ${model.type === 'premium' ? 'bg-gradient-to-br from-purple-900 via-fuchsia-900 to-purple-950 backdrop-blur-0 shadow-[0_0_90px_30px_rgba(147,51,234,0.55)_inset]' : model.type === 'one_time' ? 'bg-gradient-to-br from-yellow-900 via-amber-900 to-yellow-950 backdrop-blur-0 shadow-[0_0_90px_30px_rgba(251,191,36,0.55)_inset]' : 'bg-black/80'} rounded-t-lg overflow-hidden`}>
+          {visible && !userAccess.hasAccess && model.type !== 'free' && (
+            <div className={`absolute inset-0 flex items-center justify-center ${model.type === 'premium' ? 'bg-gradient-to-br from-purple-900 via-fuchsia-900 to-purple-950 shadow-[0_0_60px_20px_rgba(147,51,234,0.45)_inset]' : model.type === 'one_time' ? 'bg-gradient-to-br from-yellow-900 via-amber-900 to-yellow-950 shadow-[0_0_60px_20px_rgba(251,191,36,0.45)_inset]' : 'bg-black/70'} rounded-t-lg overflow-hidden`}>
               {model.type === 'premium' && (
                 <>
                   {/* Halo exterior brillante y animado */}
-                  <div className="pointer-events-none absolute -inset-6 rounded-2xl bg-purple-600/30 blur-3xl" />
+                  <div className="pointer-events-none absolute -inset-6 rounded-2xl bg-purple-600/25 blur-2xl" />
                   {/* Borde glow animado */}
-                  <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-2 ring-fuchsia-400/30" />
+                  <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-2 ring-fuchsia-400/25" />
                 </>
               )}
               {model.type === 'one_time' && (
                 <>
                   {/* Halo exterior dorado y animado */}
-                  <div className="pointer-events-none absolute -inset-6 rounded-2xl bg-yellow-600/35 blur-3xl animate-none group-hover:animate-[pulse_2.2s_ease-in-out_infinite]" />
+                  <div className="pointer-events-none absolute -inset-6 rounded-2xl bg-yellow-600/30 blur-2xl" />
                   {/* Borde glow dorado animado */}
-                  <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-2 ring-yellow-400/35 animate-none group-hover:animate-[pulse_2.2s_ease-in-out_infinite]" />
+                  <div className="pointer-events-none absolute inset-0 rounded-t-lg ring-2 ring-yellow-400/30" />
                 </>
               )}
               <div className="relative text-center text-white z-10">
@@ -254,8 +255,8 @@ export function ModelCardWithAccess({
             )}
           </Button>
           {/* Glow para pago único */}
-          {!userAccess.hasAccess && model.type === 'one_time' && (
-            <div className="pointer-events-none absolute inset-x-4 -bottom-1 h-8 blur-xl rounded-full bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-300 opacity-70 animate-pulse"></div>
+          {visible && !userAccess.hasAccess && model.type === 'one_time' && (
+            <div className="pointer-events-none absolute inset-x-4 -bottom-1 h-8 blur-lg rounded-full bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-300 opacity-60"></div>
           )}
         </div>
       </CardContent>
@@ -263,3 +264,21 @@ export function ModelCardWithAccess({
     </div>
   );
 }
+
+// Evitar re-renderizados innecesarios
+function areEqual(prev: ModelCardWithAccessProps, next: ModelCardWithAccessProps) {
+  const a = prev.model;
+  const b = next.model;
+  return (
+    a.id === b.id &&
+    a.name === b.name &&
+    a.image_url === b.image_url &&
+    a.type === b.type &&
+    a.price === b.price &&
+    a.rating === b.rating &&
+    prev.userAccess.hasAccess === next.userAccess.hasAccess &&
+    (!!prev.user === !!next.user)
+  );
+}
+
+export const ModelCardWithAccess = memo(ModelCardWithAccessComponent, areEqual);

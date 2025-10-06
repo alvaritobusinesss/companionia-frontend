@@ -10,3 +10,4 @@ FROM pg_tables
 WHERE tablename = 'conversations';
 
 
+
