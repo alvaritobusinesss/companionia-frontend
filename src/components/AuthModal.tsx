@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
-import { signInLocal, signUpLocal } from '@/lib/auth-local';
+import { supabase } from '@/lib/supabase';
+import { ensureUserRow } from '@/lib/auth';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface AuthModalProps {
@@ -45,12 +46,21 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         setLoading(false);
       }, 12000);
 
-      // Autenticación local (mock)
-      const user = await signInLocal(loginData.email, loginData.password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
       clearTimeout(watchdog);
-      const authedEmail = user.email;
+      if (error || !data?.user?.email) {
+        setError(error?.message || t('auth.unexpectedError'));
+        return;
+      }
+
+      // ensure user row en background (no bloquear UI)
+      ensureUserRow(supabase as any, data.user.email).catch(() => {});
+
       setSuccess(t('auth.loginSuccess'));
-      onSuccess(authedEmail);
+      onSuccess(data.user.email);
       onClose();
     } catch (err) {
       console.error('❌ Error inesperado en login:', err);
@@ -79,13 +89,26 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     }
 
     try {
+      const watchdog = setTimeout(() => {
+        setError('El registro está tardando demasiado. Inténtalo de nuevo.');
+        setLoading(false);
+      }, 15000);
 
-      // Registro local (mock)
-      const u = await signUpLocal(registerData.email, registerData.password);
-      const authedEmail = u.email;
+      const { data, error } = await supabase.auth.signUp({
+        email: registerData.email,
+        password: registerData.password,
+      });
+      clearTimeout(watchdog);
+      if (error || !data?.user?.email) {
+        setError(error?.message || t('auth.unexpectedError'));
+        return;
+      }
+
+      // Crear fila de usuario en background
+      ensureUserRow(supabase as any, data.user.email).catch(() => {});
 
       setSuccess(t('auth.registerSuccess'));
-      onSuccess(authedEmail);
+      onSuccess(data.user.email);
       onClose();
       setSuccess(null);
       setRegisterData({ email: '', password: '', confirmPassword: '' });

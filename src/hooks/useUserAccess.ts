@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getLocalUser } from '@/lib/auth-local';
+import { supabase } from '@/lib/supabase';
 
 export interface User {
   id: string;
@@ -35,22 +35,37 @@ export function useUserAccess() {
   useEffect(() => {
     let isMounted = true;
 
-    const local = getLocalUser();
-    if (local && isMounted) {
-      setUser({
-        id: local.id,
-        email: local.email,
-        is_premium: Boolean(local.is_premium),
-        purchased_models: Array.isArray(local.purchased_models) ? local.purchased_models : [],
-        daily_message_count: local.daily_message_count,
-      });
-    } else {
-      setUser(null);
+    async function init() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const sUser = data?.session?.user;
+        if (!sUser?.email) {
+          setUser(null);
+          return;
+        }
+        await refreshUser();
+      } catch (e) {
+        console.warn('useUserAccess init error', e);
+        setUser(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     }
-    if (isMounted) setLoading(false);
+
+    init();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        await refreshUser();
+      }
+    });
 
     return () => {
       isMounted = false;
+      try { sub.subscription?.unsubscribe?.(); } catch {}
     };
   }, []);
 
@@ -83,17 +98,45 @@ export function useUserAccess() {
   };
 
   const refreshUser = async () => {
-    const local = getLocalUser();
-    if (local) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const sUser = data?.session?.user;
+      if (!sUser?.id || !sUser?.email) {
+        setUser(null);
+        return;
+      }
+
+      // Leer fila del usuario
+      const { data: uRow, error: uErr } = await supabase
+        .from('users')
+        .select('id, email, is_premium')
+        .eq('id', sUser.id)
+        .single();
+
+      if (uErr && uErr.code !== 'PGRST116') {
+        console.warn('refreshUser select users error', uErr.message);
+      }
+
+      // Leer compras
+      const { data: purchases, error: pErr } = await supabase
+        .from('user_purchased_models')
+        .select('model_id')
+        .eq('user_id', sUser.id);
+      if (pErr) {
+        console.warn('refreshUser purchases error', pErr.message);
+      }
+
+      const purchased = Array.isArray(purchases) ? purchases.map((r: any) => String(r.model_id)) : [];
+
       const normalized: User = {
-        id: local.id,
-        email: local.email,
-        is_premium: Boolean(local.is_premium),
-        purchased_models: Array.isArray(local.purchased_models) ? local.purchased_models : [],
-        daily_message_count: local.daily_message_count,
+        id: sUser.id,
+        email: sUser.email,
+        is_premium: Boolean(uRow?.is_premium),
+        purchased_models: purchased,
       };
       setUser(normalized);
-    } else {
+    } catch (e) {
+      console.warn('refreshUser exception', e);
       setUser(null);
     }
   };
