@@ -50,15 +50,24 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         email: loginData.email,
         password: loginData.password,
       });
-      clearTimeout(watchdog);
       if (error || !data?.user?.email) {
+        clearTimeout(watchdog);
         setError(error?.message || t('auth.unexpectedError'));
         return;
       }
 
+      // Esperar brevemente a que la sesión quede disponible
+      let tries = 0;
+      while (tries < 6) {
+        const { data: s } = await supabase.auth.getSession();
+        if (s?.session?.user?.email) break;
+        await new Promise(r => setTimeout(r, 200));
+        tries++;
+      }
+
+      clearTimeout(watchdog);
       // ensure user row en background (no bloquear UI)
       ensureUserRow(supabase as any, data.user.email).catch(() => {});
-
       setSuccess(t('auth.loginSuccess'));
       onSuccess(data.user.email);
       onClose();
