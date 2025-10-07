@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { User, Crown, LogOut, Settings } from 'lucide-react';
-import { signOutLocal } from '@/lib/auth-local';
+import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface UserMenuProps {
@@ -29,15 +29,15 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
   const handleSignOut = async () => {
     try {
       console.log('🚪 Cerrando sesión...');
-      await signOutLocal();
+      await supabase.auth.signOut();
       
       // Callback opcional para notificar al componente padre
       if (onSignOut) {
         onSignOut();
       }
       
-      // Redirigir a la página de autenticación
-      window.location.href = '/auth';
+      // Redirigir a inicio (la ruta /auth no existe en producción)
+      window.location.href = '/';
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
