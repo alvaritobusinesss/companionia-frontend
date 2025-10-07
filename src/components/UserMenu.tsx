@@ -29,7 +29,15 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
   const handleSignOut = async () => {
     try {
       console.log('🚪 Cerrando sesión...');
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'global' as any });
+      // Verificación rápida: si aún hay sesión, forzar limpieza local
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) {
+          console.warn('⚠️ Sesión persistente tras signOut, limpiando almacenamiento local');
+          localStorage.removeItem('sb-"session"');
+        }
+      } catch {}
       
       // Callback opcional para notificar al componente padre
       if (onSignOut) {
@@ -37,7 +45,7 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
       }
       
       // Redirigir a inicio (la ruta /auth no existe en producción)
-      window.location.href = '/';
+      window.location.replace('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
