@@ -14,6 +14,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import LegalNotice from "./pages/LegalNotice";
 import CookieConsent from "@/components/CookieConsent";
 import Auth from "./pages/Auth";
+import { DiagnosticPanel } from "@/components/DiagnosticPanel";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route path="/legal-notice" element={<LegalNotice />} />
+            <Route path="/diagnostics" element={<DiagnosticPanel />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
