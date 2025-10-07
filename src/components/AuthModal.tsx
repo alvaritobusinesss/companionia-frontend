@@ -41,79 +41,43 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
     try {
       console.log('🔐 Iniciando login para:', loginData.email);
-      
+
       // Verificar que Supabase esté configurado
       if (!supabase) {
         setError('Error de configuración: Supabase no está disponible');
         return;
       }
 
-      // Watchdog para evitar que la UI se quede bloqueada si la red se cuelga
-      const watchdog = setTimeout(() => {
-        console.error('⏰ Timeout en login');
-        setError('La solicitud de inicio de sesión está tardando demasiado. Verifica tu conexión e inténtalo de nuevo.');
-        setLoading(false);
-      }, 15000);
-
+      // 1) Iniciar sesión
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginData.email,
         password: loginData.password,
       });
-      
-      console.log('📝 Respuesta de login:', { 
-        hasData: !!data, 
-        hasUser: !!data?.user, 
-        hasEmail: !!data?.user?.email,
-        error: error?.message 
-      });
-
       if (error) {
-        clearTimeout(watchdog);
         console.error('❌ Error en login:', error);
-        
-        // Mensajes de error más específicos
-        let errorMessage = error.message;
-        if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Email o contraseña incorrectos';
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Por favor, confirma tu email antes de iniciar sesión';
-        } else if (error.message.includes('Too many requests')) {
-          errorMessage = 'Demasiados intentos. Espera unos minutos antes de intentar de nuevo';
-        }
-        
-        setError(errorMessage);
+        setError(error.message || t('auth.unexpectedError'));
         return;
       }
 
-      if (!data?.user?.email) {
-        clearTimeout(watchdog);
-        setError('No se pudo obtener la información del usuario');
-        return;
-      }
-
-      // Esperar brevemente a que la sesión quede disponible
-      let tries = 0;
-      while (tries < 8) {
+      // 2) Esperar hasta que la sesión esté disponible localmente (máx 3s)
+      const t0 = Date.now();
+      while (Date.now() - t0 < 3000) {
         const { data: s } = await supabase.auth.getSession();
-        if (s?.session?.user?.email) {
-          console.log('✅ Sesión confirmada');
-          break;
+        if (s.session) {
+          console.log('✅ Sesión detectada para:', s.session.user.email);
+          // ensure user row en background (no bloquear UI)
+          ensureUserRow(supabase as any, s.session.user.email).catch(() => {});
+          setSuccess(t('auth.loginSuccess'));
+          onSuccess(s.session.user.email);
+          onClose();
+          return;
         }
-        await new Promise(r => setTimeout(r, 250));
-        tries++;
+        await new Promise((r) => setTimeout(r, 150));
       }
 
-      clearTimeout(watchdog);
-      
-      // ensure user row en background (no bloquear UI)
-      ensureUserRow(supabase as any, data.user.email).catch((err) => {
-        console.warn('⚠️ Error al crear fila de usuario:', err);
-      });
-      
-      console.log('✅ Login exitoso para:', data.user.email);
-      setSuccess(t('auth.loginSuccess'));
-      onSuccess(data.user.email);
-      onClose();
+      // Si no se detecta la sesión en 3s
+      console.error('⏰ timeout: sesión no detectada');
+      setError('La solicitud de inicio de sesión está tardando demasiado. Inténtalo de nuevo.');
     } catch (err) {
       console.error('❌ Error inesperado en login:', err);
       setError('Error inesperado. Por favor, recarga la página e inténtalo de nuevo.');
