@@ -459,6 +459,7 @@ const Index = () => {
   
   const { user, loading: userLoading, checkModelAccess, refreshUser } = useUserAccess();
   const { t, isLoading: translationLoading } = useTranslation();
+  const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || 'http://localhost:3001';
 
   // Identificador para control global de límite diario
   const getSubjectId = () => {
@@ -532,7 +533,7 @@ const Index = () => {
       // Consultar límite global del día en el backend
       try {
         const subjectId = getSubjectId();
-        const res = await fetch(`/api/usage-status?subjectId=${encodeURIComponent(subjectId)}`);
+        const res = await fetch(`${API_BASE}/api/usage-status?subjectId=${encodeURIComponent(subjectId)}`);
         if (res.ok) {
           const info = await res.json();
           const remaining = typeof info?.remaining === 'number' ? info.remaining : null;
@@ -586,7 +587,7 @@ const Index = () => {
 
   const handlePurchaseConfirm = async (modelId: string) => {
     try {
-      const response = await fetch(`/api/create-checkout-session`, {
+      const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
