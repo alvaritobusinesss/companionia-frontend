@@ -92,23 +92,39 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       const watchdog = setTimeout(() => {
         setError('El registro está tardando demasiado. Inténtalo de nuevo.');
         setLoading(false);
-      }, 15000);
+      }, 8000);
 
-      const { data, error } = await supabase.auth.signUp({
-        email: registerData.email,
-        password: registerData.password,
-      });
-      clearTimeout(watchdog);
-      if (error || !data?.user?.email) {
-        setError(error?.message || t('auth.unexpectedError'));
+      const email = registerData.email;
+      const password = registerData.password;
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        clearTimeout(watchdog);
+        setError(error.message || t('auth.unexpectedError'));
         return;
       }
 
-      // Crear fila de usuario en background
-      ensureUserRow(supabase as any, data.user.email).catch(() => {});
+      // Intentar sesión inmediata por si no llega automáticamente
+      try {
+        const signInRes = await supabase.auth.signInWithPassword({ email, password });
+        if (signInRes?.data?.user?.email) {
+          clearTimeout(watchdog);
+          ensureUserRow(supabase as any, signInRes.data.user.email).catch(() => {});
+          setSuccess(t('auth.registerSuccess'));
+          onSuccess(signInRes.data.user.email);
+          onClose();
+          setSuccess(null);
+          setRegisterData({ email: '', password: '', confirmPassword: '' });
+          return;
+        }
+      } catch {}
 
+      // Fallback: si signUp devolvió user, proceder igualmente y dejar que onAuthStateChange nos autentique
+      clearTimeout(watchdog);
+      const newEmail = data?.user?.email || email;
+      ensureUserRow(supabase as any, newEmail).catch(() => {});
       setSuccess(t('auth.registerSuccess'));
-      onSuccess(data.user.email);
+      onSuccess(newEmail);
       onClose();
       setSuccess(null);
       setRegisterData({ email: '', password: '', confirmPassword: '' });
