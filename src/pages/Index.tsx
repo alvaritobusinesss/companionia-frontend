@@ -802,6 +802,24 @@ const Index = () => {
                 {t('header.language')}
               </Button>
               
+              {/* Estado de usuario: skeleton mientras carga */}
+              {userLoading && (
+                <div className="w-9 h-9 rounded-full bg-muted animate-pulse" aria-hidden />
+              )}
+
+              {/* Botón de login cuando no hay usuario y no está cargando */}
+              {!user && !userLoading && (
+                <Button 
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-xs"
+                >
+                  <User className="w-3 h-3 mr-1" />
+                  {t('auth.login')}
+                </Button>
+              )}
+
               {/* User Menu - Solo mostrar si hay usuario autenticado */}
               {user && (
                 <UserMenu 

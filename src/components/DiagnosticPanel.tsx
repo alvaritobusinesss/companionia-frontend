@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthProvider';
 
 interface DiagnosticResult {
   name: string;
@@ -14,6 +15,7 @@ interface DiagnosticResult {
 export function DiagnosticPanel() {
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const { status, user } = useAuth();
 
   const runDiagnostics = async () => {
     setIsRunning(true);
@@ -180,6 +182,12 @@ export function DiagnosticPanel() {
           <AlertCircle className="w-5 h-5" />
           Panel de Diagnóstico
         </CardTitle>
+        <div className="text-sm text-muted-foreground mt-1">
+          Estado de autenticación: <span className="font-medium">{status}</span>
+          {user?.email ? (
+            <span> · Usuario: <span className="font-medium">{user.email}</span></span>
+          ) : null}
+        </div>
         <Button onClick={runDiagnostics} disabled={isRunning} className="w-fit">
           {isRunning ? 'Ejecutando...' : 'Ejecutar Diagnósticos'}
         </Button>
