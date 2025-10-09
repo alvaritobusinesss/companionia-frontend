@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthProvider';
 
 export interface User {
   id: string;
@@ -31,43 +32,30 @@ export interface UserAccess {
 export function useUserAccess() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { status, user: authUser } = useAuth();
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function init() {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const sUser = data?.session?.user;
-        if (!sUser?.email) {
-          setUser(null);
-          return;
-        }
-        await refreshUser();
-      } catch (e) {
-        console.warn('useUserAccess init error', e);
-        setUser(null);
-      } finally {
-        if (isMounted) setLoading(false);
+    let cancelled = false;
+    async function sync() {
+      // While auth status is hydrating, we are loading
+      if (status === 'loading') {
+        setLoading(true);
+        return;
       }
+      // If unauthenticated, clear user and stop loading
+      if (status === 'unauthenticated' || !authUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      // Authenticated: fetch business row(s)
+      setLoading(true);
+      await refreshUser();
+      if (!cancelled) setLoading(false);
     }
-
-    init();
-
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        await refreshUser();
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      try { sub.subscription?.unsubscribe?.(); } catch {}
-    };
-  }, []);
+    sync();
+    return () => { cancelled = true; };
+  }, [status, authUser?.id]);
 
   const checkModelAccess = (model: Model): UserAccess => {
     if (!user) {
@@ -99,8 +87,7 @@ export function useUserAccess() {
 
   const refreshUser = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
-      const sUser = data?.session?.user;
+      const sUser = authUser;
       if (!sUser?.id || !sUser?.email) {
         setUser(null);
         return;
