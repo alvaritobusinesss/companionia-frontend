@@ -459,7 +459,8 @@ const Index = () => {
   
   const { user, loading: userLoading, checkModelAccess, refreshUser } = useUserAccess();
   const { t, isLoading: translationLoading } = useTranslation();
-  const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || 'http://localhost:3001';
+  // Use same-origin in production if no explicit API URL is provided
+  const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
 
   // Identificador para control global de límite diario
   const getSubjectId = () => {

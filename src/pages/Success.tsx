@@ -6,7 +6,7 @@ import { CheckCircle, Crown, CreditCard, ArrowLeft } from 'lucide-react';
 import { useUserAccess } from '@/hooks/useUserAccess';
 
 export default function Success() {
-  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
+  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
   const [searchParams] = useSearchParams();
   const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
