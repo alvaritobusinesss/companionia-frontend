@@ -1,5 +1,4 @@
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -76,29 +75,43 @@ export default async function handler(req: any, res: any) {
     } else {
       // one_time
       if (!modelId) return res.status(400).json({ error: 'Model ID is required' });
-      const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-      const { data: model, error } = await supabase
-        .from('models')
-        .select('*')
-        .eq('id', modelId)
-        .single();
-      if (error || !model) return res.status(404).json({ error: 'Model not found' });
 
-      sessionConfig.line_items = [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `${model.name} - AI Companion`,
-              description: model.description,
-              images: model.image_url ? [model.image_url] : undefined,
-            },
-            unit_amount: Math.round((model.price || 0) * 100),
-          },
-          quantity: 1,
-        },
-      ];
+      // Try to use a configured Stripe Price ID for this model
+      const envKey = `STRIPE_PRICE_MODEL_${modelId}`;
+      const viteKey = `VITE_STRIPE_PRICE_MODEL_${modelId}`;
+      const configuredPriceId = process.env[envKey] || process.env[viteKey] || null;
+
+      // Determine price from request or fallback mapping (kept in sync with api-server.js)
+      const fallbackPrices: Record<string, number> = {
+        '4': 79.0,
+        '8': 49.0,
+        '12': 299.0,
+        '16': 99.0,
+        '20': 999.0,
+        '24': 39.0,
+      };
+      const unitPrice = Number(modelPrice) || fallbackPrices[String(modelId)] || 79.0;
+
       sessionConfig.mode = 'payment';
+      if (configuredPriceId) {
+        sessionConfig.line_items = [
+          { price: configuredPriceId, quantity: 1 },
+        ];
+      } else {
+        sessionConfig.line_items = [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `Modelo ${modelId} - AI Companion`,
+                description: 'Acceso ilimitado a este modelo',
+              },
+              unit_amount: Math.round(unitPrice * 100),
+            },
+            quantity: 1,
+          },
+        ];
+      }
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
