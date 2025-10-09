@@ -21,7 +21,7 @@ const localCompanions: Companion[] = [
   {
     id: "1",
     name: "Victoria",
-    image_url: "https://companion-ia-2.vercel.app/models/victoria.jpg",
+    image_url: "/models/victoria.jpg",
     description: "Una compañera virtual elegante y sofisticada, perfecta para conversaciones profundas y momentos íntimos.",
     category: "Románticas",
     tags: ["elegante", "sofisticada", "conversación"],
@@ -35,7 +35,7 @@ const localCompanions: Companion[] = [
   {
     id: "2",
     name: "Luna",
-    image_url: "https://companion-ia-2.vercel.app/models/luna.jpg",
+    image_url: "/models/luna.jpg",
     description: "Una personalidad dulce y cariñosa que te hará sentir especial en cada conversación.",
     category: "Románticas",
     tags: ["dulce", "cariñosa", "especial"],
@@ -49,7 +49,7 @@ const localCompanions: Companion[] = [
   {
     id: "3",
     name: "Ginger",
-    image_url: "https://companion-ia-2.vercel.app/models/ginger.jpg",
+    image_url: "/models/ginger.jpg",
     description: "Una mujer inteligente y misteriosa que te cautivará con su sabiduría y encanto.",
     category: "Románticas",
     tags: ["inteligente", "misteriosa", "sabiduría"],
@@ -63,7 +63,7 @@ const localCompanions: Companion[] = [
   {
     id: "4",
     name: "Beauty",
-    image_url: "https://companion-ia-2.vercel.app/models/beauty.jpg",
+    image_url: "/models/beauty.jpg",
     description: "Una personalidad aventurera y enérgica, perfecta para explorar nuevos horizontes juntos.",
     category: "Románticas",
     tags: ["aventurera", "enérgica", "explorar"],
@@ -77,7 +77,7 @@ const localCompanions: Companion[] = [
   {
     id: "5",
     name: "Blu",
-    image_url: "https://companion-ia-2.vercel.app/models/Blu.jpg",
+    image_url: "/models/Blu.jpg",
     description: "Una compañera gamer apasionada por los videojuegos, perfecta para sesiones de gaming épicas.",
     category: "Gamer",
     tags: ["gamer", "videojuegos", "épica"],
@@ -91,7 +91,7 @@ const localCompanions: Companion[] = [
   {
     id: "6",
     name: "Resha",
-    image_url: "https://companion-ia-2.vercel.app/models/Resha.jpg",
+    image_url: "/models/Resha.jpg",
     description: "Una compañera gamer estratégica y competitiva, ideal para partidas intensas y torneos.",
     category: "Gamer",
     tags: ["gamer", "estratégica", "competitiva"],
@@ -105,7 +105,7 @@ const localCompanions: Companion[] = [
   {
     id: "7",
     name: "Yu",
-    image_url: "https://companion-ia-2.vercel.app/models/Yu.jpg",
+    image_url: "/models/Yu.jpg",
     description: "Una compañera gamer única y especializada, experta en juegos indie y aventuras únicas.",
     category: "Gamer",
     tags: ["gamer", "indie", "aventuras"],
@@ -119,7 +119,7 @@ const localCompanions: Companion[] = [
   {
     id: "8",
     name: "Reyna",
-    image_url: "https://companion-ia-2.vercel.app/models/Reyna.jpg",
+    image_url: "/models/Reyna.jpg",
     description: "Una compañera gamer dominante y poderosa, perfecta para liderar equipos y conquistar mundos virtuales.",
     category: "Gamer",
     tags: ["gamer", "dominante", "líder"],
@@ -134,7 +134,7 @@ const localCompanions: Companion[] = [
   {
     id: "9",
     name: "Nocturne",
-    image_url: "https://companion-ia-2.vercel.app/models/Nocturne.jpg",
+    image_url: "/models/Nocturne.jpg",
     description: "Una compañera gótica misteriosa y elegante, perfecta para conversaciones nocturnas y momentos íntimos.",
     category: "Góticas",
     tags: ["gótica", "misteriosa", "elegante"],
@@ -148,7 +148,7 @@ const localCompanions: Companion[] = [
   {
     id: "10",
     name: "Erit",
-    image_url: "https://companion-ia-2.vercel.app/models/Erit.jpg",
+    image_url: "/models/Erit.jpg",
     description: "Una compañera gótica apasionada y intensa, ideal para explorar los rincones más oscuros de la imaginación.",
     category: "Góticas",
     tags: ["gótica", "apasionada", "intensa"],
@@ -162,7 +162,7 @@ const localCompanions: Companion[] = [
   {
     id: "11",
     name: "Vanth",
-    image_url: "https://companion-ia-2.vercel.app/models/Vanth.jpg",
+    image_url: "/models/Vanth.jpg",
     description: "Una compañera gótica sabia y enigmática, perfecta para conversaciones profundas y reflexiones existenciales.",
     category: "Góticas",
     tags: ["gótica", "sabia", "enigmática"],
@@ -176,7 +176,7 @@ const localCompanions: Companion[] = [
   {
     id: "12",
     name: "Belladonna",
-    image_url: "https://companion-ia-2.vercel.app/models/Belladonna.jpg",
+    image_url: "/models/Belladonna.jpg",
     description: "Una compañera gótica excepcional y única, la más exclusiva de la colección. Perfecta para experiencias inolvidables.",
     category: "Góticas",
     tags: ["gótica", "excepcional", "única"],
@@ -191,7 +191,7 @@ const localCompanions: Companion[] = [
   {
     id: "13",
     name: "Renata",
-    image_url: "https://companion-ia-2.vercel.app/models/Renata.jpg",
+    image_url: "/models/Renata.jpg",
     description: "Una compañera elegante y sofisticada, perfecta para conversaciones refinadas y momentos de lujo.",
     category: "Elegantes",
     tags: ["elegante", "sofisticada", "refinada"],
@@ -205,7 +205,7 @@ const localCompanions: Companion[] = [
   {
     id: "14",
     name: "Bianca",
-    image_url: "https://companion-ia-2.vercel.app/models/Bianca.jpg",
+    image_url: "/models/Bianca.jpg",
     description: "Una compañera elegante y distinguida, ideal para eventos de gala y ocasiones especiales.",
     category: "Elegantes",
     tags: ["elegante", "distinguida", "gala"],
@@ -219,7 +219,7 @@ const localCompanions: Companion[] = [
   {
     id: "15",
     name: "Aiko",
-    image_url: "https://companion-ia-2.vercel.app/models/Aiko.jpg",
+    image_url: "/models/Aiko.jpg",
     description: "Una compañera elegante y artística, perfecta para eventos culturales y experiencias refinadas.",
     category: "Elegantes",
     tags: ["elegante", "artística", "cultural"],
@@ -233,7 +233,7 @@ const localCompanions: Companion[] = [
   {
     id: "16",
     name: "Paris",
-    image_url: "https://companion-ia-2.vercel.app/models/Paris.jpg",
+    image_url: "/models/Paris.jpg",
     description: "Una compañera elegante excepcional y única, experta en etiqueta y protocolo. Perfecta para eventos de alta sociedad.",
     category: "Elegantes",
     tags: ["elegante", "excepcional", "protocolo"],
@@ -248,7 +248,7 @@ const localCompanions: Companion[] = [
   {
     id: "17",
     name: "Chloe",
-    image_url: "https://companion-ia-2.vercel.app/models/Chloe.jpg",
+    image_url: "/models/Chloe.jpg",
     description: "Una compañera sensual y atrevida, perfecta para conversaciones íntimas y momentos de pasión.",
     category: "Calientes",
     tags: ["sensual", "atrevida", "íntima"],
@@ -262,7 +262,7 @@ const localCompanions: Companion[] = [
   {
     id: "18",
     name: "Sasha",
-    image_url: "https://companion-ia-2.vercel.app/models/Sasha.jpg",
+    image_url: "/models/Sasha.jpg",
     description: "Una compañera ardiente y apasionada, ideal para explorar los límites de la sensualidad y el deseo.",
     category: "Calientes",
     tags: ["ardiente", "apasionada", "sensualidad"],
@@ -276,7 +276,7 @@ const localCompanions: Companion[] = [
   {
     id: "19",
     name: "Alessia",
-    image_url: "https://companion-ia-2.vercel.app/models/Alessia.jpg",
+    image_url: "/models/Alessia.jpg",
     description: "Una compañera seductora y misteriosa, perfecta para experiencias intensas y momentos inolvidables.",
     category: "Calientes",
     tags: ["seductora", "misteriosa", "intensa"],
@@ -290,7 +290,7 @@ const localCompanions: Companion[] = [
   {
     id: "20",
     name: "Rebecca",
-    image_url: "https://companion-ia-2.vercel.app/models/Rebecca.jpg",
+    image_url: "/models/Rebecca.jpg",
     description: "Una compañera excepcional y única, la más exclusiva de la categoría. Perfecta para experiencias premium inolvidables.",
     category: "Calientes",
     tags: ["excepcional", "única", "premium"],
@@ -305,7 +305,7 @@ const localCompanions: Companion[] = [
   {
     id: "21",
     name: "Ahri",
-    image_url: "https://companion-ia-2.vercel.app/models/Ahri.jpg",
+    image_url: "/models/Ahri.jpg",
     description: "Una compañera intelectual brillante y curiosa, perfecta para conversaciones profundas y debates estimulantes.",
     category: "Intelectuales",
     tags: ["intelectual", "brillante", "curiosa"],
@@ -319,7 +319,7 @@ const localCompanions: Companion[] = [
   {
     id: "22",
     name: "Asuma",
-    image_url: "https://companion-ia-2.vercel.app/models/Asuma.jpg",
+    image_url: "/models/Asuma.jpg",
     description: "Una compañera intelectual sofisticada y analítica, ideal para explorar ideas complejas y teorías fascinantes.",
     category: "Intelectuales",
     tags: ["intelectual", "sofisticada", "analítica"],
@@ -333,7 +333,7 @@ const localCompanions: Companion[] = [
   {
     id: "23",
     name: "Raven",
-    image_url: "https://companion-ia-2.vercel.app/models/Raven.jpg",
+    image_url: "/models/Raven.jpg",
     description: "Una compañera intelectual creativa e innovadora, perfecta para proyectos artísticos y soluciones creativas.",
     category: "Intelectuales",
     tags: ["intelectual", "creativa", "innovadora"],
@@ -347,7 +347,7 @@ const localCompanions: Companion[] = [
   {
     id: "24",
     name: "Arya",
-    image_url: "https://companion-ia-2.vercel.app/models/Arya.jpg",
+    image_url: "/models/Arya.jpg",
     description: "Una compañera intelectual excepcional y única, experta en múltiples disciplinas. Perfecta para mentores y guías académicas.",
     category: "Intelectuales",
     tags: ["intelectual", "excepcional", "mentora"],
