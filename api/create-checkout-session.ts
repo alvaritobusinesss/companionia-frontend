@@ -1,7 +1,5 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -9,7 +7,9 @@ export default async function handler(req: any, res: any) {
       console.error('Missing STRIPE_SECRET_KEY');
       return res.status(500).json({ error: 'Stripe key not configured' });
     }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
     let { type, modelId, userEmail, modelPrice, amount, priceId } = req.body || {};
+    if (!type) return res.status(400).json({ error: 'type is required' });
 
     // Determine base URL for redirects
     const headerProto = (req.headers['x-forwarded-proto'] as string) || 'https';
@@ -22,12 +22,12 @@ export default async function handler(req: any, res: any) {
       'http://localhost:8080';
 
     let sessionConfig: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ['card'],
       mode: type === 'premium' ? 'subscription' : 'payment',
       ui_mode: 'hosted',
       success_url: `${successBase}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${successBase}/cancel`,
-      customer_email: userEmail,
+      payment_method_types: ['card'],
+      ...(userEmail ? { customer_email: userEmail as string } : {}),
       metadata: {
         type: type,
         modelId: modelId || '',
@@ -131,6 +131,11 @@ export default async function handler(req: any, res: any) {
     const session = await stripe.checkout.sessions.create(sessionConfig);
     return res.json({ sessionId: session.id, url: session.url });
   } catch (error: any) {
+    console.error('create-checkout-session error:', {
+      message: error?.message,
+      type: error?.type,
+      code: error?.code,
+    });
     return res.status(500).json({ error: error?.message || 'Stripe session error' });
   }
 }
