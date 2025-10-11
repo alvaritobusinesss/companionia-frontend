@@ -17,9 +17,12 @@ export default async function handler(req: any, res: any) {
   try {
     const sig = req.headers['stripe-signature'] as string;
     if (!sig) return res.status(400).json({ error: 'Missing stripe-signature header' });
-
-    // req.body is a Buffer thanks to vercel.json encoding raw
-    const buf = (req as any).body as Buffer;
+    // Read raw body from the request stream for signature verification
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+    }
+    const buf = Buffer.concat(chunks);
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
     const event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
 

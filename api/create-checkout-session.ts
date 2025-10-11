@@ -7,7 +7,15 @@ export default async function handler(req: any, res: any) {
   try {
     let { type, modelId, userEmail, modelPrice, amount, priceId } = req.body || {};
 
-    const successBase = process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_APP_URL || 'http://localhost:8080';
+    // Determine base URL for redirects
+    const headerProto = (req.headers['x-forwarded-proto'] as string) || 'https';
+    const headerHost = (req.headers['x-forwarded-host'] as string) || (req.headers.host as string) || '';
+    const derivedBase = headerHost ? `${headerProto}://${headerHost}` : '';
+    const successBase =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.VITE_APP_URL ||
+      derivedBase ||
+      'http://localhost:8080';
 
     let sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
@@ -18,6 +26,7 @@ export default async function handler(req: any, res: any) {
       metadata: {
         type: type,
         modelId: modelId || '',
+        userEmail: userEmail || '',
       },
     };
 
