@@ -18,7 +18,7 @@ interface PurchaseModalProps {
 
 export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }: PurchaseModalProps) {
   const [loading, setLoading] = useState(false);
-  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
+  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
   const { t } = useTranslation();
   
   console.log('🔥 PURCHASE MODAL RENDER:', { isOpen, model, type, user });

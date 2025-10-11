@@ -16,54 +16,57 @@ export default function Success() {
 
   useEffect(() => {
     if (sessionId) {
-      // Verificar el estado de la sesión con el backend
-      const checkPaymentStatus = async () => {
+      // Verificar el estado de la sesión con el backend (con reintentos)
+      let cancelled = false;
+      const poll = async () => {
+        const start = Date.now();
+        const maxMs = 15000; // 15s
+        const intervalMs = 1200;
+        let lastData: any = null;
         try {
-          const response = await fetch(`${API_BASE}/api/check-payment-status/${sessionId}`);
-          if (response.ok) {
-            const data = await response.json();
-            setSessionData(data);
-            
-            // Si el pago fue exitoso, simular la actualización del usuario
-            if (data.paymentStatus === 'paid') {
-              console.log('✅ Pago verificado, actualizando usuario...');
-              
-              // Simular actualización del usuario
-              setTimeout(async () => {
-                try {
-                  const updateResponse = await fetch(`${API_BASE}/api/simulate-payment`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      userEmail: data.customerEmail,
-                      type: data.metadata?.type || 'premium',
-                      modelId: data.metadata?.modelId,
-                    }),
-                  });
-                  
-                  if (updateResponse.ok) {
-                    console.log('✅ Usuario actualizado automáticamente');
-                    // Refrescar acceso en la app inmediatamente
-                    await refreshUser();
-                  }
-                } catch (error) {
-                  console.error('Error updating user:', error);
-                }
-              }, 2000);
+          while (!cancelled && Date.now() - start < maxMs) {
+            const resp = await fetch(`${API_BASE}/api/check-payment-status/${sessionId}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              lastData = data;
+              setSessionData(data);
+              const paid = data?.paymentStatus === 'paid';
+              const complete = data?.status === 'complete';
+              if (paid || complete) {
+                break;
+              }
             }
+            await new Promise(r => setTimeout(r, intervalMs));
           }
-        } catch (error) {
-          console.error('Error checking payment status:', error);
-          // Fallback: asumir que el pago fue exitoso
-          setSessionData({ id: sessionId, status: 'complete' });
-        } finally {
-          setLoading(false);
+        } catch (e) {
+          console.error('Error checking payment status:', e);
         }
+
+        // Intentar actualización en cuanto haya señales suficientes
+        const meta = lastData?.metadata || {};
+        const customerEmail = lastData?.customerEmail || null;
+        if (customerEmail) {
+          try {
+            const updateResponse = await fetch(`${API_BASE}/api/simulate-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail: customerEmail,
+                type: meta?.type || 'premium',
+                modelId: meta?.modelId,
+              }),
+            });
+            if (updateResponse.ok) {
+              await refreshUser();
+            }
+          } catch (e) {
+            console.error('simulate-payment error:', e);
+          }
+        }
+        if (!cancelled) setLoading(false);
       };
-      
-      checkPaymentStatus();
+      poll();
+      return () => { cancelled = true; };
     } else {
       setLoading(false);
     }
