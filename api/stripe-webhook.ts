@@ -4,7 +4,7 @@ import { handleStripeWebhook } from '../src/api/stripe-webhook';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export const config = {
-  runtime: 'nodejs18.x',
+  runtime: 'nodejs',
   api: { bodyParser: false },
 };
 
