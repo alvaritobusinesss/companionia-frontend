@@ -4,9 +4,8 @@ import { handleStripeWebhook } from '../src/api/stripe-webhook';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  runtime: 'nodejs18.x',
+  api: { bodyParser: false },
 };
 
 export default async function handler(req: any, res: any) {

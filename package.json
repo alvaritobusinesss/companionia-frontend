@@ -9,7 +9,7 @@
     "dev:all": "concurrently -k -n \"API,WEB\" -c \"cyan,magenta\" \"npm:dev:server\" \"npm:dev\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "export:legal": "APP_URL=http://localhost:8080 node scripts/export-legal-to-pdf.js",
+    "export:legal": "APP_URL=http://localhost:5371 node scripts/export-legal-to-pdf.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "npm run build && npm run dev:server"
