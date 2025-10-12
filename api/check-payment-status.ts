@@ -24,3 +24,5 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: error?.message || 'Stripe status error' });
   }
 }
+
+export const config = { runtime: 'nodejs18.x' };
