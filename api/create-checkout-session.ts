@@ -5,11 +5,23 @@ export const config = { runtime: 'nodejs' };
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('Missing STRIPE_SECRET_KEY');
-      return res.status(500).json({ error: 'Stripe key not configured' });
+    const stripeSecret =
+      process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_LIVE_SECRET_KEY ||
+      process.env.STRIPE_SECRET ||
+      process.env.STRIPE_API_KEY ||
+      null;
+    if (!stripeSecret) {
+      const stripeEnvKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
+      console.error('Missing Stripe secret in runtime env. Detected keys (names only):', stripeEnvKeys);
+      return res.status(500).json({
+        error: 'Stripe key not configured',
+        detectedStripeEnvKeys: stripeEnvKeys,
+        node: process.versions?.node || null,
+        runtime: 'nodejs',
+      });
     }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+    const stripe = new Stripe(stripeSecret as string);
     let { type, modelId, userEmail, modelPrice, amount, priceId } = req.body || {};
     if (!type) return res.status(400).json({ error: 'type is required' });
 

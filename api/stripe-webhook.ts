@@ -1,8 +1,6 @@
 import Stripe from 'stripe';
 import { handleStripeWebhook } from '../src/api/stripe-webhook';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 export const config = {
   runtime: 'nodejs',
   api: { bodyParser: false },
@@ -23,6 +21,18 @@ export default async function handler(req: any, res: any) {
     }
     const buf = Buffer.concat(chunks);
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+    const stripeSecret =
+      process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_LIVE_SECRET_KEY ||
+      process.env.STRIPE_SECRET ||
+      process.env.STRIPE_API_KEY ||
+      null;
+    if (!stripeSecret) {
+      console.error('Missing Stripe secret in runtime env for webhook handler');
+      return res.status(500).json({ error: 'Stripe key not configured' });
+    }
+    const stripe = new Stripe(stripeSecret);
     const event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
 
     await handleStripeWebhook(event);
