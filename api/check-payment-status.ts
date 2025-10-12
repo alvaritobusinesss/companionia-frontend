@@ -3,15 +3,20 @@ import Stripe from 'stripe';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const stripeSecret =
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_LIVE_SECRET_KEY ||
-      process.env.STRIPE_SECRET ||
-      process.env.STRIPE_API_KEY ||
-      null;
+    // Strict: use STRIPE_SECRET_KEY. Temporary fallback STRIPE_SK documented.
+    let stripeSecret = process.env.STRIPE_SECRET_KEY || '';
+    const stripeEnvKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
+    if (!stripeSecret && process.env.STRIPE_SK) {
+      console.warn('Using STRIPE_SK as temporary fallback in check-payment-status');
+      stripeSecret = process.env.STRIPE_SK as string;
+    }
     if (!stripeSecret) {
-      console.error('Missing Stripe secret in runtime env for check-payment-status');
-      return res.status(500).json({ error: 'Stripe key not configured' });
+      console.error('STRIPE_SECRET_KEY missing (check-payment-status). Detected keys:', stripeEnvKeys);
+      return res.status(500).json({ error: 'STRIPE_SECRET_KEY missing', detectedStripeEnvKeys: stripeEnvKeys });
+    }
+    if (!stripeSecret.startsWith('sk_')) {
+      console.error('STRIPE_SECRET_KEY present but invalid format (check-payment-status)');
+      return res.status(500).json({ error: 'STRIPE_SECRET_KEY has unexpected format' });
     }
     const stripe = new Stripe(stripeSecret);
     const { sessionId } = req.query;

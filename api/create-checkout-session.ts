@@ -5,23 +5,23 @@ export const config = { runtime: 'nodejs' };
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const stripeSecret =
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_LIVE_SECRET_KEY ||
-      process.env.STRIPE_SECRET ||
-      process.env.STRIPE_API_KEY ||
-      null;
-    if (!stripeSecret) {
-      const stripeEnvKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
-      console.error('Missing Stripe secret in runtime env. Detected keys (names only):', stripeEnvKeys);
-      return res.status(500).json({
-        error: 'Stripe key not configured',
-        detectedStripeEnvKeys: stripeEnvKeys,
-        node: process.versions?.node || null,
-        runtime: 'nodejs',
-      });
+    // Strict: use STRIPE_SECRET_KEY. Temporary fallback to STRIPE_SK if needed.
+    let stripeSecret = process.env.STRIPE_SECRET_KEY || '';
+    if (!stripeSecret && process.env.STRIPE_SK) {
+      console.warn('Using STRIPE_SK as temporary fallback. Please set STRIPE_SECRET_KEY in Vercel.');
+      stripeSecret = process.env.STRIPE_SK as string;
     }
-    const stripe = new Stripe(stripeSecret as string);
+
+    const stripeEnvKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
+    if (!stripeSecret) {
+      console.error('STRIPE_SECRET_KEY missing. Detected keys (names only):', stripeEnvKeys);
+      return res.status(500).json({ error: 'STRIPE_SECRET_KEY missing', detectedStripeEnvKeys: stripeEnvKeys });
+    }
+    if (!stripeSecret.startsWith('sk_')) {
+      console.error('STRIPE_SECRET_KEY present but does not start with sk_');
+      return res.status(500).json({ error: 'STRIPE_SECRET_KEY has unexpected format' });
+    }
+    const stripe = new Stripe(stripeSecret);
     let { type, modelId, userEmail, modelPrice, amount, priceId } = req.body || {};
     if (!type) return res.status(400).json({ error: 'type is required' });
 
@@ -50,26 +50,14 @@ export default async function handler(req: any, res: any) {
     };
 
     if (type === 'premium') {
-      const premiumPrice = process.env.STRIPE_PREMIUM_PRICE || process.env.VITE_PREMIUM_PRICE;
+      const premiumPrice = process.env.STRIPE_PREMIUM_PRICE; // strict per request
+      if (!premiumPrice) {
+        console.error('STRIPE_PREMIUM_PRICE missing');
+        return res.status(500).json({ error: 'STRIPE_PREMIUM_PRICE missing' });
+      }
       if (premiumPrice) {
         sessionConfig.mode = 'subscription';
         sessionConfig.line_items = [{ price: premiumPrice, quantity: 1 }];
-      } else {
-        sessionConfig.mode = 'subscription';
-        sessionConfig.line_items = [
-          {
-            price_data: {
-              currency: 'eur',
-              product_data: {
-                name: 'Premium Subscription',
-                description: 'Unlimited chat with all models',
-              },
-              unit_amount: 1999,
-              recurring: { interval: 'month' },
-            },
-            quantity: 1,
-          },
-        ];
       }
     } else if (type === 'donation') {
       const cents = Math.max(100, Math.round(Number(amount) || 0));
