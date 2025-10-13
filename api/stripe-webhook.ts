@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const config = {
-  runtime: 'nodejs',
+  runtime: 'nodejs20.x',
   api: { bodyParser: false },
 };
 
