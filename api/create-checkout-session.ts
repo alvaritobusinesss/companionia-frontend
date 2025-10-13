@@ -1,9 +1,5 @@
 import Stripe from 'stripe';
 
-// Ensure Node.js runtime on Vercel and disable Edge
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export const config = { runtime: 'nodejs20.x' };
 
 export default async function handler(req: any, res: any) {
