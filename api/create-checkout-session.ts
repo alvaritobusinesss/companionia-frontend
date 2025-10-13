@@ -3,14 +3,8 @@ import Stripe from 'stripe';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    // Read Stripe secret from multiple possible env names (webhook-compatible)
-    let stripeSecret =
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_LIVE_SECRET_KEY ||
-      process.env.STRIPE_SECRET ||
-      process.env.STRIPE_API_KEY ||
-      process.env.STRIPE_SK ||
-      '';
+    // Unificado: usar únicamente STRIPE_SECRET_KEY
+    const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 
     const stripeEnvKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
     if (!stripeSecret) {

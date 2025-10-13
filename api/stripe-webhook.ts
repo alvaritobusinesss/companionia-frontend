@@ -16,13 +16,7 @@ export default async function handler(req: any, res: any) {
     }
     const buf = Buffer.concat(chunks);
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
-    const stripeSecret =
-      process.env.STRIPE_SECRET_KEY ||
-      process.env.STRIPE_LIVE_SECRET_KEY ||
-      process.env.STRIPE_SECRET ||
-      process.env.STRIPE_API_KEY ||
-      null;
+    const stripeSecret = process.env.STRIPE_SECRET_KEY || null;
     if (!stripeSecret) {
       console.error('Missing Stripe secret in runtime env for webhook handler');
       return res.status(500).json({ error: 'Stripe key not configured' });
