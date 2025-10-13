@@ -12,6 +12,8 @@ export default async function handler(_req: any, res: any) {
       stripeKeysDetected: stripeEnvKeys, // names only, no values
       node: process.versions?.node || null,
       runtime: 'nodejs',
+      // Match requested field name for easy verification in production
+      STRIPE_SECRET_KEY_present: Boolean(secret),
     };
     res.status(200).json(info);
   } catch (e: any) {
@@ -19,4 +21,7 @@ export default async function handler(_req: any, res: any) {
   }
 }
 
+// Ensure Node.js runtime on Vercel and disable Edge
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const config = { runtime: 'nodejs' };

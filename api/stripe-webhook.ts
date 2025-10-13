@@ -1,6 +1,10 @@
 import Stripe from 'stripe';
 import { handleStripeWebhook } from '../src/api/stripe-webhook';
 
+// Ensure Node.js runtime on Vercel and disable Edge
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export const config = {
   runtime: 'nodejs',
   api: { bodyParser: false },
