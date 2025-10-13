@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        ".next/**",
+        "dist/**"
+      ],
+      "env": [
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PREMIUM_PRICE",
+        "VITE_STRIPE_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_*",
+        "VITE_*"
+      ]
+    },
+    "dev": {
+      "env": [
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PREMIUM_PRICE",
+        "VITE_STRIPE_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_*",
+        "VITE_*"
+      ]
+    }
+  }
+}
