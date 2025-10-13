@@ -1,11 +1,6 @@
 import Stripe from 'stripe';
 import { handleStripeWebhook } from '../src/api/stripe-webhook';
 
-export const config = {
-  runtime: 'nodejs20.x',
-  api: { bodyParser: false },
-};
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
