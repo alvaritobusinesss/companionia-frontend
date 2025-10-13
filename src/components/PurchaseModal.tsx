@@ -28,8 +28,20 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
   const handlePurchase = async () => {
     try {
       setLoading(true);
-      alert('El sistema de pagos está deshabilitado temporalmente. Próximamente habilitaremos un nuevo método de pago.');
-      onClose();
+      // Crear sesión de checkout (suscripción para premium, pago único para one_time más adelante)
+      const resp = await fetch(`${API_BASE}/api/create-checkout-session`, {
+        method: 'POST',
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'No se pudo crear la sesión de pago');
+      }
+      const { url } = await resp.json();
+      if (!url) throw new Error('Respuesta inválida del servidor (sin url)');
+      window.location.href = url;
+    } catch (e: any) {
+      console.error('Error iniciando checkout:', e);
+      alert(e?.message || 'No se pudo iniciar el pago');
     } finally {
       setLoading(false);
     }
