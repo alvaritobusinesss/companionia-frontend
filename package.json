@@ -7,7 +7,7 @@
     "gen:webp": "node scripts/generate-webp.js",
     "dev:server": "node api-server.js",
     "dev:all": "concurrently -k -n \"API,WEB\" -c \"cyan,magenta\" \"npm:dev:server\" \"npm:dev\"",
-    "build": "vite build",
+    "build": "node scripts/diagnose-env.js && vite build",
     "build:dev": "vite build --mode development",
     "export:legal": "APP_URL=http://localhost:5371 node scripts/export-legal-to-pdf.js",
     "lint": "eslint .",
