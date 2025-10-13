@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Lock, CreditCard, Star } from 'lucide-react';
 import { Model, User } from '@/hooks/useUserAccess';
-import stripePromise from '@/lib/stripe';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface PurchaseModalProps {
@@ -27,86 +26,10 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
   if (!model) return null;
 
   const handlePurchase = async () => {
-    setLoading(true);
     try {
-      console.log('Iniciando proceso de compra...', { type, model, user });
-      
-      // Crear sesión de checkout con nuestro servidor
-      const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: type,
-          modelId: type === 'one_time' ? model.id : undefined,
-          userEmail: user?.email,
-          modelPrice: type === 'one_time' ? Number(model.price ?? 0) : undefined,
-        }),
-      });
-
-      console.log('Respuesta del servidor:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error del servidor:', errorText);
-        throw new Error(`Error al crear la sesión de checkout: ${errorText}`);
-      }
-
-      const { sessionId, url } = await response.json();
-      console.log('Checkout creado:', { sessionId, url });
-      
-      // Priorizar siempre la URL directa de Stripe cuando esté disponible
-      if (url) {
-        window.location.href = url;
-        return;
-      }
-
-      if (sessionId) {
-        console.log('Cargando Stripe...');
-        const stripe = await stripePromise;
-        console.log('Stripe cargado:', !!stripe);
-        
-        if (stripe) {
-          console.log('Redirigiendo a checkout con sessionId:', sessionId);
-          const { error } = await stripe.redirectToCheckout({ sessionId });
-          if (error) {
-            console.error('Error redirecting to checkout:', error);
-            alert('Error al procesar el pago: ' + error.message);
-          } else {
-            console.log('Redirección exitosa a Stripe');
-            // Solo en desarrollo: endpoint de simulación para no depender del webhook
-            if (import.meta.env.DEV) {
-              setTimeout(async () => {
-                try {
-                  const updateResponse = await fetch(`${API_BASE}/api/simulate-payment`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      userEmail: user?.email,
-                      type: type,
-                      modelId: type === 'one_time' ? model.id : undefined,
-                    }),
-                  });
-                  if (updateResponse.ok) {
-                    console.log('Simulación de pago (DEV) exitosa');
-                    onPurchase(model.id);
-                  } else {
-                    console.error('Error en simulación de pago (DEV)');
-                  }
-                } catch (updateError) {
-                  console.error('Excepción en simulación de pago (DEV):', updateError);
-                }
-              }, 2000);
-            }
-          }
-        }
-      }
-    } catch (error: any) {
-      console.error('Excepción en handlePurchase:', error);
-      alert(error?.message || 'Error al procesar la compra.');
+      setLoading(true);
+      alert('El sistema de pagos está deshabilitado temporalmente. Próximamente habilitaremos un nuevo método de pago.');
+      onClose();
     } finally {
       setLoading(false);
     }

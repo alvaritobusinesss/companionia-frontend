@@ -28,7 +28,7 @@ export default function PrivacyPolicy() {
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Información de cuenta:</strong> Email, contraseña (encriptada)</li>
-                <li><strong>Datos de pago:</strong> Información de facturación procesada por Stripe</li>
+                <li><strong>Datos de pago:</strong> Información de facturación procesada por un proveedor de pagos seguro (cuando esté habilitado)</li>
                 <li><strong>Mensajes de chat:</strong> Conversaciones con las modelos AI</li>
                 <li><strong>Preferencias:</strong> Configuraciones de chat y personalización</li>
                 <li><strong>Datos de uso:</strong> Patrones de uso y estadísticas anónimas</li>
@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
                 No vendemos ni compartimos tu información personal con terceros, excepto:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Stripe:</strong> Para procesar pagos de forma segura</li>
+                <li><strong>Proveedor de pagos:</strong> Para procesar pagos de forma segura (cuando esté habilitado)</li>
                 <li><strong>Supabase:</strong> Para almacenar datos de forma segura</li>
                 <li><strong>OpenAI:</strong> Para generar respuestas de chat (datos anonimizados)</li>
                 <li><strong>Cumplimiento legal:</strong> Cuando sea requerido por ley</li>

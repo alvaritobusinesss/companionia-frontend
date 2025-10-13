@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, ArrowLeft, Settings, Crown, Heart, Sparkles, Lightbulb } from "lucide-react";
 import { ChatPreferences } from "./PersonalizationModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import stripePromise from "@/lib/stripe";
 
 // Tipos simplificados
 type Message = {
@@ -60,19 +59,7 @@ export function ChatInterface({
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
   const videoWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Precios fijos opcionales (Stripe Price IDs) por importe
-  const DONATE_5_PRICE = (import.meta as any).env?.VITE_DONATE_5_PRICE as string | undefined;
-  const DONATE_10_PRICE = (import.meta as any).env?.VITE_DONATE_10_PRICE as string | undefined;
-  const DONATE_20_PRICE = (import.meta as any).env?.VITE_DONATE_20_PRICE as string | undefined;
-  const DONATE_100_PRICE = (import.meta as any).env?.VITE_DONATE_100_PRICE as string | undefined;
-
-  function getPriceIdForAmount(euro: number): string | undefined {
-    if (euro === 5) return DONATE_5_PRICE;
-    if (euro === 10) return DONATE_10_PRICE;
-    if (euro === 20) return DONATE_20_PRICE;
-    if (euro === 100) return DONATE_100_PRICE;
-    return undefined;
-  }
+  // Donaciones deshabilitadas temporalmente
 
   const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -187,40 +174,8 @@ export function ChatInterface({
     }
   };
 
-  async function handleDonate(euro: number) {
-    try {
-      const priceId = getPriceIdForAmount(euro);
-      const payload: any = {
-        type: 'donation',
-        amount: Math.round(euro * 100),
-        userEmail: userId ? undefined : undefined, // opcional
-      };
-      if (priceId) payload.priceId = priceId;
-
-      const res = await fetch(`/api/create-checkout-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Error creando sesión de donación');
-      }
-      const { url, sessionId } = await res.json();
-      if (url) {
-        window.location.href = url;
-        return;
-      }
-      if (sessionId) {
-        const stripe = await stripePromise;
-        await stripe?.redirectToCheckout({ sessionId });
-        return;
-      }
-      throw new Error('Respuesta inesperada del servidor');
-    } catch (e: any) {
-      console.error('Donación error:', e);
-      alert(e?.message || 'No se pudo iniciar la donación');
-    }
+  async function handleDonate(_euro: number) {
+    alert('Las donaciones están deshabilitadas temporalmente. Próximamente habilitaremos un nuevo método.');
   }
 
   // Función simple para guardar mensajes (últimos 20) vía API (evita RLS)
@@ -841,39 +796,9 @@ export function ChatInterface({
                 </Button>
                 {onUpgradeToPremium && (
                   <Button 
-                    onClick={async () => {
-                      console.log('🔥 CLICK HAZTE PREMIUM - REDIRIGIENDO DIRECTAMENTE A STRIPE');
+                    onClick={() => {
                       setShowLimitBanner(false);
-                      
-                      try {
-                        // Crear sesión de checkout
-                        const response = await fetch(`/api/create-checkout-session`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            type: 'premium',
-                            userEmail: 'test@test.com'
-                          })
-                        });
-                        const { url, sessionId } = await response.json();
-                        console.log('🔥 REDIRIGIENDO A:', url);
-                        
-                        // Redirigir a Stripe
-                        if (url) {
-                          window.location.href = url;
-                        } else if (sessionId) {
-                          try {
-                            const stripe = await import('@stripe/stripe-js');
-                            const stripeInstance = await stripe.loadStripe((import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY);
-                            await stripeInstance?.redirectToCheckout({ sessionId });
-                          } catch (e) {
-                            console.error('Stripe.js redirect error', e);
-                          }
-                        }
-                      } catch (error) {
-                        console.error('Error:', error);
-                        alert('Error al crear la sesión de pago');
-                      }
+                      alert('El sistema de suscripciones está deshabilitado temporalmente. Próximamente habilitaremos un nuevo método.');
                     }}
                     className="flex-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
                   >

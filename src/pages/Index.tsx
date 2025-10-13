@@ -587,35 +587,7 @@ const Index = () => {
   };
 
   const handlePurchaseConfirm = async (modelId: string) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: purchaseType,
-          modelId: purchaseType === 'one_time' ? modelId : undefined,
-          userEmail: user?.email,
-        }),
-      });
-
-      const { sessionId, url } = await response.json();
-      
-      if (url) {
-        window.location.href = url;
-        return;
-      }
-
-      if (sessionId) {
-        // Redirigir a Stripe Checkout (usando Vite env o helper compartido)
-        const stripe = await import('@stripe/stripe-js');
-        const stripeInstance = await stripe.loadStripe((import.meta as any).env?.VITE_STRIPE_PUBLISHABLE_KEY!);
-        if (stripeInstance) await stripeInstance.redirectToCheckout({ sessionId });
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-    }
+    alert('El sistema de pagos está deshabilitado temporalmente. Próximamente habilitaremos un nuevo método.');
   };
 
   const handleStartChat = (preferences: ChatPreferences) => {
@@ -742,7 +714,6 @@ const Index = () => {
   
   if (showChat && selectedModel && chatPreferences) {
     console.log('✅ TODAS LAS CONDICIONES CUMPLIDAS - MOSTRANDO CHAT');
-    const donationUrl = import.meta.env.VITE_DONATION_URL || 'https://buy.stripe.com/test_14k02bJxGe040i0V8w';
     return (
       <div className="relative">
       <ChatInterface

@@ -70,7 +70,7 @@ export default function TermsOfService() {
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Plan gratuito: Limitado a 5 mensajes diarios</li>
                   <li>Plan Premium: €19.99/mes, mensajes ilimitados</li>
-                  <li>Los pagos se procesan a través de Stripe</li>
+                  <li>Los pagos (cuando estén habilitados) se procesarán a través de un proveedor de pagos seguro</li>
                   <li>Las suscripciones se renuevan automáticamente</li>
                 </ul>
                 <p><strong>Política de reembolsos:</strong> Los reembolsos se evalúan caso por caso dentro de los primeros 7 días.</p>

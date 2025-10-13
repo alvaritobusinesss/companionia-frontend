@@ -79,7 +79,7 @@ export default function CookiePolicy() {
               <h2 className="text-2xl font-semibold mb-4">3. Cookies de terceros</h2>
               <p className="mb-4">Utilizamos servicios de terceros que pueden establecer cookies:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Stripe:</strong> Para procesar pagos de forma segura</li>
+                <li><strong>Proveedor de pagos:</strong> Para procesar pagos de forma segura (cuando esté habilitado)</li>
                 <li><strong>Supabase:</strong> Para autenticación y base de datos</li>
                 <li><strong>Google Analytics:</strong> Para análisis de tráfico</li>
                 <li><strong>OpenAI:</strong> Para funcionalidad de chat (sin cookies)</li>
