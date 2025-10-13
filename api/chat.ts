@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -81,12 +80,13 @@ ${memoryText}
 No inventes datos ni recuerdos. Si encaja de forma natural, puedes recordar información previa.`;
 }
 
-export async function POST(request: NextRequest) {
+export default async function handler(req: any, res: any) {
   try {
-    const { messages, tone, topics, style, modelName, modelPersona, userId } = await request.json();
+    const body = req.body || {};
+    const { messages, tone, topics, style, modelName, modelPersona, userId } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: 'Messages array is required' }, { status: 400 });
+      return res.status(400).json({ error: 'Messages array is required' });
     }
 
     // Detectar emoción del último mensaje del usuario
@@ -122,13 +122,12 @@ export async function POST(request: NextRequest) {
       messages: openaiMessages,
       temperature: 0.8,
       top_p: 0.9,
-      presence_penalty: 0.2,
       max_tokens: 300,
     });
 
     const response = completion.choices[0]?.message?.content || 'Lo siento, no puedo responder en este momento.';
 
-    return NextResponse.json({ 
+    res.status(200).json({
       reply: response,
       emotion,
       memorySnippet: null // TODO: Implementar extracción de snippets
@@ -136,6 +135,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in /api/chat:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
