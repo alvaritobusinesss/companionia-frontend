@@ -3,19 +3,23 @@ import Stripe from 'stripe';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    // Unificado: usar únicamente STRIPE_SECRET_KEY
-    const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
+    // Robust: resolver clave secreta desde varias opciones
+    const STRIPE_KEY =
+      process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_API_KEY ||
+      process.env.STRIPE_SECRET ||
+      '';
 
     const stripeEnvKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
-    if (!stripeSecret) {
-      console.error('STRIPE_SECRET_KEY missing. Detected keys (names only):', stripeEnvKeys);
-      return res.status(500).json({ error: 'STRIPE_SECRET_KEY missing', detectedStripeEnvKeys: stripeEnvKeys });
+    if (!STRIPE_KEY) {
+      console.error('Missing STRIPE secret. Detected keys (names only):', stripeEnvKeys);
+      return res.status(500).json({ error: 'Missing STRIPE secret', detectedStripeEnvKeys: stripeEnvKeys });
     }
-    if (!stripeSecret.startsWith('sk_')) {
+    if (!STRIPE_KEY.startsWith('sk_')) {
       console.error('STRIPE_SECRET_KEY present but does not start with sk_');
       return res.status(500).json({ error: 'STRIPE_SECRET_KEY has unexpected format' });
     }
-    const stripe = new Stripe(stripeSecret);
+    const stripe = new Stripe(STRIPE_KEY);
     let { type, modelId, userEmail, modelPrice, amount, priceId } = req.body || {};
     if (!type) return res.status(400).json({ error: 'type is required' });
 

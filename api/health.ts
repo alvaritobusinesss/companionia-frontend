@@ -10,6 +10,12 @@ export default async function handler(_req: any, res: any) {
     ];
     const detectedStripeEnvKeys = keysOfInterest.filter(k => Boolean(process.env[k]));
 
+    const STRIPE_SECRET_KEY_present = Boolean(process.env.STRIPE_SECRET_KEY);
+    const STRIPE_API_KEY_present = Boolean(process.env.STRIPE_API_KEY);
+    const STRIPE_SECRET_present = Boolean(process.env.STRIPE_SECRET);
+    const hasStripeSecret = STRIPE_SECRET_KEY_present || STRIPE_API_KEY_present || STRIPE_SECRET_present;
+    const effectiveSecret = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY || process.env.STRIPE_SECRET || '';
+
     const info = {
       ok: true,
       time: new Date().toISOString(),
@@ -22,14 +28,16 @@ export default async function handler(_req: any, res: any) {
       detectedStripeEnvKeys, // specifically requested list
 
       // Per-key presence for quick verification
-      STRIPE_SECRET_KEY_present: Boolean(secret),
+      STRIPE_SECRET_KEY_present,
+      STRIPE_API_KEY_present,
+      STRIPE_SECRET_present,
+      hasStripeSecret,
       STRIPE_WEBHOOK_SECRET_present: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       STRIPE_PREMIUM_PRICE_present: Boolean(process.env.STRIPE_PREMIUM_PRICE),
       VITE_STRIPE_PUBLISHABLE_KEY_present: Boolean(process.env.VITE_STRIPE_PUBLISHABLE_KEY),
 
       // Extra validation
-      hasStripeSecret: Boolean(secret),
-      hasStripeSecretSkPrefix: secret.startsWith('sk_'),
+      hasStripeSecretSkPrefix: effectiveSecret.startsWith('sk_'),
       hasWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
     };
     res.status(200).json(info);
