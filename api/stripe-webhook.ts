@@ -8,11 +8,18 @@ const supabase = createClient(
 
 export default async function handler(req: any, res: any) {
   try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
     // Nota: En Vercel Hobby usamos JSON sin verificación de firma para simplificar.
     // En producción, configura STRIPE_WEBHOOK_SECRET y verifica la firma.
-    const event = req.body || {};
+    let event: any = req.body;
+    try {
+      if (typeof event === 'string') event = JSON.parse(event);
+    } catch {}
+    event = event || {};
     if (!event || !event.type) {
-      return res.status(400).json({ error: 'invalid_event' });
+      return res.status(400).json({ error: 'invalid_event', gotType: typeof req.body, hasSig: Boolean(req.headers['stripe-signature']) });
     }
 
     // Utilidades
@@ -38,7 +45,7 @@ export default async function handler(req: any, res: any) {
           .update({ is_premium: true, premium_expires_at: premiumExpiresAt, updated_at: new Date().toISOString() })
           .eq('id', String(userId))
           .select('id');
-        if (error) return res.status(500).json({ error: error.message, where: 'update_by_id' });
+        if (error) return res.status(200).json({ ok: false, error: error.message, where: 'update_by_id' });
         if (Array.isArray(data) && data.length > 0) updated = true;
       }
 
@@ -48,7 +55,7 @@ export default async function handler(req: any, res: any) {
           .update({ is_premium: true, premium_expires_at: premiumExpiresAt, updated_at: new Date().toISOString() })
           .eq('email', String(userEmail))
           .select('id');
-        if (error) return res.status(500).json({ error: error.message, where: 'update_by_email' });
+        if (error) return res.status(200).json({ ok: false, error: error.message, where: 'update_by_email' });
         if (Array.isArray(data) && data.length > 0) updated = true;
       }
 
@@ -57,7 +64,7 @@ export default async function handler(req: any, res: any) {
         if (userId) payload.id = String(userId);
         if (userEmail) payload.email = String(userEmail);
         const { error } = await supabase.from('users').upsert(payload, { onConflict: 'id' });
-        if (error) return res.status(500).json({ error: error.message, where: 'upsert' });
+        if (error) return res.status(200).json({ ok: false, error: error.message, where: 'upsert' });
         updated = true;
       }
 
@@ -74,7 +81,7 @@ export default async function handler(req: any, res: any) {
         .from('users')
         .update({ is_premium: true, premium_expires_at: premiumExpiresAt, updated_at: new Date().toISOString() })
         .eq('email', String(userEmail));
-      if (error) return res.status(500).json({ error: error.message, where: 'renewal_update' });
+      if (error) return res.status(200).json({ ok: false, error: error.message, where: 'renewal_update' });
       return res.json({ ok: true, renewed: true, userEmail, premium_expires_at: premiumExpiresAt });
     }
 
