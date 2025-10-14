@@ -10,7 +10,7 @@ export default function Success() {
   const [searchParams] = useSearchParams();
   const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { refreshUser } = useUserAccess();
+  const { refreshUser, user } = useUserAccess() as any;
   
   const sessionId = searchParams.get('session_id');
 
@@ -22,7 +22,11 @@ export default function Success() {
         const retries = 5;
         for (let i = 0; i < retries && !cancelled; i++) {
           try {
-            const confirmRes = await fetch(`${API_BASE}/api/confirm-premium?sessionId=${encodeURIComponent(sessionId)}`);
+            const base = API_BASE && /^https?:\/\//.test(API_BASE) ? API_BASE : '';
+            const qs = new URLSearchParams({ sessionId });
+            if (user?.email) qs.set('email', user.email);
+            const endpoint = `${base}/api/confirm-premium?${qs.toString()}`;
+            const confirmRes = await fetch(endpoint);
             if (confirmRes.ok) {
               const data = await confirmRes.json();
               setSessionData(data);
