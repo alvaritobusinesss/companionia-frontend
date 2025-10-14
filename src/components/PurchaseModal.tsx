@@ -34,6 +34,17 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
         userId: user?.id,
         type,
         modelId: type === 'one_time' ? model.id : undefined,
+        ...(type === 'one_time'
+          ? {
+              modelName: model.name,
+              currency: 'EUR',
+              // model.price viene como string tipo "79.00"; convertir a céntimos
+              amount: (() => {
+                const p = typeof model.price === 'number' ? model.price : parseFloat(String(model.price || '0'));
+                return Math.round((isNaN(p) ? 0 : p) * 100);
+              })(),
+            }
+          : {}),
       };
       const resp = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: 'POST',

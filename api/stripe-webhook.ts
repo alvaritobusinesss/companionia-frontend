@@ -28,13 +28,41 @@ export default async function handler(req: any, res: any) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data?.object || {};
       const metadata = session.metadata || {};
+      const flowType = (metadata.type || '').toString();
+      const modelId = metadata.modelId || '';
       const userEmail = session.customer_email || metadata.userEmail || metadata.app_user_email || null;
-      const userId = metadata.supabase_user_id || null;
+      let userId = metadata.supabase_user_id || null;
 
       if (!userEmail && !userId) {
         return res.status(200).json({ handled: false, reason: 'no_user_identifiers' });
       }
 
+      // Resolver userId por email si no vino en metadata
+      if (!userId && userEmail) {
+        const { data: uRow } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', String(userEmail))
+          .maybeSingle();
+        if (uRow?.id) userId = uRow.id;
+      }
+
+      if (flowType === 'one_time' && modelId) {
+        // Insertar compra única
+        if (!userId) {
+          return res.status(200).json({ ok: false, error: 'missing_user_id_for_one_time', userEmail, modelId });
+        }
+        // Evitar duplicados: upsert por (user_id, model_id) si hay índice único; si no, intenta insert y capturar error
+        const { error: insErr } = await supabase
+          .from('user_purchased_models')
+          .insert({ user_id: String(userId), model_id: String(modelId), purchased_at: new Date().toISOString() });
+        if (insErr && !insErr.message.toLowerCase().includes('duplicate')) {
+          return res.status(200).json({ ok: false, error: insErr.message, where: 'insert_one_time' });
+        }
+        return res.json({ ok: true, one_time: true, userId, modelId });
+      }
+
+      // Suscripción premium (por defecto)
       const premiumExpiresAt = toIsoPlus30d();
 
       // Actualizar por id o email
