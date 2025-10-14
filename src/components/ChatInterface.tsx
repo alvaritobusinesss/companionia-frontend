@@ -61,7 +61,8 @@ export function ChatInterface({
 
   // Donaciones deshabilitadas temporalmente
 
-  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
+  // Use same-origin in production to avoid CORS and domain mismatches
+  const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Identificador estable para límites (usuario autenticado o deviceId)
