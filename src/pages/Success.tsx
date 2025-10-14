@@ -42,26 +42,16 @@ export default function Success() {
           console.error('Error checking payment status:', e);
         }
 
-        // Intentar actualización en cuanto haya señales suficientes
-        const meta = lastData?.metadata || {};
-        const customerEmail = lastData?.customerEmail || null;
-        if (customerEmail) {
-          try {
-            const updateResponse = await fetch(`${API_BASE}/api/simulate-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail: customerEmail,
-                type: meta?.type || 'premium',
-                modelId: meta?.modelId,
-              }),
-            });
-            if (updateResponse.ok) {
-              await refreshUser();
-            }
-          } catch (e) {
-            console.error('simulate-payment error:', e);
+        // Confirmar premium en el backend validando el sessionId con Stripe
+        try {
+          const confirmRes = await fetch(`${API_BASE}/api/confirm-premium?sessionId=${encodeURIComponent(sessionId)}`);
+          if (confirmRes.ok) {
+            await refreshUser();
+          } else {
+            console.warn('confirm-premium failed');
           }
+        } catch (e) {
+          console.error('confirm-premium error:', e);
         }
         if (!cancelled) setLoading(false);
       };
