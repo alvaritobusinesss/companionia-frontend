@@ -174,8 +174,29 @@ export function ChatInterface({
     }
   };
 
-  async function handleDonate(_euro: number) {
-    alert('Las donaciones están deshabilitadas temporalmente. Próximamente habilitaremos un nuevo método.');
+  async function handleDonate(euro: number) {
+    try {
+      const payload: any = {
+        amount: Math.round(euro * 100), // céntimos
+        currency: 'EUR',
+        userId: userId,
+      };
+      const resp = await fetch(`${API_BASE}/api/donate-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'No se pudo crear la donación');
+      }
+      const data = await resp.json();
+      if (!data?.url) throw new Error('Respuesta inválida del servidor (sin url)');
+      window.location.href = data.url;
+    } catch (e: any) {
+      console.error('Error iniciando donación:', e);
+      alert(e?.message || 'No se pudo iniciar la donación');
+    }
   }
 
   // Función simple para guardar mensajes (últimos 20) vía API (evita RLS)
