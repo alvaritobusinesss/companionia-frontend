@@ -29,19 +29,8 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ updated: false, reason: 'not_paid_or_no_email', status: session.status, payment_status: session.payment_status });
     }
 
-    // Calcular expiración a partir de la suscripción si existe; fallback 30 días
-    let premiumExpiresAt: string | null = null;
-    try {
-      if (session.subscription) {
-        const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-        if (sub?.current_period_end) {
-          premiumExpiresAt = new Date(sub.current_period_end * 1000).toISOString();
-        }
-      }
-    } catch {}
-    if (!premiumExpiresAt) {
-      premiumExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    }
+    // Establecer expiración por defecto a 30 días (suficiente para confirmar acceso inicial)
+    const premiumExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const { error } = await supabase
       .from('users')

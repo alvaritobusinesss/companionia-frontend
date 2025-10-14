@@ -16,46 +16,27 @@ export default function Success() {
 
   useEffect(() => {
     if (sessionId) {
-      // Verificar el estado de la sesión con el backend (con reintentos)
+      // Confirmar premium directamente con reintentos cortos
       let cancelled = false;
-      const poll = async () => {
-        const start = Date.now();
-        const maxMs = 15000; // 15s
-        const intervalMs = 1200;
-        let lastData: any = null;
-        try {
-          while (!cancelled && Date.now() - start < maxMs) {
-            const resp = await fetch(`${API_BASE}/api/check-payment-status/${sessionId}`);
-            if (resp.ok) {
-              const data = await resp.json();
-              lastData = data;
+      const run = async () => {
+        const retries = 5;
+        for (let i = 0; i < retries && !cancelled; i++) {
+          try {
+            const confirmRes = await fetch(`${API_BASE}/api/confirm-premium?sessionId=${encodeURIComponent(sessionId)}`);
+            if (confirmRes.ok) {
+              const data = await confirmRes.json();
               setSessionData(data);
-              const paid = data?.paymentStatus === 'paid';
-              const complete = data?.status === 'complete';
-              if (paid || complete) {
-                break;
-              }
+              await refreshUser();
+              break;
             }
-            await new Promise(r => setTimeout(r, intervalMs));
+          } catch (e) {
+            console.warn('confirm-premium attempt failed', e);
           }
-        } catch (e) {
-          console.error('Error checking payment status:', e);
-        }
-
-        // Confirmar premium en el backend validando el sessionId con Stripe
-        try {
-          const confirmRes = await fetch(`${API_BASE}/api/confirm-premium?sessionId=${encodeURIComponent(sessionId)}`);
-          if (confirmRes.ok) {
-            await refreshUser();
-          } else {
-            console.warn('confirm-premium failed');
-          }
-        } catch (e) {
-          console.error('confirm-premium error:', e);
+          await new Promise(r => setTimeout(r, 1200));
         }
         if (!cancelled) setLoading(false);
       };
-      poll();
+      run();
       return () => { cancelled = true; };
     } else {
       setLoading(false);
