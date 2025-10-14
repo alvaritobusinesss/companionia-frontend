@@ -4,10 +4,15 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
+    const STRIPE_KEY =
+      process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_API_KEY ||
+      process.env.STRIPE_SECRET ||
+      '';
     const PRICE_ID = process.env.STRIPE_PREMIUM_PRICE || '';
     if (!STRIPE_KEY || !PRICE_ID) {
-      return res.status(500).json({ error: 'Stripe env missing (STRIPE_SECRET_KEY or STRIPE_PREMIUM_PRICE)' });
+      const present = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
+      return res.status(500).json({ error: 'Stripe env missing (STRIPE_SECRET_KEY or STRIPE_PREMIUM_PRICE)', present });
     }
 
     const stripe = new Stripe(STRIPE_KEY);
@@ -22,6 +27,11 @@ export default async function handler(req: any, res: any) {
       derivedBase ||
       'http://localhost:5173';
 
+    // Datos del usuario autenticado (enviados desde el frontend)
+    const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
+    const email = typeof body?.email === 'string' ? body.email : undefined;
+    const userId = typeof body?.userId === 'string' ? body.userId : undefined;
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       ui_mode: 'hosted',
@@ -29,6 +39,17 @@ export default async function handler(req: any, res: any) {
       success_url: `${successBase}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${successBase}/cancel`,
       payment_method_types: ['card'],
+      // Prefill del email para asociar el pago a la cuenta iniciada
+      customer_email: email,
+      client_reference_id: userId,
+      metadata: {
+        supabase_user_id: userId || '',
+        app_user_email: email || '',
+        userEmail: email || '',
+        type: String(body?.type || 'premium'),
+        modelId: body?.modelId ? String(body.modelId) : '',
+        app: 'companionia',
+      },
     });
 
     return res.status(200).json({ url: session.url, sessionId: session.id });
@@ -36,4 +57,8 @@ export default async function handler(req: any, res: any) {
     console.error('create-checkout-session error:', e);
     return res.status(500).json({ error: e?.message || 'Stripe error' });
   }
+}
+
+function safeJsonParse(text: string) {
+  try { return JSON.parse(text || '{}'); } catch { return {}; }
 }

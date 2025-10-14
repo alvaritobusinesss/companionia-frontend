@@ -29,8 +29,16 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
     try {
       setLoading(true);
       // Crear sesión de checkout (suscripción para premium, pago único para one_time más adelante)
+      const payload: any = {
+        email: user?.email,
+        userId: user?.id,
+        type,
+        modelId: type === 'one_time' ? model.id : undefined,
+      };
       const resp = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
       if (!resp.ok) {
         const txt = await resp.text();
