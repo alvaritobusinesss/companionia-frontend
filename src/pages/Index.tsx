@@ -457,7 +457,7 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   
-  const { user, loading: userLoading, refreshUser } = useUserAccess();
+  const { user, loading: userLoading, refreshUser, checkModelAccess } = useUserAccess();
   const { t, isLoading: translationLoading } = useTranslation();
   // Use same-origin in production if no explicit API URL is provided
   const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
@@ -774,8 +774,38 @@ const Index = () => {
                 <Globe className="w-3 h-3 mr-1" />
                 {t('header.language')}
               </Button>
-              
-            Name="text-4xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              {/* User actions */}
+              {userLoading && (
+                <div className="w-9 h-9 rounded-full bg-muted animate-pulse" aria-hidden />
+              )}
+              {!user && !userLoading && (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-xs"
+                >
+                  <User className="w-3 h-3 mr-1" />
+                  {t('auth.login')}
+                </Button>
+              )}
+              {user && (
+                <UserMenu 
+                  user={user}
+                  onSignOut={() => {
+                    refreshUser();
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Hero Section */}
+        <div className="text-center space-y-4 py-8">
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             {t('hero.title')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
