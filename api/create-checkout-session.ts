@@ -22,11 +22,6 @@ export default async function handler(req: any, res: any) {
     const headerProto = (req.headers['x-forwarded-proto'] as string) || 'https';
     const headerHost = (req.headers['x-forwarded-host'] as string) || (req.headers.host as string) || '';
     const derivedBase = headerHost ? `${headerProto}://${headerHost}` : '';
-    const successBase =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.VITE_APP_URL ||
-      derivedBase ||
-      'http://localhost:5173';
 
     // Datos del usuario autenticado (enviados desde el frontend)
     const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
@@ -46,6 +41,10 @@ export default async function handler(req: any, res: any) {
         if (uRow?.email) email = String(uRow.email);
       } catch {}
     }
+
+    // Permitir que el cliente fuerce el origin de retorno para mantener la misma sesión
+    const preferReturnUrl = (typeof body?.returnUrl === 'string' && /^https?:\/\//i.test(body.returnUrl)) ? body.returnUrl : undefined;
+    const returnBase = preferReturnUrl || derivedBase || process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_APP_URL || 'http://localhost:5173';
 
     let session: Stripe.Checkout.Session;
     if (type === 'one_time' || type === 'donation') {
@@ -68,8 +67,8 @@ export default async function handler(req: any, res: any) {
           },
           quantity: 1,
         }],
-        success_url: `${successBase}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${successBase}/cancel`,
+        success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${returnBase}/cancel`,
         payment_method_types: ['card'],
         customer_email: email,
         customer_creation: 'always',
@@ -96,8 +95,8 @@ export default async function handler(req: any, res: any) {
         mode: 'subscription',
         ui_mode: 'hosted',
         line_items: [{ price: PRICE_ID, quantity: 1 }],
-        success_url: `${successBase}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${successBase}/cancel`,
+        success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${returnBase}/cancel`,
         payment_method_types: ['card'],
         // Prefill del email para asociar el pago a la cuenta iniciada
         customer_email: email,

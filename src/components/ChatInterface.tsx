@@ -183,6 +183,7 @@ export function ChatInterface({
       userId: userId,
       email: userEmail,
       userEmail: userEmail,
+      returnUrl: window.location.origin,
       type: 'donation', // Added this to explicitly set type for create-checkout-session
     };
     const endpoints = [

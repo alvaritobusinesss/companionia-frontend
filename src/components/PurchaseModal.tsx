@@ -39,6 +39,7 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
         email: user.email,
         userEmail: user.email,
         userId: user.id,
+        returnUrl: window.location.origin,
         type,
         modelId: type === 'one_time' ? model.id : undefined,
         ...(type === 'one_time'
