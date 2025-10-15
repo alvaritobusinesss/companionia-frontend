@@ -54,10 +54,13 @@ export default async function handler(req: any, res: any) {
     // Email opcional, solo informativo
     const email = (currentUser.email || undefined) as string | undefined;
 
-    // Base de redirección: SIEMPRE desde NEXT_PUBLIC_APP_URL
-    const returnBase = process.env.NEXT_PUBLIC_APP_URL || '';
+    // Base de redirección: priorizar el origin del cliente para mantener la MISMA sesión
+    const preferReturnUrl = (typeof body?.returnUrl === 'string' && /^https?:\/\//i.test(body.returnUrl))
+      ? body.returnUrl
+      : undefined;
+    const returnBase = preferReturnUrl || process.env.NEXT_PUBLIC_APP_URL || '';
     if (!returnBase) {
-      return res.status(500).json({ error: 'NEXT_PUBLIC_APP_URL is not configured' });
+      return res.status(500).json({ error: 'Missing return base: provide body.returnUrl or set NEXT_PUBLIC_APP_URL' });
     }
 
     let session: Stripe.Checkout.Session;
@@ -77,10 +80,8 @@ export default async function handler(req: any, res: any) {
           quantity: 1,
         }],
         success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${returnBase}/gallery`,
+        cancel_url: `${returnBase}/`,
         payment_method_types: ['card'],
-        // customer_email solo informativo
-        customer_email: email,
         client_reference_id: currentUser.id,
         metadata: {
           user_id: currentUser.id,
@@ -102,9 +103,8 @@ export default async function handler(req: any, res: any) {
         ui_mode: 'hosted',
         line_items: [{ price: PRICE_ID, quantity: 1 }],
         success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${returnBase}/gallery`,
+        cancel_url: `${returnBase}/`,
         payment_method_types: ['card'],
-        customer_email: email,
         client_reference_id: currentUser.id,
         metadata: {
           user_id: currentUser.id,
