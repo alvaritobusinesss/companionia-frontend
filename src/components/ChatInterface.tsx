@@ -176,28 +176,41 @@ export function ChatInterface({
   };
 
   async function handleDonate(euro: number) {
-    try {
-      const payload: any = {
-        amount: Math.round(euro * 100), // céntimos
-        currency: 'EUR',
-        userId: userId,
-      };
-      const resp = await fetch(`${API_BASE}/api/donate-checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(txt || 'No se pudo crear la donación');
+    const payload: any = {
+      amount: Math.round(euro * 100), // céntimos
+      currency: 'EUR',
+      userId: userId,
+    };
+    const endpoints = [
+      `${API_BASE}/api/donate-checkout`,
+      // Fallback duro a Producción para que funcione también en Previews
+      `https://companionia-frontend.vercel.app/api/donate-checkout`,
+    ];
+    let lastErr: any = null;
+    for (const ep of endpoints) {
+      try {
+        const resp = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          const txt = await resp.text();
+          throw new Error(txt || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+        throw new Error('Respuesta inválida del servidor (sin url)');
+      } catch (e) {
+        lastErr = e;
+        // intenta siguiente endpoint
       }
-      const data = await resp.json();
-      if (!data?.url) throw new Error('Respuesta inválida del servidor (sin url)');
-      window.location.href = data.url;
-    } catch (e: any) {
-      console.error('Error iniciando donación:', e);
-      alert(e?.message || 'No se pudo iniciar la donación');
     }
+    console.error('Error iniciando donación (todos los endpoints fallaron):', lastErr);
+    alert('No se pudo iniciar la donación. Inténtalo de nuevo en unos segundos.');
   }
 
   // Función simple para guardar mensajes (últimos 20) vía API (evita RLS)
