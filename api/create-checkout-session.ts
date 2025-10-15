@@ -34,11 +34,11 @@ export default async function handler(req: any, res: any) {
     const type = String(body?.type || 'premium');
 
     let session: Stripe.Checkout.Session;
-    if (type === 'one_time') {
+    if (type === 'one_time' || type === 'donation') {
       // Pago único: usar price_data dinámico
       const amount = Number.isFinite(body?.amount) ? Number(body.amount) : undefined; // en céntimos
       const currency = (body?.currency || 'EUR').toString().toLowerCase();
-      const modelName = (body?.modelName || 'Modelo').toString();
+      const modelName = (body?.modelName || (type === 'donation' ? 'Donation' : 'Modelo')).toString();
       const modelId = body?.modelId ? String(body.modelId) : '';
       if (!amount || amount <= 0) {
         return res.status(400).json({ error: 'Invalid amount for one_time (must be cents integer > 0)' });
@@ -63,7 +63,7 @@ export default async function handler(req: any, res: any) {
           supabase_user_id: userId || '',
           app_user_email: email || '',
           userEmail: email || '',
-          type: 'one_time',
+          type: type,
           modelId,
           amount: String(amount),
           currency,

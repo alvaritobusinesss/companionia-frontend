@@ -182,9 +182,9 @@ export function ChatInterface({
       userId: userId,
     };
     const endpoints = [
-      `${API_BASE}/api/donate-checkout`,
+      `${API_BASE}/api/create-checkout-session`,
       // Fallback duro a Producción para que funcione también en Previews
-      `https://companionia-frontend.vercel.app/api/donate-checkout`,
+      `https://companionia-frontend.vercel.app/api/create-checkout-session`,
     ];
     let lastErr: any = null;
     for (const ep of endpoints) {
@@ -192,7 +192,7 @@ export function ChatInterface({
         const resp = await fetch(ep, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ ...payload, type: 'donation' }),
         });
         if (!resp.ok) {
           const txt = await resp.text();
