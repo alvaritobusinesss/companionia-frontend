@@ -10,9 +10,9 @@ export default async function handler(req: any, res: any) {
       process.env.STRIPE_SECRET ||
       '';
     const PRICE_ID = process.env.STRIPE_PREMIUM_PRICE || '';
-    if (!STRIPE_KEY || !PRICE_ID) {
+    if (!STRIPE_KEY) {
       const present = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
-      return res.status(500).json({ error: 'Stripe env missing (STRIPE_SECRET_KEY or STRIPE_PREMIUM_PRICE)', present });
+      return res.status(500).json({ error: 'Stripe env missing (STRIPE_SECRET_KEY)', present });
     }
 
     const stripe = new Stripe(STRIPE_KEY);
@@ -74,6 +74,10 @@ export default async function handler(req: any, res: any) {
       });
     } else {
       // Suscripción premium
+      if (!PRICE_ID) {
+        const present = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
+        return res.status(500).json({ error: 'Missing STRIPE_PREMIUM_PRICE for premium subscriptions', present });
+      }
       session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         ui_mode: 'hosted',
