@@ -29,7 +29,7 @@ export default async function handler(req: any, res: any) {
 
     // Datos del usuario autenticado (enviados desde el frontend)
     const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
-    const email = typeof body?.email === 'string' ? body.email : undefined;
+    const email = typeof body?.email === 'string' ? body.email : (typeof body?.userEmail === 'string' ? body.userEmail : undefined);
     const userId = typeof body?.userId === 'string' ? body.userId : undefined;
     const type = String(body?.type || 'premium');
 
@@ -58,6 +58,7 @@ export default async function handler(req: any, res: any) {
         cancel_url: `${successBase}/cancel`,
         payment_method_types: ['card'],
         customer_email: email,
+        customer_creation: 'always',
         client_reference_id: userId,
         metadata: {
           supabase_user_id: userId || '',
@@ -82,6 +83,7 @@ export default async function handler(req: any, res: any) {
         payment_method_types: ['card'],
         // Prefill del email para asociar el pago a la cuenta iniciada
         customer_email: email,
+        customer_creation: 'always',
         client_reference_id: userId,
         metadata: {
           supabase_user_id: userId || '',

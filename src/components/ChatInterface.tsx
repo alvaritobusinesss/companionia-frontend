@@ -23,6 +23,7 @@ interface ChatInterfaceProps {
   onBack: () => void;
   isPremiumModel?: boolean;
   userId?: string;
+  userEmail?: string;
   modelId?: string;
   userIsPremium?: boolean;
   unlimitedForThisModel?: boolean;
@@ -39,6 +40,7 @@ export function ChatInterface({
   onBack, 
   isPremiumModel = false,
   userId,
+  userEmail,
   modelId,
   userIsPremium = false,
   unlimitedForThisModel = false,
