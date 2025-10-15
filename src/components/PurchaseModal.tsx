@@ -17,8 +17,8 @@ interface PurchaseModalProps {
 
 export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }: PurchaseModalProps) {
   const [loading, setLoading] = useState(false);
-  // Use relative path to avoid CORS and domain mismatches in Vercel previews
-  const API_BASE = '';
+  // Prefer explicit API base from env (e.g., production host). Fallback to same-origin
+  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
   const { t } = useTranslation();
   
   console.log('🔥 PURCHASE MODAL RENDER:', { isOpen, model, type, user });
