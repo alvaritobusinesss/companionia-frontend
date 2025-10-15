@@ -72,7 +72,7 @@ export function LanguageSelector({ onLanguageSelected }: LanguageSelectorProps) 
               <Globe className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">
-              AI Companions
+              AI ChatHer
             </h1>
             <p className="text-white/80 text-lg">
               Choose your language / Elige tu idioma
