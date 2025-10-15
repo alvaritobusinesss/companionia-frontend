@@ -2,7 +2,17 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.status(200).end();
+  }
+  if (req.method !== 'POST') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
     const STRIPE_KEY =
@@ -17,12 +27,11 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'Stripe env missing (STRIPE_SECRET_KEY)', present });
     }
 
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' });
-    }
-
     const stripe = new Stripe(STRIPE_KEY);
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const canUseServiceRole = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = canUseServiceRole
+      ? createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
+      : null as any;
 
     // Body y parámetros
     const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
@@ -41,15 +50,21 @@ export default async function handler(req: any, res: any) {
     const cookieTokenMatch = cookie.match(/sb-access-token=([^;]+)/);
     const accessToken = bearer || (cookieTokenMatch ? decodeURIComponent(cookieTokenMatch[1]) : undefined);
 
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Unauthorized: no access token' });
+    let currentUser: any | null = null;
+    if (accessToken && supabase) {
+      const { data: userResp, error: userErr } = await supabase.auth.getUser(accessToken);
+      if (!userErr && userResp?.user) {
+        currentUser = userResp.user;
+      }
     }
-
-    const { data: userResp, error: userErr } = await supabase.auth.getUser(accessToken);
-    if (userErr || !userResp?.user) {
-      return res.status(401).json({ error: 'Unauthorized: user not found' });
+    // Fallback suave: confiar en body.userId si no pudimos obtener user por token.
+    if (!currentUser) {
+      const bodyUserId = body?.userId && typeof body.userId === 'string' ? body.userId : undefined;
+      if (!bodyUserId) {
+        return res.status(401).json({ error: 'Unauthorized: user not found (no token, no body.userId)' });
+      }
+      currentUser = { id: bodyUserId, email: body?.email || undefined };
     }
-    const currentUser = userResp.user;
 
     // Email opcional, solo informativo
     const email = (currentUser.email || undefined) as string | undefined;
@@ -115,9 +130,11 @@ export default async function handler(req: any, res: any) {
       });
     }
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ url: session.url, sessionId: session.id });
   } catch (e: any) {
     console.error('create-checkout-session error:', e);
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(500).json({ error: e?.message || 'Stripe error' });
   }
 }

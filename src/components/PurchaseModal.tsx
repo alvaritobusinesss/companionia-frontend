@@ -18,8 +18,17 @@ interface PurchaseModalProps {
 
 export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }: PurchaseModalProps) {
   const [loading, setLoading] = useState(false);
-  // Prefer explicit API base from env (e.g., production host). Fallback to same-origin
-  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
+  // Use same-origin unless VITE_API_URL matches current origin (avoid localhost in prod)
+  const API_BASE = (() => {
+    const envUrl = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
+    try {
+      if (envUrl && /^https?:\/\//i.test(envUrl)) {
+        const envOrigin = new URL(envUrl).origin;
+        if (typeof window !== 'undefined' && envOrigin === window.location.origin) return envUrl;
+      }
+    } catch {}
+    return '';
+  })();
   const { t } = useTranslation();
   
   console.log('🔥 PURCHASE MODAL RENDER:', { isOpen, model, type, user });
