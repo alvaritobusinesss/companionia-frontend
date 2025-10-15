@@ -30,8 +30,8 @@ export default function Success() {
       } finally {
         if (!cancelled) {
           setLoading(false);
-          // Redirigir siempre a la galería sin modificar sesión
-          navigate('/gallery', { replace: true });
+          // Redirigir siempre a inicio sin modificar sesión
+          navigate('/', { replace: true });
         }
       }
     };
