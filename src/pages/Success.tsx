@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Crown, CreditCard, ArrowLeft } from 'lucide-react';
 import { useUserAccess } from '@/hooks/useUserAccess';
+import { supabase } from '@/lib/supabase';
 
 export default function Success() {
   const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
@@ -15,36 +16,57 @@ export default function Success() {
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
-    if (sessionId) {
-      // Confirmar premium directamente con reintentos cortos
-      let cancelled = false;
-      const run = async () => {
-        const retries = 5;
-        for (let i = 0; i < retries && !cancelled; i++) {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        // 1) Restaurar sesión esperada si hay backup
+        const expectedEmail = localStorage.getItem('expectedEmail') || undefined;
+        const expectedUserId = localStorage.getItem('expectedUserId') || undefined;
+        const raw = localStorage.getItem('sessionBackup');
+        if (raw) {
           try {
-            const base = API_BASE && /^https?:\/\//.test(API_BASE) ? API_BASE : '';
-            const qs = new URLSearchParams({ sessionId });
-            if (user?.email) qs.set('email', user.email);
-            const endpoint = `${base}/api/confirm-premium?${qs.toString()}`;
-            const confirmRes = await fetch(endpoint);
-            if (confirmRes.ok) {
-              const data = await confirmRes.json();
-              setSessionData(data);
-              await refreshUser();
-              break;
+            const { access_token, refresh_token } = JSON.parse(raw) || {};
+            if (access_token && refresh_token) {
+              const { data: restored } = await supabase.auth.setSession({ access_token, refresh_token });
+              // Si restauró, limpia
+              if (restored?.session) {
+                localStorage.removeItem('sessionBackup');
+              }
             }
-          } catch (e) {
-            console.warn('confirm-premium attempt failed', e);
-          }
-          await new Promise(r => setTimeout(r, 1200));
+          } catch {}
         }
+        if (expectedEmail) localStorage.removeItem('expectedEmail');
+        if (expectedUserId) localStorage.removeItem('expectedUserId');
+
+        // 2) Confirmar pago si hay sessionId
+        if (sessionId) {
+          const retries = 5;
+          for (let i = 0; i < retries && !cancelled; i++) {
+            try {
+              const base = API_BASE && /^https?:\/\//.test(API_BASE) ? API_BASE : '';
+              const qs = new URLSearchParams({ sessionId });
+              const me = (await supabase.auth.getUser()).data.user;
+              if (me?.email) qs.set('email', me.email);
+              const endpoint = `${base}/api/confirm-premium?${qs.toString()}`;
+              const confirmRes = await fetch(endpoint);
+              if (confirmRes.ok) {
+                const data = await confirmRes.json();
+                setSessionData(data);
+                await refreshUser();
+                break;
+              }
+            } catch (e) {
+              console.warn('confirm-premium attempt failed', e);
+            }
+            await new Promise(r => setTimeout(r, 1200));
+          }
+        }
+      } finally {
         if (!cancelled) setLoading(false);
-      };
-      run();
-      return () => { cancelled = true; };
-    } else {
-      setLoading(false);
-    }
+      }
+    };
+    run();
+    return () => { cancelled = true; };
   }, [sessionId]);
 
   if (loading) {
