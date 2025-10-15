@@ -26,6 +26,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       setStatus(s ? 'authenticated' : 'unauthenticated');
+
+      // Stripe return guard: if we expect a specific user/email, try to restore the previous session
+      try {
+        const expectedEmail = localStorage.getItem('expectedEmail') || undefined;
+        const expectedUserId = localStorage.getItem('expectedUserId') || undefined;
+        const currentEmail = s?.user?.email;
+        const currentId = s?.user?.id;
+        if ((expectedEmail && currentEmail && expectedEmail !== currentEmail) || (expectedUserId && currentId && expectedUserId !== currentId)) {
+          // Try to restore the backup session saved before redirecting to Stripe
+          const raw = localStorage.getItem('sessionBackup');
+          if (raw) {
+            try {
+              const { access_token, refresh_token } = JSON.parse(raw) || {};
+              if (access_token && refresh_token) {
+                const { data: restored } = await supabase.auth.setSession({ access_token, refresh_token });
+                if (restored?.session?.user?.email === expectedEmail || restored?.session?.user?.id === expectedUserId) {
+                  setSession(restored.session);
+                  setUser(restored.session.user);
+                  setStatus('authenticated');
+                } else {
+                  await supabase.auth.signOut();
+                  setSession(null);
+                  setUser(null);
+                  setStatus('unauthenticated');
+                }
+              } else {
+                await supabase.auth.signOut();
+                setSession(null);
+                setUser(null);
+                setStatus('unauthenticated');
+              }
+            } catch {
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setStatus('unauthenticated');
+            }
+          } else {
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            setStatus('unauthenticated');
+          }
+        }
+        // Clear expectations once checked
+        if (expectedEmail) localStorage.removeItem('expectedEmail');
+        if (expectedUserId) localStorage.removeItem('expectedUserId');
+        if (localStorage.getItem('sessionBackup')) localStorage.removeItem('sessionBackup');
+      } catch {}
     } catch (e) {
       console.warn('AuthProvider hydrate error', e);
       setSession(null);

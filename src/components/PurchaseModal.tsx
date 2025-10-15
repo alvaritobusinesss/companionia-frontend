@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,16 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
         return;
       }
       // Crear sesión de checkout (suscripción para premium, pago único para one_time más adelante)
+      // Guardar sesión esperada y backup de tokens antes de salir a Stripe
+      try {
+        const { data } = await supabase.auth.getSession();
+        const at = data?.session?.access_token;
+        const rt = data?.session?.refresh_token;
+        if (at && rt) localStorage.setItem('sessionBackup', JSON.stringify({ access_token: at, refresh_token: rt }));
+        localStorage.setItem('expectedEmail', user.email);
+        localStorage.setItem('expectedUserId', user.id);
+      } catch {}
+
       const payload: any = {
         email: user.email,
         userEmail: user.email,
