@@ -28,10 +28,17 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
   const handlePurchase = async () => {
     try {
       setLoading(true);
+      // Requiere usuario logueado con email
+      if (!user?.id || !user?.email) {
+        setLoading(false);
+        alert('Debes iniciar sesión para continuar con el pago.');
+        return;
+      }
       // Crear sesión de checkout (suscripción para premium, pago único para one_time más adelante)
       const payload: any = {
-        email: user?.email,
-        userId: user?.id,
+        email: user.email,
+        userEmail: user.email,
+        userId: user.id,
         type,
         modelId: type === 'one_time' ? model.id : undefined,
         ...(type === 'one_time'

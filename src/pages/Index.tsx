@@ -716,8 +716,8 @@ const Index = () => {
     console.log('✅ TODAS LAS CONDICIONES CUMPLIDAS - MOSTRANDO CHAT');
     return (
       <div className="relative">
-      <ChatInterface
-        modelName={selectedModel.name}
+        <ChatInterface
+          modelName={selectedModel.name}
           modelImage={selectedModel.image_url}
           modelVideo={(function(){
             const slug = selectedModel.name
@@ -732,6 +732,7 @@ const Index = () => {
         onBack={handleBackToGallery}
           isPremiumModel={selectedModel.type === 'premium'}
           userId={user?.id}
+          userEmail={user?.email}
           modelId={selectedModel.id}
           userIsPremium={user?.is_premium || false}
           unlimitedForThisModel={(() => {

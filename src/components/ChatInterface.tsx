@@ -176,12 +176,14 @@ export function ChatInterface({
       console.error('❌ Error al borrar conversación:', e);
     }
   };
-
   async function handleDonate(euro: number) {
     const payload: any = {
       amount: Math.round(euro * 100), // céntimos
       currency: 'EUR',
       userId: userId,
+      email: userEmail,
+      userEmail: userEmail,
+      type: 'donation', // Added this to explicitly set type for create-checkout-session
     };
     const endpoints = [
       `${API_BASE}/api/create-checkout-session`,
