@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from '@/lib/supabase';
 import { ModelCardWithAccess } from "@/components/ModelCardWithAccess";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { AuthModal } from "@/components/AuthModal";
@@ -457,7 +458,7 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   
-  const { user, loading: userLoading, checkModelAccess, refreshUser } = useUserAccess();
+  const { user, loading: userLoading, refreshUser } = useUserAccess();
   const { t, isLoading: translationLoading } = useTranslation();
   // Use same-origin in production if no explicit API URL is provided
   const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
