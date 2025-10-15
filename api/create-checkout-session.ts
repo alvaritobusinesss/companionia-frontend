@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -29,9 +30,22 @@ export default async function handler(req: any, res: any) {
 
     // Datos del usuario autenticado (enviados desde el frontend)
     const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
-    const email = typeof body?.email === 'string' ? body.email : (typeof body?.userEmail === 'string' ? body.userEmail : undefined);
+    let email = typeof body?.email === 'string' ? body.email : (typeof body?.userEmail === 'string' ? body.userEmail : undefined);
     const userId = typeof body?.userId === 'string' ? body.userId : undefined;
     const type = String(body?.type || 'premium');
+
+    // Fallback: si no nos pasan email pero tenemos userId, intentamos resolverlo desde Supabase
+    if (!email && userId && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        const { data: uRow } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', userId)
+          .maybeSingle();
+        if (uRow?.email) email = String(uRow.email);
+      } catch {}
+    }
 
     let session: Stripe.Checkout.Session;
     if (type === 'one_time' || type === 'donation') {
