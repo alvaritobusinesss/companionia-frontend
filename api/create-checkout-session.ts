@@ -97,6 +97,8 @@ export default async function handler(req: any, res: any) {
         success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${returnBase}/`,
         payment_method_types: ['card'],
+        // Prefill email solo para comodidad del usuario (no se usa para identificar en nuestra app)
+        ...(email ? { customer_email: email } : {}),
         client_reference_id: currentUser.id,
         metadata: {
           user_id: currentUser.id,
