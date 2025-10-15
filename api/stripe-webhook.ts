@@ -28,10 +28,11 @@ export default async function handler(req: any, res: any) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data?.object || {};
       const metadata = session.metadata || {};
-      const flowType = (metadata.type || '').toString();
-      const modelId = metadata.modelId || '';
+      const flowTypeLegacy = (metadata.type || '').toString();
+      const flowType = (metadata.purchase_type || flowTypeLegacy || '').toString();
+      const modelId = metadata.model_id || metadata.modelId || '';
       const userEmail = session.customer_email || metadata.userEmail || metadata.app_user_email || null;
-      let userId = metadata.supabase_user_id || null;
+      let userId = metadata.user_id || metadata.supabase_user_id || null;
 
       if (!userEmail && !userId) {
         return res.status(200).json({ handled: false, reason: 'no_user_identifiers' });
@@ -59,6 +60,24 @@ export default async function handler(req: any, res: any) {
         if (insErr && !insErr.message.toLowerCase().includes('duplicate')) {
           return res.status(200).json({ ok: false, error: insErr.message, where: 'insert_one_time' });
         }
+        // Audit row keyed by payment_intent or session id
+        try {
+          const pi = session.payment_intent;
+          const purchaseKey = (typeof pi === 'string') ? pi : (pi?.id || session.id);
+          const { error: auditErr } = await supabase
+            .from('payments_audit')
+            .upsert({
+              purchase_key: purchaseKey,
+              user_id: String(userId),
+              model_id: String(modelId),
+              purchase_type: 'one_time',
+              amount_total: session.amount_total || null,
+              currency: session.currency || null,
+              raw: session,
+              created_at: new Date().toISOString(),
+            }, { onConflict: 'purchase_key' });
+          if (auditErr) console.warn('webhook payments_audit upsert warn', auditErr.message);
+        } catch {}
         return res.json({ ok: true, one_time: true, userId, modelId });
       }
 
@@ -96,6 +115,24 @@ export default async function handler(req: any, res: any) {
         updated = true;
       }
 
+      // Audit row for subscription checkout
+      try {
+        const pi = session.payment_intent;
+        const purchaseKey = (typeof pi === 'string') ? pi : (pi?.id || session.id);
+        const { error: auditErr } = await supabase
+          .from('payments_audit')
+          .upsert({
+            purchase_key: purchaseKey,
+            user_id: userId ? String(userId) : null,
+            model_id: null,
+            purchase_type: 'premium',
+            amount_total: session.amount_total || null,
+            currency: session.currency || null,
+            raw: session,
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'purchase_key' });
+        if (auditErr) console.warn('webhook payments_audit upsert warn', auditErr.message);
+      } catch {}
       return res.json({ ok: true, updated, userId, userEmail, premium_expires_at: premiumExpiresAt });
     }
 

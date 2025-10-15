@@ -65,9 +65,15 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
             }
           : {}),
       };
+      // Obtener token actual para autenticación del servidor
+      const { data: s } = await supabase.auth.getSession();
+      const accessToken = s?.session?.access_token;
       const resp = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify(payload),
       });
       if (!resp.ok) {

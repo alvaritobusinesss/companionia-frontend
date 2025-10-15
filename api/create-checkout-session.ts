@@ -11,48 +11,57 @@ export default async function handler(req: any, res: any) {
       process.env.STRIPE_SECRET ||
       '';
     const PRICE_ID = process.env.STRIPE_PREMIUM_PRICE || '';
+
     if (!STRIPE_KEY) {
       const present = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
       return res.status(500).json({ error: 'Stripe env missing (STRIPE_SECRET_KEY)', present });
     }
 
-    const stripe = new Stripe(STRIPE_KEY);
-
-    // Base URL para redirecciones
-    const headerProto = (req.headers['x-forwarded-proto'] as string) || 'https';
-    const headerHost = (req.headers['x-forwarded-host'] as string) || (req.headers.host as string) || '';
-    const derivedBase = headerHost ? `${headerProto}://${headerHost}` : '';
-
-    // Datos del usuario autenticado (enviados desde el frontend)
-    const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
-    let email = typeof body?.email === 'string' ? body.email : (typeof body?.userEmail === 'string' ? body.userEmail : undefined);
-    const userId = typeof body?.userId === 'string' ? body.userId : undefined;
-    const type = String(body?.type || 'premium');
-
-    // Fallback: si no nos pasan email pero tenemos userId, intentamos resolverlo desde Supabase
-    if (!email && userId && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      try {
-        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-        const { data: uRow } = await supabase
-          .from('users')
-          .select('email')
-          .eq('id', userId)
-          .maybeSingle();
-        if (uRow?.email) email = String(uRow.email);
-      } catch {}
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(500).json({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' });
     }
 
-    // Permitir que el cliente fuerce el origin de retorno para mantener la misma sesión
-    const preferReturnUrl = (typeof body?.returnUrl === 'string' && /^https?:\/\//i.test(body.returnUrl)) ? body.returnUrl : undefined;
-    const returnBase = preferReturnUrl || derivedBase || process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_APP_URL || 'http://localhost:5173';
+    const stripe = new Stripe(STRIPE_KEY);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+    // Body y parámetros
+    const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
+    const type = String(body?.type || 'premium');
+    const amount = Number.isFinite(body?.amount) ? Number(body.amount) : undefined; // en céntimos cuando aplique
+    const currency = (body?.currency || 'EUR').toString().toLowerCase();
+    const modelName = (body?.modelName || (type === 'donation' ? 'Donation' : 'Modelo')).toString();
+    const modelId = body?.modelId ? String(body.modelId) : '';
+
+    // Obtener usuario autenticado en servidor (token de Supabase en Authorization Bearer o cookie)
+    const authHeader = (req.headers['authorization'] || req.headers['Authorization']) as string | undefined;
+    const bearer = authHeader && authHeader.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length)
+      : undefined;
+    const cookie = (req.headers['cookie'] as string | undefined) || '';
+    const cookieTokenMatch = cookie.match(/sb-access-token=([^;]+)/);
+    const accessToken = bearer || (cookieTokenMatch ? decodeURIComponent(cookieTokenMatch[1]) : undefined);
+
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Unauthorized: no access token' });
+    }
+
+    const { data: userResp, error: userErr } = await supabase.auth.getUser(accessToken);
+    if (userErr || !userResp?.user) {
+      return res.status(401).json({ error: 'Unauthorized: user not found' });
+    }
+    const currentUser = userResp.user;
+
+    // Email opcional, solo informativo
+    const email = (currentUser.email || undefined) as string | undefined;
+
+    // Base de redirección: SIEMPRE desde NEXT_PUBLIC_APP_URL
+    const returnBase = process.env.NEXT_PUBLIC_APP_URL || '';
+    if (!returnBase) {
+      return res.status(500).json({ error: 'NEXT_PUBLIC_APP_URL is not configured' });
+    }
 
     let session: Stripe.Checkout.Session;
     if (type === 'one_time' || type === 'donation') {
-      // Pago único: usar price_data dinámico
-      const amount = Number.isFinite(body?.amount) ? Number(body.amount) : undefined; // en céntimos
-      const currency = (body?.currency || 'EUR').toString().toLowerCase();
-      const modelName = (body?.modelName || (type === 'donation' ? 'Donation' : 'Modelo')).toString();
-      const modelId = body?.modelId ? String(body.modelId) : '';
       if (!amount || amount <= 0) {
         return res.status(400).json({ error: 'Invalid amount for one_time (must be cents integer > 0)' });
       }
@@ -68,17 +77,15 @@ export default async function handler(req: any, res: any) {
           quantity: 1,
         }],
         success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${returnBase}/cancel`,
+        cancel_url: `${returnBase}/gallery`,
         payment_method_types: ['card'],
+        // customer_email solo informativo
         customer_email: email,
-        customer_creation: 'always',
-        client_reference_id: userId,
+        client_reference_id: currentUser.id,
         metadata: {
-          supabase_user_id: userId || '',
-          app_user_email: email || '',
-          userEmail: email || '',
-          type: type,
-          modelId,
+          user_id: currentUser.id,
+          model_id: modelId,
+          purchase_type: type,
           amount: String(amount),
           currency,
           modelName,
@@ -86,7 +93,6 @@ export default async function handler(req: any, res: any) {
         },
       });
     } else {
-      // Suscripción premium
       if (!PRICE_ID) {
         const present = Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE'));
         return res.status(500).json({ error: 'Missing STRIPE_PREMIUM_PRICE for premium subscriptions', present });
@@ -96,18 +102,14 @@ export default async function handler(req: any, res: any) {
         ui_mode: 'hosted',
         line_items: [{ price: PRICE_ID, quantity: 1 }],
         success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${returnBase}/cancel`,
+        cancel_url: `${returnBase}/gallery`,
         payment_method_types: ['card'],
-        // Prefill del email para asociar el pago a la cuenta iniciada
         customer_email: email,
-        customer_creation: 'always',
-        client_reference_id: userId,
+        client_reference_id: currentUser.id,
         metadata: {
-          supabase_user_id: userId || '',
-          app_user_email: email || '',
-          userEmail: email || '',
-          type: 'premium',
-          modelId: body?.modelId ? String(body.modelId) : '',
+          user_id: currentUser.id,
+          model_id: modelId,
+          purchase_type: 'premium',
           app: 'companionia',
         },
       });

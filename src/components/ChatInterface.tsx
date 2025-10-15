@@ -194,9 +194,18 @@ export function ChatInterface({
     let lastErr: any = null;
     for (const ep of endpoints) {
       try {
+        // Obtener token actual para autenticación del servidor
+        let accessToken: string | undefined;
+        try {
+          const { data: s } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+          accessToken = s?.session?.access_token as string | undefined;
+        } catch {}
         const resp = await fetch(ep, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({ ...payload, type: 'donation' }),
         });
         if (!resp.ok) {

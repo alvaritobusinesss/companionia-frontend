@@ -1,68 +1,38 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Crown, CreditCard, ArrowLeft } from 'lucide-react';
 import { useUserAccess } from '@/hooks/useUserAccess';
-import { supabase } from '@/lib/supabase';
 
 export default function Success() {
-  const API_BASE = ((import.meta as any).env?.VITE_API_URL as string | undefined) || '';
   const [searchParams] = useSearchParams();
-  const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { refreshUser, user } = useUserAccess() as any;
-  
+  const navigate = useNavigate();
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
       try {
-        // 1) Restaurar sesión esperada si hay backup
-        const expectedEmail = localStorage.getItem('expectedEmail') || undefined;
-        const expectedUserId = localStorage.getItem('expectedUserId') || undefined;
-        const raw = localStorage.getItem('sessionBackup');
-        if (raw) {
-          try {
-            const { access_token, refresh_token } = JSON.parse(raw) || {};
-            if (access_token && refresh_token) {
-              const { data: restored } = await supabase.auth.setSession({ access_token, refresh_token });
-              // Si restauró, limpia
-              if (restored?.session) {
-                localStorage.removeItem('sessionBackup');
-              }
-            }
-          } catch {}
-        }
-        if (expectedEmail) localStorage.removeItem('expectedEmail');
-        if (expectedUserId) localStorage.removeItem('expectedUserId');
-
-        // 2) Confirmar pago si hay sessionId
         if (sessionId) {
-          const retries = 5;
-          for (let i = 0; i < retries && !cancelled; i++) {
-            try {
-              const base = API_BASE && /^https?:\/\//.test(API_BASE) ? API_BASE : '';
-              const qs = new URLSearchParams({ sessionId });
-              const me = (await supabase.auth.getUser()).data.user;
-              if (me?.email) qs.set('email', me.email);
-              const endpoint = `${base}/api/confirm-premium?${qs.toString()}`;
-              const confirmRes = await fetch(endpoint);
-              if (confirmRes.ok) {
-                const data = await confirmRes.json();
-                setSessionData(data);
-                await refreshUser();
-                break;
-              }
-            } catch (e) {
-              console.warn('confirm-premium attempt failed', e);
-            }
-            await new Promise(r => setTimeout(r, 1200));
+          // POST al nuevo endpoint para procesar la compra; no tocar autenticación
+          try {
+            await fetch('/api/checkout/success', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ session_id: sessionId }),
+            });
+          } catch (e) {
+            console.warn('POST /api/checkout/success failed', e);
           }
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          // Redirigir siempre a la galería sin modificar sesión
+          navigate('/gallery', { replace: true });
+        }
       }
     };
     run();
