@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from '@/lib/supabase';
 import { ModelCardWithAccess } from "@/components/ModelCardWithAccess";
 import { PurchaseModal } from "@/components/PurchaseModal";
 import { AuthModal } from "@/components/AuthModal";
@@ -776,43 +775,7 @@ const Index = () => {
                 {t('header.language')}
               </Button>
               
-              {/* Estado de usuario: skeleton mientras carga */}
-              {userLoading && (
-                <div className="w-9 h-9 rounded-full bg-muted animate-pulse" aria-hidden />
-              )}
-
-              {/* Botón de login cuando no hay usuario y no está cargando */}
-              {!user && !userLoading && (
-                <Button 
-                  variant="default"
-                  size="sm"
-                  onClick={() => setShowAuthModal(true)}
-                  className="text-xs"
-                >
-                  <User className="w-3 h-3 mr-1" />
-                  {t('auth.login')}
-                </Button>
-              )}
-
-              {/* User Menu - Solo mostrar si hay usuario autenticado */}
-              {user && (
-                <UserMenu 
-                  user={user} 
-                  onSignOut={() => {
-                    // Refrescar el estado del usuario después del logout
-                    refreshUser();
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Hero Section */}
-        <div className="text-center space-y-4 py-8">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            Name="text-4xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             {t('hero.title')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
