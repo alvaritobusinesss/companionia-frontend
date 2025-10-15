@@ -11,7 +11,7 @@
     "and": " y "
   },
   "header": {
-    "title": "AI Companions",
+    "title": "AI ChatHer",
     "subtitle": "Tu Compañero Digital Perfecto",
     "freeUser": "Usuario Gratuito",
     "premiumUser": "Usuario Premium",
@@ -206,7 +206,7 @@
     "limitReachedModal": "Has usado tus 5 mensajes diarios gratuitos. Hazte Premium para chatear sin límites con todas las modelos."
   },
   "auth": {
-    "welcome": "Bienvenido a AI Companions",
+    "welcome": "Bienvenido a AI ChatHer",
     "login": "Iniciar Sesión",
     "register": "Registrarse",
     "email": "Email",
@@ -287,6 +287,6 @@
     "termsOfService": "Términos y Condiciones", 
     "cookiePolicy": "Política de Cookies",
     "legalNotice": "Aviso Legal",
-    "copyright": "© 2024 AI Companions. Todos los derechos reservados."
+    "copyright": "© 2024 AI ChatHer. Todos los derechos reservados."
   }
 }

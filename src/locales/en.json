@@ -11,7 +11,7 @@
     "and": " and "
   },
   "header": {
-    "title": "AI Companions",
+    "title": "AI ChatHer",
     "subtitle": "Your Perfect Digital Companion",
     "freeUser": "Free User",
     "premiumUser": "Premium User",
@@ -190,7 +190,6 @@
   "chat": {
     "messagesLabel": "Messages:",
     "remaining": "{{count}} remaining",
-    "initialMessage": "Hello! I'm {{name}} and I'm happy to meet you. I've seen that you prefer a {{mood}} treatment and you're interested in topics like {{topics}}. How has your day been?",
     "typeMessage": "Type your message...",
     "send": "Send",
     "messageLimit": "Message limit reached",
@@ -206,7 +205,7 @@
     "limitReachedModal": "You've used your 5 free daily messages. Go Premium to chat without limits with all models."
   },
   "auth": {
-    "welcome": "Welcome to AI Companions",
+    "welcome": "Welcome to AI ChatHer",
     "login": "Log In",
     "register": "Register",
     "email": "Email",
@@ -287,6 +286,6 @@
     "termsOfService": "Terms and Conditions", 
     "cookiePolicy": "Cookie Policy",
     "legalNotice": "Legal Notice",
-    "copyright": "© 2024 AI Companions. All rights reserved."
+    "copyright": "© 2024 AI ChatHer. All rights reserved."
   }
 }
