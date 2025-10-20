@@ -180,7 +180,8 @@ export function ChatInterface({
     const payload: any = {
       amount: Math.round(usd * 100), // cents
       currency: 'USD',
-      userId: userId,
+      // Usar userId autenticado o un subjectId estable basado en dispositivo como fallback
+      userId: userId || subjectId,
       email: userEmail,
       userEmail: userEmail,
       returnUrl: window.location.origin,
