@@ -87,6 +87,14 @@ export default async function handler(req: any, res: any) {
 
       if (type === 'one_time') {
         resolvedPriceId = resolveOneTimePriceId(modelId, modelName);
+        try {
+          console.log('[checkout] one_time request', {
+            modelId,
+            modelName,
+            resolvedPriceId: resolvedPriceId || null,
+            note: resolvedPriceId ? 'using price_id from env/map' : 'fallback to amount/price_data',
+          });
+        } catch {}
       } else {
         // DONATION: intentar por tiers predefinidos
         if (!amount || amount <= 0) {
@@ -96,6 +104,13 @@ export default async function handler(req: any, res: any) {
         resolvedPriceId = resolveDonationPriceId(dollars);
         if (resolvedPriceId) usedDonationPriceId = resolvedPriceId;
         productName = `Donation $${dollars}`;
+        try {
+          console.log('[checkout] donation request', {
+            tierUSD: dollars,
+            resolvedPriceId: resolvedPriceId || null,
+            note: resolvedPriceId ? 'using donation price_id from env/map' : 'fallback to amount/price_data',
+          });
+        } catch {}
       }
 
       const usingPriceId = Boolean(resolvedPriceId);
