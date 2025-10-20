@@ -30,6 +30,9 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
     return '';
   })();
   const { t } = useTranslation();
+  // USD currency formatter for one-time model prices
+  const formatUSD = (value: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
   
   console.log('🔥 PURCHASE MODAL RENDER:', { isOpen, model, type, user });
 
@@ -65,7 +68,7 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
         ...(type === 'one_time'
           ? {
               modelName: model.name,
-              currency: 'EUR',
+              currency: 'USD',
               // model.price viene como string tipo "79.00"; convertir a céntimos
               amount: (() => {
                 const p = typeof model.price === 'number' ? model.price : parseFloat(String(model.price || '0'));
@@ -171,7 +174,7 @@ export function PurchaseModal({ isOpen, onClose, model, type, user, onPurchase }
           ) : (
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-500 drop-shadow">€{model.price}</div>
+                <div className="text-3xl font-bold text-red-500 drop-shadow">{formatUSD(Number(model.price || 0))}</div>
                 <div className="text-sm text-gray-600">{t('model.oneTime')}</div>
               </div>
             </div>

@@ -22,6 +22,7 @@ function ModelCardWithAccessComponent({
   onPurchase 
 }: ModelCardWithAccessProps) {
   const { t, ta } = useTranslation();
+  const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
   const [visible, setVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [imgSrc, setImgSrc] = useState(() => {
@@ -53,7 +54,7 @@ function ModelCardWithAccessComponent({
       case 'premium':
         return t('model.premium');
       case 'one_time':
-        return model.price ? `€${model.price}` : t('model.oneTime');
+        return model.price ? `${formatUSD(Number(model.price || 0))}` : t('model.oneTime');
       default:
         return t('model.free');
     }
@@ -167,7 +168,7 @@ function ModelCardWithAccessComponent({
                   <Lock className="w-8 h-8 mx-auto mb-2 text-red-400" />
                 )}
                 <p className="text-sm font-medium">
-                  {model.type === 'premium' ? t('model.premium') : model.price ? `€${model.price}` : t('model.locked')}
+                  {model.type === 'premium' ? t('model.premium') : model.price ? `${formatUSD(Number(model.price || 0))}` : t('model.locked')}
                 </p>
               </div>
             </div>
@@ -250,7 +251,7 @@ function ModelCardWithAccessComponent({
             ) : (
               <>
                 <CreditCard className="w-4 h-4 mr-2" />
-                {model.price ? `${t('model.buyFor')} €${model.price}` : t('model.buy')}
+                {model.price ? `${t('model.buyFor')} ${formatUSD(Number(model.price || 0))}` : t('model.buy')}
               </>
             )}
           </Button>

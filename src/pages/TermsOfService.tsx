@@ -69,7 +69,7 @@ export default function TermsOfService() {
                 <p><strong>Modelo de suscripción:</strong></p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Plan gratuito: Limitado a 5 mensajes diarios</li>
-                  <li>Plan Premium: €19.99/mes, mensajes ilimitados</li>
+                  <li>Plan Premium: $19.99/mes, mensajes ilimitados</li>
                   <li>Los pagos (cuando estén habilitados) se procesarán a través de un proveedor de pagos seguro</li>
                   <li>Las suscripciones se renuevan automáticamente</li>
                 </ul>

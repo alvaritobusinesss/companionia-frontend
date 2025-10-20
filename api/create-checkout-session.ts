@@ -80,34 +80,46 @@ export default async function handler(req: any, res: any) {
 
     let session: Stripe.Checkout.Session;
     if (type === 'one_time' || type === 'donation') {
-      if (!amount || amount <= 0) {
-        return res.status(400).json({ error: 'Invalid amount for one_time (must be cents integer > 0)' });
+      // Intentar resolver un price_id de Stripe para el modelo
+      const resolvedPriceId = resolveOneTimePriceId(modelId, modelName);
+      const usingPriceId = Boolean(resolvedPriceId);
+
+      if (!usingPriceId) {
+        // Fallback: se requiere amount si no hay price_id
+        if (!amount || amount <= 0) {
+          return res.status(400).json({ error: 'Invalid amount for one_time (must be cents integer > 0) or configure ONE_TIME_PRICE_MAP/PRICE_ID_MODEL_<MODEL_ID>' });
+        }
       }
+
+      const lineItems = usingPriceId
+        ? [{ price: resolvedPriceId as string, quantity: 1 }]
+        : [{
+            price_data: {
+              currency,
+              unit_amount: Math.round(amount as number),
+              product_data: { name: `${modelName} (unlock)` },
+            },
+            quantity: 1,
+          }];
+
       session = await stripe.checkout.sessions.create({
         mode: 'payment',
         ui_mode: 'hosted',
-        line_items: [{
-          price_data: {
-            currency,
-            unit_amount: Math.round(amount),
-            product_data: { name: `${modelName} (unlock)` },
-          },
-          quantity: 1,
-        }],
+        line_items: lineItems,
         success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${returnBase}/`,
         payment_method_types: ['card'],
-        // Prefill email solo para comodidad del usuario (no se usa para identificar en nuestra app)
         ...(email ? { customer_email: email } : {}),
         client_reference_id: currentUser.id,
         metadata: {
           user_id: currentUser.id,
           model_id: modelId,
           purchase_type: type,
-          amount: String(amount),
+          amount: usingPriceId ? 'price_id' : String(amount),
           currency,
           modelName,
           app: 'companionia',
+          used_price_id: usingPriceId ? (resolvedPriceId as string) : '',
         },
       });
     } else {
@@ -144,4 +156,50 @@ export default async function handler(req: any, res: any) {
 
 function safeJsonParse(text: string) {
   try { return JSON.parse(text || '{}'); } catch { return {}; }
+}
+
+// Devuelve un price_id para compras one-time según variables de entorno de Vercel.
+// Prioridades:
+// 1) ONE_TIME_PRICE_MAP (JSON) por nombre o por id: {"Beauty":"price_xxx", "4":"price_yyy"}
+// 2) PRICE_ID_MODEL_<NOMBRE_SANITIZADO>
+// 3) PRICE_ID_MODEL_<ID_SANITIZADO>
+// 4) undefined si no hay coincidencia
+function resolveOneTimePriceId(modelId?: string, modelName?: string): string | undefined {
+  const id = modelId || '';
+  const name = modelName || '';
+
+  // 1) JSON map
+  const mapRaw = process.env.ONE_TIME_PRICE_MAP;
+  if (mapRaw && typeof mapRaw === 'string') {
+    try {
+      const parsed = JSON.parse(mapRaw) as Record<string, string>;
+      if (parsed && typeof parsed === 'object') {
+        const byName = name ? parsed[name] : undefined;
+        if (byName && typeof byName === 'string' && byName.startsWith('price_')) return byName;
+        const byId = id ? parsed[id] : undefined;
+        if (byId && typeof byId === 'string' && byId.startsWith('price_')) return byId;
+      }
+    } catch { /* ignore JSON errors */ }
+  }
+
+  // 2) Individual env var por NOMBRE
+  if (name) {
+    const keyByName = `PRICE_ID_MODEL_${sanitizeEnvKey(name)}`;
+    const candidateByName = (process.env as any)[keyByName];
+    if (candidateByName && typeof candidateByName === 'string' && candidateByName.startsWith('price_')) return candidateByName;
+  }
+
+  // 3) Individual env var por ID
+  if (id) {
+    const keyById = `PRICE_ID_MODEL_${sanitizeEnvKey(id)}`;
+    const candidateById = (process.env as any)[keyById];
+    if (candidateById && typeof candidateById === 'string' && candidateById.startsWith('price_')) return candidateById;
+  }
+
+  return undefined;
+}
+
+function sanitizeEnvKey(s: string) {
+  // Reemplazar cualquier caracter no alfanumérico por '_', y mayúsculas
+  return s.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
 }

@@ -176,10 +176,10 @@ export function ChatInterface({
       console.error('❌ Error al borrar conversación:', e);
     }
   };
-  async function handleDonate(euro: number) {
+  async function handleDonate(usd: number) {
     const payload: any = {
-      amount: Math.round(euro * 100), // céntimos
-      currency: 'EUR',
+      amount: Math.round(usd * 100), // cents
+      currency: 'USD',
       userId: userId,
       email: userEmail,
       userEmail: userEmail,
@@ -654,15 +654,15 @@ export function ChatInterface({
               {showDonationPanel && (
                 <div className="bg-white/95 text-gray-900 rounded-xl shadow-2xl p-2 backdrop-blur-md border border-gray-200">
                   <div className="flex gap-2">
-                    {[5,10,20,100].map((euro) => (
+                    {[5,10,20,100].map((usd) => (
                       <Button
-                        key={euro}
+                        key={usd}
                         size="sm"
                         variant="outline"
                         className="bg-white text-gray-900 border-gray-300 hover:bg-gray-100 shadow"
-                        onClick={() => handleDonate(euro)}
+                        onClick={() => handleDonate(usd)}
                       >
-                        {euro}€
+                        ${usd}
                       </Button>
                     ))}
                   </div>
