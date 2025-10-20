@@ -81,6 +81,28 @@ export default async function handler(req: any, res: any) {
         return res.json({ ok: true, one_time: true, userId, modelId });
       }
 
+      if (flowType === 'donation') {
+        // Registrar donación, no alterar premium
+        try {
+          const pi = session.payment_intent;
+          const purchaseKey = (typeof pi === 'string') ? pi : (pi?.id || session.id);
+          const { error: auditErr } = await supabase
+            .from('payments_audit')
+            .upsert({
+              purchase_key: purchaseKey,
+              user_id: userId ? String(userId) : null,
+              model_id: null,
+              purchase_type: 'donation',
+              amount_total: session.amount_total || null,
+              currency: session.currency || null,
+              raw: session,
+              created_at: new Date().toISOString(),
+            }, { onConflict: 'purchase_key' });
+          if (auditErr) console.warn('webhook donations audit warn', auditErr.message);
+        } catch {}
+        return res.json({ ok: true, donation: true, userId, userEmail });
+      }
+
       // Suscripción premium (por defecto)
       const premiumExpiresAt = toIsoPlus30d();
 

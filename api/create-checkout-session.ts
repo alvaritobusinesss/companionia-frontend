@@ -80,14 +80,29 @@ export default async function handler(req: any, res: any) {
 
     let session: Stripe.Checkout.Session;
     if (type === 'one_time' || type === 'donation') {
-      // Intentar resolver un price_id de Stripe para el modelo
-      const resolvedPriceId = resolveOneTimePriceId(modelId, modelName);
-      const usingPriceId = Boolean(resolvedPriceId);
+      // Resolver price_id específico según el tipo
+      let resolvedPriceId: string | undefined;
+      let productName = `${modelName} (unlock)`;
+      let usedDonationPriceId = '';
 
+      if (type === 'one_time') {
+        resolvedPriceId = resolveOneTimePriceId(modelId, modelName);
+      } else {
+        // DONATION: intentar por tiers predefinidos
+        if (!amount || amount <= 0) {
+          return res.status(400).json({ error: 'Invalid amount for donation (must be cents integer > 0)' });
+        }
+        const dollars = Math.round((amount as number) / 100);
+        resolvedPriceId = resolveDonationPriceId(dollars);
+        if (resolvedPriceId) usedDonationPriceId = resolvedPriceId;
+        productName = `Donation $${dollars}`;
+      }
+
+      const usingPriceId = Boolean(resolvedPriceId);
       if (!usingPriceId) {
         // Fallback: se requiere amount si no hay price_id
         if (!amount || amount <= 0) {
-          return res.status(400).json({ error: 'Invalid amount for one_time (must be cents integer > 0) or configure ONE_TIME_PRICE_MAP/PRICE_ID_MODEL_<MODEL_ID>' });
+          return res.status(400).json({ error: 'Invalid amount (must be cents integer > 0) or configure ONE_TIME_PRICE_MAP/PRICE_ID_*' });
         }
       }
 
@@ -97,7 +112,7 @@ export default async function handler(req: any, res: any) {
             price_data: {
               currency,
               unit_amount: Math.round(amount as number),
-              product_data: { name: `${modelName} (unlock)` },
+              product_data: { name: productName },
             },
             quantity: 1,
           }];
@@ -120,6 +135,7 @@ export default async function handler(req: any, res: any) {
           modelName,
           app: 'companionia',
           used_price_id: usingPriceId ? (resolvedPriceId as string) : '',
+          used_donation_price_id: usedDonationPriceId,
         },
       });
     } else {
@@ -202,4 +218,31 @@ function resolveOneTimePriceId(modelId?: string, modelName?: string): string | u
 function sanitizeEnvKey(s: string) {
   // Reemplazar cualquier caracter no alfanumérico por '_', y mayúsculas
   return s.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+}
+
+// Devuelve un price_id para donaciones por tiers fijos (en USD) según variables de entorno.
+// Prioridades:
+// 1) DONATION_PRICE_MAP JSON: {"5":"price_...","10":"price_..."}
+// 2) PRICE_ID_DONATION_<DOLLARS>
+// 3) undefined si no hay coincidencia
+function resolveDonationPriceId(dollars?: number): string | undefined {
+  if (!dollars || dollars <= 0 || !Number.isFinite(dollars)) return undefined;
+  const key = String(Math.round(dollars));
+
+  // 1) JSON map
+  const mapRaw = process.env.DONATION_PRICE_MAP;
+  if (mapRaw && typeof mapRaw === 'string') {
+    try {
+      const parsed = JSON.parse(mapRaw) as Record<string, string>;
+      const fromMap = parsed?.[key];
+      if (fromMap && typeof fromMap === 'string' && fromMap.startsWith('price_')) return fromMap;
+    } catch { /* ignore JSON errors */ }
+  }
+
+  // 2) Individual env var por cantidad
+  const envKey = `PRICE_ID_DONATION_${key}`;
+  const candidate = (process.env as any)[envKey];
+  if (candidate && typeof candidate === 'string' && candidate.startsWith('price_')) return candidate;
+
+  return undefined;
 }
