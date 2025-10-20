@@ -37,7 +37,7 @@ export default async function handler(req: any, res: any) {
     const body = typeof req.body === 'string' ? safeJsonParse(req.body) : (req.body || {});
     const type = String(body?.type || 'premium');
     const amount = Number.isFinite(body?.amount) ? Number(body.amount) : undefined; // en céntimos cuando aplique
-    const currency = (body?.currency || 'EUR').toString().toLowerCase();
+    const currency = (body?.currency || 'USD').toString().toLowerCase();
     const modelName = (body?.modelName || (type === 'donation' ? 'Donation' : 'Modelo')).toString();
     const modelId = body?.modelId ? String(body.modelId) : '';
 
