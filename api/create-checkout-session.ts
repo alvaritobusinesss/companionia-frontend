@@ -87,30 +87,30 @@ export default async function handler(req: any, res: any) {
 
       if (type === 'one_time') {
         resolvedPriceId = resolveOneTimePriceId(modelId, modelName);
-        try {
-          console.log('[checkout] one_time request', {
-            modelId,
-            modelName,
-            resolvedPriceId: resolvedPriceId || null,
-            note: resolvedPriceId ? 'using price_id from env/map' : 'fallback to amount/price_data',
-          });
-        } catch {}
       } else {
         // DONATION: intentar por tiers predefinidos
-        if (!amount || amount <= 0) {
-          return res.status(400).json({ error: 'Invalid amount for donation (must be cents integer > 0)' });
+        const explicitTier = Number.isFinite(body?.donationTier) ? Number(body.donationTier) : undefined;
+        if (explicitTier && explicitTier > 0) {
+          // Modo estricto por tier: usa price_id de env, si no existe => error claro
+          const tierUSD = Math.round(explicitTier);
+          resolvedPriceId = resolveDonationPriceId(tierUSD);
+          if (!resolvedPriceId) {
+            return res.status(400).json({
+              error: `Missing PRICE_ID_DONATION_${tierUSD} or DONATION_PRICE_MAP for donation tier ${tierUSD} USD`,
+            });
+          }
+          usedDonationPriceId = resolvedPriceId;
+          productName = `Donation $${tierUSD}`;
+        } else {
+          // Compatibilidad: si no envían donationTier, intentar deducir por amount
+          if (!amount || amount <= 0) {
+            return res.status(400).json({ error: 'Invalid donation amount (must be cents integer > 0) or send donationTier' });
+          }
+          const dollars = Math.round((amount as number) / 100);
+          resolvedPriceId = resolveDonationPriceId(dollars);
+          if (resolvedPriceId) usedDonationPriceId = resolvedPriceId;
+          productName = `Donation $${dollars}`;
         }
-        const dollars = Math.round((amount as number) / 100);
-        resolvedPriceId = resolveDonationPriceId(dollars);
-        if (resolvedPriceId) usedDonationPriceId = resolvedPriceId;
-        productName = `Donation $${dollars}`;
-        try {
-          console.log('[checkout] donation request', {
-            tierUSD: dollars,
-            resolvedPriceId: resolvedPriceId || null,
-            note: resolvedPriceId ? 'using donation price_id from env/map' : 'fallback to amount/price_data',
-          });
-        } catch {}
       }
 
       const usingPriceId = Boolean(resolvedPriceId);

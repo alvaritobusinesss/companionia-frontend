@@ -186,6 +186,7 @@ export function ChatInterface({
       userEmail: userEmail,
       returnUrl: window.location.origin,
       type: 'donation', // Added this to explicitly set type for create-checkout-session
+      donationTier: usd, // fuerza uso de PRICE_ID_DONATION_<tier> en el backend
     };
     const endpoints = [
       `${API_BASE}/api/create-checkout-session`,
