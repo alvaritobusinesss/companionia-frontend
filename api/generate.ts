@@ -13,6 +13,31 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+// Safe fallback generator (no OpenAI). Keeps conversation flowing if provider fails.
+function buildSafeFallbackReply(opts: {
+  modelName: string;
+  mood: string;
+  style: string;
+  topics: string[];
+  lastUser: string;
+}): string {
+  const { mood, style, topics } = opts;
+  const t = (topics || []).filter(Boolean);
+  const topic = t[0] || 'lo que te importa ahora';
+  // Paraphrase user very briefly without quotes
+  const cleaned = (opts.lastUser || '').replace(/"|\u201c|\u201d|\u201e|\u201f/g, '').trim();
+  const short = cleaned.length > 80 ? cleaned.slice(0, 77) + '…' : cleaned;
+  const paraphrase = short ? `Sobre eso que comentas (${short}),` : 'Vale,';
+  const openers = [
+    '¿Qué te gustaría conseguir con esto?',
+    '¿Cómo te hace sentir ahora mismo?',
+    `¿Prefieres que lo miremos por pasos o hablar de ${topic}?`,
+    '¿Quieres que te proponga 2 opciones y eliges?',
+  ];
+  const q = openers[Math.floor(Math.random() * openers.length)];
+  return `${paraphrase} te acompaño con un tono ${mood} y un estilo ${style}. ${q}`.trim();
+}
+
   try {
     const apiKey = process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY;
     if (!apiKey) {
@@ -81,7 +106,8 @@ export default async function handler(req: any, res: any) {
           { role: 'system', content: systemPrompt },
           ...recentMessages,
         ],
-        stream: !!stream,
+        // Streaming desactivado temporalmente para estabilidad
+        stream: false,
       }),
     });
 
@@ -114,37 +140,28 @@ export default async function handler(req: any, res: any) {
           return res.status(200).json({ reply, retried: true });
         }
         const retryText = await retryRes.text();
-        return res.status(500).json({ error: 'OpenAI error', details: firstErrText, retryDetails: retryText });
+        // Safe fallback reply: keep conversation flowing without breaking UI
+        const safeReply = buildSafeFallbackReply({
+          modelName,
+          mood: String(tone || 'natural'),
+          style: String(style || 'natural'),
+          topics: Array.isArray(topics) ? topics : [],
+          lastUser: recentMessages.filter(m => m.role === 'user').slice(-1)[0]?.content || '',
+        });
+        return res.status(200).json({ reply: safeReply, fallback: true, error: 'OpenAI error', details: firstErrText, retryDetails: retryText });
       } catch (re) {
-        return res.status(500).json({ error: 'OpenAI error', details: firstErrText, retryError: String(re) });
+        const safeReply = buildSafeFallbackReply({
+          modelName,
+          mood: String(tone || 'natural'),
+          style: String(style || 'natural'),
+          topics: Array.isArray(topics) ? topics : [],
+          lastUser: recentMessages.filter(m => m.role === 'user').slice(-1)[0]?.content || '',
+        });
+        return res.status(200).json({ reply: safeReply, fallback: true, error: 'OpenAI error', details: firstErrText, retryError: String(re) });
       }
     }
 
-    // Si el cliente pidió streaming, reenviamos SSE tal cual
-    if (stream) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      try {
-        // Proxy de SSE: pasar chunks directamente
-        // @ts-ignore - oaRes.body es un ReadableStream en Node en Vercel
-        for await (const chunk of oaRes.body as any) {
-          res.write(chunk);
-        }
-      } finally {
-        res.end();
-      }
-      // Guardado de memoria de forma best-effort (no bloqueante)
-      try {
-        if (supabase) {
-          const snippet = extractSnippet(userMessage || '');
-          if (snippet) await upsertUserMemory(supabase, userId, snippet);
-        }
-      } catch {}
-      return;
-    }
-
-    // Fallback: respuesta no streaming
+    // Respuesta no streaming
     const data = await oaRes.json();
     const reply: string = data?.choices?.[0]?.message?.content?.trim() || '';
 
