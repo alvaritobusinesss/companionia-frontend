@@ -24,12 +24,14 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Missing fields' });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL!;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabase = (supabaseUrl && serviceKey)
+      ? createClient(supabaseUrl, serviceKey)
+      : null;
 
     // 1) Recuperar memoria
-    const memory = await getUserMemory(supabase, userId);
+    const memory = supabase ? await getUserMemory(supabase, userId) : [];
 
     // 2) Emoción
     const emotion = await detectEmotion(userMessage);
@@ -94,8 +96,10 @@ export default async function handler(req: any, res: any) {
       }
       // Guardado de memoria de forma best-effort (no bloqueante)
       try {
-        const snippet = extractSnippet(userMessage);
-        if (snippet) await upsertUserMemory(supabase, userId, snippet);
+        if (supabase) {
+          const snippet = extractSnippet(userMessage || '');
+          if (snippet) await upsertUserMemory(supabase, userId, snippet);
+        }
       } catch {}
       return;
     }
@@ -106,13 +110,13 @@ export default async function handler(req: any, res: any) {
 
     // 5) Guardar snippet simple (si aplica)
     const snippet = extractSnippet(userMessage);
-    if (snippet) {
+    if (snippet && supabase) {
       await upsertUserMemory(supabase, userId, snippet);
     }
 
     return res.status(200).json({ reply });
   } catch (e: any) {
-    return res.status(500).json({ error: e?.message || 'Server error' });
+    return res.status(500).json({ error: e?.message || 'Server error', code: e?.code || null });
   }
 }
 
