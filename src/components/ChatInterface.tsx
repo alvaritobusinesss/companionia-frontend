@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, ArrowLeft, Settings, Crown, Heart, Sparkles, Lightbulb } from "lucide-react";
 import { ChatPreferences } from "./PersonalizationModal";
 import { useTranslation } from "@/hooks/useTranslation";
+import { generateInitialGreeting, generateResumeOpener, summarizeRecentMessages } from "@/lib/promptGenerator";
 
 // Tipos simplificados
 type Message = {
@@ -66,6 +67,8 @@ export function ChatInterface({
   // Use same-origin in production to avoid CORS and domain mismatches
   const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const insertedResumeRef = useRef<boolean>(false);
 
   // Identificador estable para límites (usuario autenticado o deviceId)
   function getSubjectId(): string {
@@ -165,13 +168,16 @@ export function ChatInterface({
         const lsKey = `conv:${modelId || modelName}:${subjectId}`;
         localStorage.removeItem(lsKey);
       } catch {}
-      // Resetear mensajes con saludo inicial
-      const initialMessage: Message = {
-        role: 'assistant',
-        content: `¡Hola! Soy ${modelName} y me alegra conocerte. He visto que prefieres un trato ${preferences.mood} y te interesan temas como ${preferences.topics.slice(0, 2).join(' y ')}. ¿Cómo ha sido tu día?`,
-        timestamp: new Date(),
-      };
+      // Resetear mensajes con saludo inicial diverso
+      const opener = generateInitialGreeting({
+        modelName,
+        mood: preferences.mood,
+        style: preferences.style,
+        topics: preferences.topics || [],
+      }, `${subjectId}-${Date.now()}`);
+      const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
       setMessages([initialMessage]);
+      saveMessages([initialMessage]);
     } catch (e) {
       console.error('❌ Error al borrar conversación:', e);
     }
@@ -298,13 +304,19 @@ export function ChatInterface({
   useEffect(() => {
     const loadMessages = async () => {
       if (!userId || !modelId) {
-        // Sin persistencia, mostrar mensaje inicial
-        const initialMessage: Message = {
-          role: 'assistant',
-          content: `¡Hola! Soy ${modelName} y me alegra conocerte. He visto que prefieres un trato ${preferences.mood} y te interesan temas como ${preferences.topics.slice(0, 2).join(' y ')}. ¿Cómo ha sido tu día?`,
-          timestamp: new Date(),
-        };
+        // Sin persistencia, generar saludo inicial diverso
+        const opener = generateInitialGreeting({
+          modelName,
+          mood: preferences.mood,
+          style: preferences.style,
+          topics: preferences.topics || [],
+        }, `${subjectId}-${modelName}`);
+        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages([initialMessage]);
+        // Si hay persistencia disponible, guardamos también para fijar preferencias en la conversación
+        if (userId && modelId) {
+          saveMessages([initialMessage]);
+        }
         return;
       }
 
@@ -312,10 +324,25 @@ export function ChatInterface({
         // Cargar desde backend (service role)
         const res = await fetch(`${API_BASE}/api/conversations/get?user_id=${encodeURIComponent(userId)}&model_id=${encodeURIComponent(String(modelId))}`);
         if (res.ok) {
-          const { messages: serverMessages } = await res.json();
+          const { messages: serverMessages, last_summary } = await res.json();
           if (Array.isArray(serverMessages) && serverMessages.length) {
             const savedMessages = serverMessages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
             setMessages(savedMessages);
+            // Insertar recap + pregunta abierta al reanudar (una sola vez)
+            if (!insertedResumeRef.current) {
+              const recap = last_summary || summarizeRecentMessages(savedMessages.map((m: any) => ({ role: m.role, content: m.content })));
+              const opener = generateResumeOpener({
+                modelName,
+                mood: preferences.mood,
+                style: preferences.style,
+                topics: preferences.topics || [],
+              }, recap, `${subjectId}-${modelId}`);
+              const resumeMsg: Message = { role: 'assistant', content: opener, timestamp: new Date() };
+              const withOpener = [...savedMessages, resumeMsg];
+              setMessages(withOpener);
+              saveMessages(withOpener);
+              insertedResumeRef.current = true;
+            }
             return;
           }
         }
@@ -326,29 +353,54 @@ export function ChatInterface({
           if (raw) {
             const localMsgs = JSON.parse(raw).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
             setMessages(localMsgs);
+            if (localMsgs.length && !insertedResumeRef.current) {
+              const recap = summarizeRecentMessages(localMsgs.map((m: any) => ({ role: m.role, content: m.content })));
+              const opener = generateResumeOpener({
+                modelName,
+                mood: preferences.mood,
+                style: preferences.style,
+                topics: preferences.topics || [],
+              }, recap, `${subjectId}-${modelId}`);
+              const resumeMsg: Message = { role: 'assistant', content: opener, timestamp: new Date() };
+              const withOpener = [...localMsgs, resumeMsg];
+              setMessages(withOpener);
+              saveMessages(withOpener);
+              insertedResumeRef.current = true;
+            }
             return;
           }
         } catch {}
-        // Mensaje inicial por defecto
-        const initialMessage: Message = {
-          role: 'assistant',
-          content: `¡Hola! Soy ${modelName} y me alegra conocerte. He visto que prefieres un trato ${preferences.mood} y te interesan temas como ${preferences.topics.slice(0, 2).join(' y ')}. ¿Cómo ha sido tu día?`,
-          timestamp: new Date(),
-        };
+        // Mensaje inicial diverso
+        const opener = generateInitialGreeting({
+          modelName,
+          mood: preferences.mood,
+          style: preferences.style,
+          topics: preferences.topics || [],
+        }, `${subjectId}-${modelName}`);
+        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages([initialMessage]);
       } catch (error) {
         console.error('❌ ERROR CARGANDO MENSAJES:', error);
-        const initialMessage: Message = {
-          role: 'assistant',
-          content: `¡Hola! Soy ${modelName} y me alegra conocerte. He visto que prefieres un trato ${preferences.mood} y te interesan temas como ${preferences.topics.slice(0, 2).join(' y ')}. ¿Cómo ha sido tu día?`,
-          timestamp: new Date(),
-        };
+        const opener = generateInitialGreeting({
+          modelName,
+          mood: preferences.mood,
+          style: preferences.style,
+          topics: preferences.topics || [],
+        }, `${subjectId}-${modelName}`);
+        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages([initialMessage]);
       }
     };
 
     loadMessages();
   }, [userId, modelId, modelName, preferences]);
+
+  // Abort in-flight on unmount or model change
+  useEffect(() => {
+    return () => {
+      try { abortRef.current?.abort(); } catch {}
+    };
+  }, [modelId, modelName]);
 
   // Debug: Log messages cuando cambien
   useEffect(() => {
@@ -412,7 +464,12 @@ export function ChatInterface({
       if ((import.meta as any).env?.DEV) {
         console.log('Calling API...');
       }
-      // Llamada al endpoint local /api/generate con streaming
+      // Cancelar petición anterior si existía
+      try { abortRef.current?.abort(); } catch {}
+      abortRef.current = new AbortController();
+      const signal = abortRef.current.signal;
+
+      // Llamada al endpoint local /api/generate con streaming y cancelación
       const response = await fetch(`${API_BASE}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -427,6 +484,7 @@ export function ChatInterface({
           style: preferences.style,
           stream: true,
         }),
+        signal,
       });
 
       if (response.ok && (response.headers.get('content-type') || '').includes('text/event-stream')) {
@@ -498,21 +556,25 @@ export function ChatInterface({
       } else {
         throw new Error('Failed to get response');
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: 'Lo siento, no puedo responder en este momento. ¿Puedes intentarlo de nuevo?',
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        // Navegación o cambio de modelo: no mostrar error, solo salir
+        if ((import.meta as any).env?.DEV) console.log('Request aborted');
+      } else {
+        console.error('Error sending message:', error);
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: 'Lo siento, no puedo responder en este momento. ¿Puedes intentarlo de nuevo?',
           timestamp: new Date(),
         };
-      if ((import.meta as any).env?.DEV) {
-        console.log('Adding error message to state');
+        if ((import.meta as any).env?.DEV) {
+          console.log('Adding error message to state');
+        }
+        const finalMessages = [...newMessages, errorMessage];
+        setMessages(finalMessages);
+        // Guardar mensajes después del mensaje de error
+        saveMessages(finalMessages);
       }
-      const finalMessages = [...newMessages, errorMessage];
-      setMessages(finalMessages);
-      
-      // Guardar mensajes después del mensaje de error
-      saveMessages(finalMessages);
     } finally {
         setIsAITyping(false);
       }
@@ -547,13 +609,18 @@ export function ChatInterface({
     }
   };
 
+  const onBackClick = useCallback(() => {
+    try { abortRef.current?.abort(); } catch {}
+    onBack();
+  }, [onBack]);
+
   return (
     <div className="flex h-screen bg-background">
       {/* Modelo Section - Left Side (50%) */}
       <div className="w-1/2 relative bg-gradient-to-br from-primary/5 to-secondary/10 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-card/80 backdrop-blur-sm border-b border-border shrink-0">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+          <Button variant="ghost" size="icon" onClick={onBackClick}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           

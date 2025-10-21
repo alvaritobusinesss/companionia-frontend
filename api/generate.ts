@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // Helpers locales
 import { detectEmotion } from '../src/lib/detectEmotion';
-import { buildPrompt } from '../src/lib/promptBuilder';
 import { getUserMemory, upsertUserMemory } from '../src/lib/memory';
+import { buildSystemPrompt, generationConfig } from '../src/lib/promptGenerator';
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -19,7 +19,7 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
     }
 
-    const { userId, userMessage, modelName, modelPersona, tone, topics, stream } = req.body || {};
+    const { userId, userMessage, modelName, modelPersona, tone, topics, style, stream } = req.body || {};
     if (!userId || !userMessage || !modelName) {
       return res.status(400).json({ error: 'Missing fields' });
     }
@@ -34,12 +34,11 @@ export default async function handler(req: any, res: any) {
     // 2) Emoción
     const emotion = await detectEmotion(userMessage);
 
-    // 3) Prompt
-    const prompt = buildPrompt({
-      userMessage,
+    // 3) Construir mensajes con system prompt centralizado
+    const systemPrompt = buildSystemPrompt({
       modelName,
-      modelPersona,
-      tone,
+      mood: String(tone || 'natural'),
+      style: String(style || 'natural'),
       topics: Array.isArray(topics) ? topics : [],
       emotion,
       memory,
@@ -54,10 +53,14 @@ export default async function handler(req: any, res: any) {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        temperature: 0.8,
-        top_p: 0.9,
-        presence_penalty: 0.3,
-        messages: [{ role: 'user', content: prompt }],
+        temperature: generationConfig.temperature,
+        top_p: generationConfig.top_p,
+        presence_penalty: generationConfig.presence_penalty,
+        frequency_penalty: generationConfig.frequency_penalty,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
         stream: !!stream,
       }),
     });

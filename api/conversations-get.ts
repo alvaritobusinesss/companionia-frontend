@@ -9,12 +9,12 @@ export default async function handler(req: any, res: any) {
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data, error } = await supabase
       .from('conversations')
-      .select('messages')
+      .select('messages, last_summary')
       .eq('user_id', String(user_id))
       .eq('model_id', String(model_id))
       .single();
     if (error && (error as any).code !== 'PGRST116') return res.status(500).json({ error: error.message });
-    return res.json({ messages: data?.messages || [] });
+    return res.json({ messages: data?.messages || [], last_summary: (data as any)?.last_summary || null });
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'get error' });
   }
