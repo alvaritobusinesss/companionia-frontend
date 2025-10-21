@@ -101,7 +101,7 @@ function listTopics(topics: string[]) {
 }
 
 // Build a reusable system-style guidance to condition responses
-export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: string[]; varietyTag?: string; turnIndex?: number }) {
+export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: string[]; varietyTag?: string; turnIndex?: number; avoidPhrases?: string[] }) {
   const topicsText = listTopics(p.topics);
   const memoryText = p.memory && p.memory.length ? `Memoria breve: ${p.memory.join(' | ')}.` : '';
   const emotionRule =
@@ -114,6 +114,17 @@ export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: s
 
   const strategy = pickStrategy(p.turnIndex ?? 0);
 
+  // Algunas aperturas variadas para guiar el inicio del turno (el modelo elegirá 1)
+  const discourse = [
+    'Vale, te sigo',
+    'Entiendo',
+    'Me gusta por dónde vas',
+    'Tiene sentido',
+    'Perfecto',
+    'Genial, vamos paso a paso',
+    'Me encanta esa idea',
+  ];
+
   return [
     `Eres ${p.modelName}. Adapta tu voz al tono ${p.mood} con estilo ${p.style}.`,
     `Temas priorizados: ${topicsText}.`,
@@ -121,10 +132,12 @@ export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: s
     `- Mensajes naturales (1–3 frases). 0–1 emoji.`,
     `- Varía longitudes y estructura de frases; micro-muletillas sutiles.`,
     `- Evita repetir la misma apertura, coletilla o estructura en turnos consecutivos.`,
-    `- No repitas literalmente lo que dijo el usuario; resume con otras palabras si es necesario.`,
+    `- No repitas literalmente lo que dijo el usuario ni lo cites entre comillas; parafrasea en 3–10 palabras como máximo.`,
     `- Haz preguntas abiertas frecuentes.`,
     p.varietyTag ? `- Diferencia esta respuesta del resto asociándola al marcador: ${p.varietyTag}.` : '',
     `- Evita expresiones como: ${bannedPhrases.join(' | ')}.`,
+    p.avoidPhrases && p.avoidPhrases.length ? `- No empieces con ninguna de estas frases usadas antes: ${p.avoidPhrases.join(' | ')}.` : '',
+    `- Elige SOLO UNA de estas aperturas conversacionales (y no la repitas si ya se usó): ${discourse.join(' | ')}.`,
     `- En este turno usa esta estrategia: ${strategy}.`,
     `[Guía emocional] ${emotionRule}`,
   ].filter(Boolean).join('\n');

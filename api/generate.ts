@@ -45,6 +45,13 @@ export default async function handler(req: any, res: any) {
       : (userMessage ? [{ role: 'user', content: String(userMessage) }] : []);
     const turnIndex = recentMessages.length;
 
+    // Derivar frases a evitar de los últimos mensajes del asistente (primeras 6 palabras)
+    const avoidPhrases = recentMessages
+      .filter(m => m.role === 'assistant')
+      .slice(-6)
+      .map(m => (m.content || '').split(/\s+/).slice(0, 6).join(' ').toLowerCase())
+      .filter(Boolean);
+
     const systemPrompt = buildSystemPrompt({
       modelName,
       mood: String(tone || 'natural'),
@@ -54,6 +61,7 @@ export default async function handler(req: any, res: any) {
       memory,
       varietyTag,
       turnIndex,
+      avoidPhrases,
     });
 
     // 4) Llamada a OpenAI (con opción de streaming)
