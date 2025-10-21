@@ -14,11 +14,11 @@ export type ChatParams = {
 
 // Adjustable generation parameters
 export const generationConfig = {
-  temperature: 0.85,
-  top_p: 0.9,
-  presence_penalty: 0.3,
-  frequency_penalty: 0.0,
-  max_tokens: 300,
+  temperature: 0.95,
+  top_p: 0.95,
+  presence_penalty: 0.7,
+  frequency_penalty: 0.35,
+  max_tokens: 320,
 };
 
 // Simple hash to seed RNG per model+params
@@ -61,6 +61,29 @@ const openers: Array<(p: ChatParams, r: () => number) => string> = [
   (p) => `Hola, soy ${p.modelName}. ¿Te gustaría una charla ligera sobre ${listTopics(p.topics)} o algo distinto?`,
 ];
 
+// Frases que queremos evitar repetir de forma insistente
+const bannedPhrases = [
+  '¿quieres que profundicemos un poco más',
+  '¿quieres profundizar un poco más',
+  '¿profundizamos un poco más',
+  '¿lo retomamos o te apetece',
+];
+
+// Estrategias de pregunta para rotar y forzar variedad
+const questionStrategies = [
+  'Haz una pregunta de opinión personal concreta ("¿Qué piensas de X en tu caso?")',
+  'Haz una pregunta de experiencia pasada ("¿Te ha pasado alguna vez algo parecido a X?")',
+  'Propón una mini actividad A/B con 2 opciones distintas y divertidas',
+  'Pide un ejemplo específico y corto ("¿Podrías darme un ejemplo de X?")',
+  'Haz una propuesta de mini-plan con el usuario ("Si hoy hiciéramos Y, ¿por dónde empezaríamos?")',
+  'Usa perspectiva ("Si fueras tu mejor amigo/a, ¿qué te aconsejarías sobre X?")',
+];
+
+function pickStrategy(turnIndex: number) {
+  if (!Number.isFinite(turnIndex) || turnIndex < 0) return questionStrategies[0];
+  return questionStrategies[turnIndex % questionStrategies.length];
+}
+
 const resumeQuestions = [
   (ctx: string) => `${ctx} ¿Quieres seguir por ahí o te apetece cambiar de tema?`,
   (ctx: string) => `${ctx} ¿Seguimos con eso o prefieres explorar otra cosa?`,
@@ -78,7 +101,7 @@ function listTopics(topics: string[]) {
 }
 
 // Build a reusable system-style guidance to condition responses
-export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: string[]; varietyTag?: string }) {
+export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: string[]; varietyTag?: string; turnIndex?: number }) {
   const topicsText = listTopics(p.topics);
   const memoryText = p.memory && p.memory.length ? `Memoria breve: ${p.memory.join(' | ')}.` : '';
   const emotionRule =
@@ -88,6 +111,8 @@ export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: s
     p.emotion === 'enfadado' ? 'Calma y valida; baja intensidad.' :
     p.emotion === 'cariñoso' ? 'Responde con afecto y cercanía.' :
     'Mantén un tono natural y cercano.';
+
+  const strategy = pickStrategy(p.turnIndex ?? 0);
 
   return [
     `Eres ${p.modelName}. Adapta tu voz al tono ${p.mood} con estilo ${p.style}.`,
@@ -99,6 +124,8 @@ export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: s
     `- No repitas literalmente lo que dijo el usuario; resume con otras palabras si es necesario.`,
     `- Haz preguntas abiertas frecuentes.`,
     p.varietyTag ? `- Diferencia esta respuesta del resto asociándola al marcador: ${p.varietyTag}.` : '',
+    `- Evita expresiones como: ${bannedPhrases.join(' | ')}.`,
+    `- En este turno usa esta estrategia: ${strategy}.`,
     `[Guía emocional] ${emotionRule}`,
   ].filter(Boolean).join('\n');
 }

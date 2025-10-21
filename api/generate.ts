@@ -38,6 +38,13 @@ export default async function handler(req: any, res: any) {
 
     // 3) Construir mensajes con system prompt centralizado
     const varietyTag = `turn-${Date.now()}`;
+    // Construcción de historial: usa el historial enviado por el cliente (últimos 16),
+    // o cae en un mensaje con userMessage si no se envió historial.
+    const recentMessages: Array<{ role: 'user'|'assistant'; content: string }> = Array.isArray(recentFromClient)
+      ? recentFromClient.slice(-16).map((m: any) => ({ role: m.role, content: String(m.content || '') }))
+      : (userMessage ? [{ role: 'user', content: String(userMessage) }] : []);
+    const turnIndex = recentMessages.length;
+
     const systemPrompt = buildSystemPrompt({
       modelName,
       mood: String(tone || 'natural'),
@@ -46,15 +53,10 @@ export default async function handler(req: any, res: any) {
       emotion,
       memory,
       varietyTag,
+      turnIndex,
     });
 
     // 4) Llamada a OpenAI (con opción de streaming)
-    // Construcción de historial: usa el historial enviado por el cliente (últimos 16),
-    // o cae en un mensaje con userMessage si no se envió historial.
-    const recentMessages: Array<{ role: 'user'|'assistant'; content: string }> = Array.isArray(recentFromClient)
-      ? recentFromClient.slice(-16).map((m: any) => ({ role: m.role, content: String(m.content || '') }))
-      : (userMessage ? [{ role: 'user', content: String(userMessage) }] : []);
-
     const oaRes = await fetch(OPENAI_URL, {
       method: 'POST',
       headers: {
