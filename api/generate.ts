@@ -14,7 +14,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
     }
