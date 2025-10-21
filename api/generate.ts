@@ -86,8 +86,38 @@ export default async function handler(req: any, res: any) {
     });
 
     if (!oaRes.ok) {
-      const txt = await oaRes.text();
-      return res.status(500).json({ error: 'OpenAI error', details: txt });
+      const firstErrText = await oaRes.text();
+      // Retry once without streaming if the first call failed
+      try {
+        const retryRes = await fetch(OPENAI_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            temperature: generationConfig.temperature,
+            top_p: generationConfig.top_p,
+            presence_penalty: generationConfig.presence_penalty,
+            frequency_penalty: generationConfig.frequency_penalty,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...recentMessages,
+            ],
+            stream: false,
+          }),
+        });
+        if (retryRes.ok) {
+          const data = await retryRes.json();
+          const reply: string = data?.choices?.[0]?.message?.content?.trim() || '';
+          return res.status(200).json({ reply, retried: true });
+        }
+        const retryText = await retryRes.text();
+        return res.status(500).json({ error: 'OpenAI error', details: firstErrText, retryDetails: retryText });
+      } catch (re) {
+        return res.status(500).json({ error: 'OpenAI error', details: firstErrText, retryError: String(re) });
+      }
     }
 
     // Si el cliente pidió streaming, reenviamos SSE tal cual
