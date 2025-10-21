@@ -19,8 +19,8 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
     }
 
-    const { userId, userMessage, modelName, modelPersona, tone, topics, style, stream } = req.body || {};
-    if (!userId || !userMessage || !modelName) {
+    const { userId, userMessage, messages: recentFromClient, modelName, modelPersona, tone, topics, style, stream } = req.body || {};
+    if (!userId || !modelName) {
       return res.status(400).json({ error: 'Missing fields' });
     }
 
@@ -35,6 +35,7 @@ export default async function handler(req: any, res: any) {
     const emotion = await detectEmotion(userMessage);
 
     // 3) Construir mensajes con system prompt centralizado
+    const varietyTag = `turn-${Date.now()}`;
     const systemPrompt = buildSystemPrompt({
       modelName,
       mood: String(tone || 'natural'),
@@ -42,9 +43,16 @@ export default async function handler(req: any, res: any) {
       topics: Array.isArray(topics) ? topics : [],
       emotion,
       memory,
+      varietyTag,
     });
 
     // 4) Llamada a OpenAI (con opción de streaming)
+    // Construcción de historial: usa el historial enviado por el cliente (últimos 16),
+    // o cae en un mensaje con userMessage si no se envió historial.
+    const recentMessages: Array<{ role: 'user'|'assistant'; content: string }> = Array.isArray(recentFromClient)
+      ? recentFromClient.slice(-16).map((m: any) => ({ role: m.role, content: String(m.content || '') }))
+      : (userMessage ? [{ role: 'user', content: String(userMessage) }] : []);
+
     const oaRes = await fetch(OPENAI_URL, {
       method: 'POST',
       headers: {
@@ -59,7 +67,7 @@ export default async function handler(req: any, res: any) {
         frequency_penalty: generationConfig.frequency_penalty,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
+          ...recentMessages,
         ],
         stream: !!stream,
       }),

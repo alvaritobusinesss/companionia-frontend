@@ -310,7 +310,7 @@ export function ChatInterface({
           mood: preferences.mood,
           style: preferences.style,
           topics: preferences.topics || [],
-        }, `${subjectId}-${modelName}`);
+        }, `${subjectId}-${modelName}-${Date.now()}`);
         const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages([initialMessage]);
         // Si hay persistencia disponible, guardamos también para fijar preferencias en la conversación
@@ -477,6 +477,7 @@ export function ChatInterface({
           userId: subjectId,
           modelId: modelId,
           userMessage: messageText,
+          messages: newMessages.slice(-16).map(m => ({ role: m.role, content: m.content })),
           modelName,
           modelPersona: `${modelName} es una modelo virtual con personalidad ${preferences.mood}`,
           tone: preferences.mood,

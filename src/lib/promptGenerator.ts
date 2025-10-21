@@ -78,7 +78,7 @@ function listTopics(topics: string[]) {
 }
 
 // Build a reusable system-style guidance to condition responses
-export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: string[] }) {
+export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: string[]; varietyTag?: string }) {
   const topicsText = listTopics(p.topics);
   const memoryText = p.memory && p.memory.length ? `Memoria breve: ${p.memory.join(' | ')}.` : '';
   const emotionRule =
@@ -94,9 +94,11 @@ export function buildSystemPrompt(p: ChatParams & { emotion?: string; memory?: s
     `Temas priorizados: ${topicsText}.`,
     memoryText,
     `- Mensajes naturales (1–3 frases). 0–1 emoji.`,
-    `- Varía longitudes; micro-muletillas sutiles.`,
-    `- Evita repetición o plantillas obvias.`,
+    `- Varía longitudes y estructura de frases; micro-muletillas sutiles.`,
+    `- Evita repetir la misma apertura, coletilla o estructura en turnos consecutivos.`,
+    `- No repitas literalmente lo que dijo el usuario; resume con otras palabras si es necesario.`,
     `- Haz preguntas abiertas frecuentes.`,
+    p.varietyTag ? `- Diferencia esta respuesta del resto asociándola al marcador: ${p.varietyTag}.` : '',
     `[Guía emocional] ${emotionRule}`,
   ].filter(Boolean).join('\n');
 }
