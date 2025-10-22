@@ -555,7 +555,38 @@ export function ChatInterface({
         setShowLimitBanner(true);
         throw new Error('Has alcanzado el límite diario');
       } else {
-        throw new Error('Failed to get response');
+        // Reintento rápido sin streaming para no cortar la conversación
+        try {
+          const nonStreamRes = await fetch(`${API_BASE}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: subjectId,
+              modelId: modelId,
+              userMessage: messageText,
+              messages: newMessages.slice(-16).map(m => ({ role: m.role, content: m.content })),
+              modelName,
+              modelPersona: `${modelName} es una modelo virtual con personalidad ${preferences.mood}`,
+              tone: preferences.mood,
+              topics: preferences.topics,
+              style: preferences.style,
+              stream: false,
+            }),
+            signal,
+          });
+          if (nonStreamRes.ok) {
+            const data = await nonStreamRes.json();
+            const replyText = data?.reply || '';
+            const aiMessage: Message = { role: 'assistant', content: replyText || 'Estoy aquí. ¿Te va si lo miramos por pasos o prefieres que te proponga 2 opciones?', timestamp: new Date() };
+            const finalMessages = [...newMessages, aiMessage];
+            setMessages(finalMessages);
+            saveMessages(finalMessages);
+          } else {
+            throw new Error('Failed to get response');
+          }
+        } catch (e) {
+          throw e;
+        }
       }
     } catch (error: any) {
       if (error?.name === 'AbortError') {
@@ -563,17 +594,14 @@ export function ChatInterface({
         if ((import.meta as any).env?.DEV) console.log('Request aborted');
       } else {
         console.error('Error sending message:', error);
-        const errorMessage: Message = {
+        // Mensaje suave para no cortar la conversación
+        const softFallback: Message = {
           role: 'assistant',
-          content: 'Lo siento, no puedo responder en este momento. ¿Puedes intentarlo de nuevo?',
+          content: 'Estoy aquí. ¿Prefieres que lo veamos por pasos o te propongo 2 opciones rápidas?',
           timestamp: new Date(),
         };
-        if ((import.meta as any).env?.DEV) {
-          console.log('Adding error message to state');
-        }
-        const finalMessages = [...newMessages, errorMessage];
+        const finalMessages = [...newMessages, softFallback];
         setMessages(finalMessages);
-        // Guardar mensajes después del mensaje de error
         saveMessages(finalMessages);
       }
     } finally {
