@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, MessageCircle, Sparkles, Coffee, ArrowLeft, ArrowRight, Flame, Zap } from "lucide-react";
+import { Heart, MessageCircle, Sparkles, Coffee, ArrowRight, Flame, Zap } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface PersonalizationModalProps {
@@ -21,18 +20,16 @@ export interface ChatPreferences {
   style: string;
 }
 
-const getTopics = (t: any) => [
-  t('personalization.topics.love'),
-  t('personalization.topics.daily'), 
-  t('personalization.topics.casual'),
-  t('personalization.topics.advice'),
-  t('personalization.topics.fantasy'),
-  t('personalization.topics.humor'),
-  t('personalization.topics.support'),
-  t('personalization.topics.interests'),
+const getMoods = (t: any) => [
+  { id: "romantic", label: t('personalization.moods.romantic'), icon: Heart, description: t('personalization.moodDescriptions.romantic') },
+  { id: "friendly", label: t('personalization.moods.friendly'), icon: Coffee, description: t('personalization.moodDescriptions.friendly') },
+  { id: "flirty", label: t('personalization.moods.flirty'), icon: Sparkles, description: t('personalization.moodDescriptions.flirty') },
+  { id: "supportive", label: t('personalization.moods.supportive'), icon: MessageCircle, description: t('personalization.moodDescriptions.supportive') },
+  { id: "aggressive", label: t('personalization.moods.aggressive'), icon: Zap, description: t('personalization.moodDescriptions.aggressive'), isPremium: true },
+  { id: "sensual", label: t('personalization.moods.sensual'), icon: Flame, description: t('personalization.moodDescriptions.sensual'), isPremium: true },
 ];
 
-// Eliminamos preguntas de temas y estilo: solo preguntamos el tono (mood)
+// Modal reducido a una única pregunta: mood
 
 export function PersonalizationModal({ 
   isOpen, 
@@ -43,27 +40,27 @@ export function PersonalizationModal({
   userIsPremium = false
 }: PersonalizationModalProps) {
   const { t } = useTranslation();
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [selectedMood, setSelectedMood] = useState("");
 
   // Sin selección de topics/estilo
 
   const handleNext = () => {
-    if (!selectedTopics.length) return;
-    onStartChat({ mood: "", topics: selectedTopics, style: "" });
+    if (!selectedMood) return;
+    onStartChat({ mood: selectedMood, topics: [], style: "" });
     onClose();
   };
 
   // Sin navegación atrás/adelante
 
   const handleStartChat = () => {
-    if (!selectedTopics.length) return;
-    onStartChat({ mood: "", topics: selectedTopics, style: "" });
+    if (!selectedMood) return;
+    onStartChat({ mood: selectedMood, topics: [], style: "" });
     onClose();
   };
 
-  const canContinue = selectedTopics.length > 0;
+  const canContinue = !!selectedMood;
 
-  const question = t('personalization.questions.topics');
+  const question = t('personalization.questions.mood');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -95,27 +92,58 @@ export function PersonalizationModal({
             </p>
           </div>
 
-          {/* Única pregunta: topics */}
-          (
-            <div className="animate-fade-in">
-              <div className="flex flex-wrap gap-2 justify-center">
-                {getTopics(t).map((topic) => (
-                  <Badge
-                    key={topic}
-                    variant={selectedTopics.includes(topic) ? "default" : "secondary"}
-                    className={`cursor-pointer transition-all text-xs py-2 px-3 hover:scale-105 ${
-                      selectedTopics.includes(topic) 
-                        ? 'bg-primary text-primary-foreground shadow-glow-primary' 
-                        : 'hover:bg-primary/20'
+          {/* Única pregunta: mood */}
+          <div className="animate-fade-in">
+            <div className="grid grid-cols-2 gap-3">
+              {getMoods(t).map((mood) => {
+                const Icon = mood.icon;
+                const isLocked = mood.isPremium && !userIsPremium;
+                return (
+                  <Card 
+                    key={mood.id}
+                    className={`cursor-pointer transition-all border-2 hover:scale-105 relative ${
+                      isLocked 
+                        ? 'border-muted bg-muted/50 opacity-70 cursor-not-allowed' 
+                        : selectedMood === mood.id 
+                          ? 'border-primary bg-primary/10 shadow-glow-primary' 
+                          : 'border-border hover:border-primary/50'
                     }`}
-                    onClick={() => setSelectedTopics(prev => prev.includes(topic) ? prev.filter(t0 => t0 !== topic) : [...prev, topic])}
+                    onClick={() => !isLocked && setSelectedMood(mood.id)}
                   >
-                    {topic}
-                  </Badge>
-                ))}
-              </div>
+                    <CardContent className="p-4 text-center">
+                      {mood.isPremium && (
+                        <div className={`absolute -top-2 -right-2 text-xs px-2 py-1 rounded ${
+                          isLocked 
+                            ? 'bg-muted-foreground text-muted' 
+                            : 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'
+                        }`}>
+                          {t('personalization.premium')}
+                        </div>
+                      )}
+                      <Icon className={`w-6 h-6 mx-auto mb-2 ${
+                        isLocked 
+                          ? 'text-muted-foreground' 
+                          : selectedMood === mood.id 
+                            ? 'text-primary' 
+                            : 'text-muted-foreground'
+                      }`} />
+                      <span className={`font-medium text-sm block ${
+                        isLocked ? 'text-muted-foreground' : ''
+                      }`}>
+                        {mood.label}
+                      </span>
+                      <p className="text-xs text-muted-foreground mt-1">{mood.description}</p>
+                      {isLocked && (
+                        <p className="text-xs text-primary mt-2 font-medium">
+                          {t('personalization.upgradeToPremium')}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          )
+          </div>
 
           {/* Navigation */}
           <div className="pt-4">
