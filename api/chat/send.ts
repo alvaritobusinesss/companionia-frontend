@@ -11,20 +11,101 @@ export default async function handler(req: any, res: any) {
     const supabase = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
 
     let tone: string = 'amistoso';
+    let turnIndex = 0;
+    let recentAssistantOpeners: string[] = [];
+
     if (supabase && !String(conversationId).startsWith('tmp-')) {
       try {
-        const { data: conv } = await supabase.from('conversations').select('id,tone').eq('id', conversationId).maybeSingle();
+        const { data: conv } = await supabase
+          .from('conversations')
+          .select('id,tone')
+          .eq('id', conversationId)
+          .maybeSingle();
         if (conv?.tone) tone = String(conv.tone);
+
+        // Save user message
         await supabase.from('messages').insert({ conversation_id: conversationId, role: 'user', content: String(message) });
+
+        // Fetch last 12 messages to compute turn and avoid repetition
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('role,content,created_at')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true })
+          .limit(24);
+        if (Array.isArray(msgs)) {
+          turnIndex = msgs.length;
+          recentAssistantOpeners = msgs
+            .filter(m => m.role === 'assistant')
+            .slice(-6)
+            .map(m => String(m.content || '').split(/\s+/).slice(0, 6).join(' ').toLowerCase())
+            .filter(Boolean);
+        }
       } catch {}
     }
 
-    // Minimal non-stream reply (placeholder while wiring streaming)
-    const lower = String(message || '').toLowerCase();
-    let reply = '';
-    if (lower.includes('examen')) reply = 'Quiero saber cómo ha ido ese examen. ¿Qué tal te sentiste al salir?';
-    else if (lower.includes('trabajo')) reply = 'Suena intenso. ¿Qué parte del trabajo te pesa más ahora mismo?';
-    else reply = 'Te leo. ¿Prefieres que lo veamos por pasos o te propongo 2 opciones y eliges?';
+    // Build varied, tone-aware reply without LLM
+    const text = String(message || '').trim();
+    const cleaned = text.replace(/\"|\“|\”|\‘|\’|"|'|`/g, '').slice(0, 120);
+    const paraphrase = cleaned ? `Sobre eso que comentas (${cleaned}),` : '';
+
+    const strategy = turnIndex % 5; // rotate 5 styles
+    const byTone: Record<string, ((ctx: string) => string)[]> = {
+      romantico: [
+        (c) => `${c} me encanta escucharte. ¿Qué parte te hizo sentir mejor hoy?`,
+        (c) => `${c} ¿te apetece elegir entre 2 opciones: A) algo dulce, B) algo atrevido?`,
+        (c) => `${c} dame un ejemplo pequeño y vemos juntos.`,
+        (c) => `${c} si hacemos un mini-plan ahora, ¿cuál sería el primer paso?`,
+        (c) => `${c} si fueras tu mejor amigo/a, ¿qué te aconsejarías?`,
+      ],
+      amistoso: [
+        (c) => `${c} cuéntame cómo te sientes ahora.`,
+        (c) => `${c} ¿te va A) verlo por pasos o B) improvisar?`,
+        (c) => `${c} ¿me das un ejemplo corto?`,
+        (c) => `${c} haría un plan simple: paso 1 hoy, ¿te cuadra?`,
+        (c) => `${c} visto desde fuera, ¿qué crees que te dirías?`,
+      ],
+      coqueto: [
+        (c) => `${c} suena bien... ¿qué te apetecería ahora mismo?`,
+        (c) => `${c} A) juego rápido, B) charla ligera, ¿cuál eliges?`,
+        (c) => `${c} dame un ejemplo picante pero breve 😉`,
+        (c) => `${c} hagamos un mini-plan divertido, ¿primer paso?`,
+        (c) => `${c} si te miraras con cariño, ¿qué te dirías?`,
+      ],
+      comprensivo: [
+        (c) => `${c} gracias por compartir. ¿Qué necesitas ahora?`,
+        (c) => `${c} A) desahogarnos un poco, B) ordenar ideas, ¿qué prefieres?`,
+        (c) => `${c} ¿podrías darme un ejemplo concreto para entender mejor?`,
+        (c) => `${c} un paso pequeño hoy podría ayudar, ¿cuál ves posible?`,
+        (c) => `${c} si fueras tu mejor apoyo, ¿qué te dirías?`,
+      ],
+      agresivo: [
+        (c) => `${c} ve al grano: ¿qué quieres conseguir?`,
+        (c) => `${c} A) actuar ya, B) pensarlo un minuto. Elige.`,
+        (c) => `${c} dame un ejemplo corto y directo.`,
+        (c) => `${c} primer paso ahora mismo, ¿cuál?`,
+        (c) => `${c} desde fuera, ¿qué decisión tomarías ya?`,
+      ],
+      sensual: [
+        (c) => `${c} me gusta escucharte… ¿qué te apetece explorar hoy?`,
+        (c) => `${c} A) ir suave, B) subir un poco la intensidad, ¿qué prefieres?`,
+        (c) => `${c} ponme un ejemplo breve para meternos en clima.`,
+        (c) => `${c} hagamos un plan sugerente de dos pasos, ¿por dónde empezarías?`,
+        (c) => `${c} si te guiaras por el deseo, ¿qué te dirías ahora?`,
+      ],
+    };
+
+    const bank = byTone[(tone || '').toLowerCase()] || byTone['amistoso'];
+    let candidate = bank[strategy](paraphrase).replace(/\s+/g, ' ').trim();
+
+    // Avoid repeating same 6-word opener as recent assistant messages
+    const opener6 = candidate.split(/\s+/).slice(0, 6).join(' ').toLowerCase();
+    if (recentAssistantOpeners.includes(opener6)) {
+      const alt = bank[(strategy + 1) % bank.length](paraphrase).replace(/\s+/g, ' ').trim();
+      candidate = alt;
+    }
+
+    const reply = candidate;
 
     if (supabase && !String(conversationId).startsWith('tmp-')) {
       try {
