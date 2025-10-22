@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, ArrowLeft, Settings, Crown, Heart, Sparkles, Lightbulb } from "lucide-react";
+import { Send, ArrowLeft, Crown, Heart } from "lucide-react";
 import { ChatPreferences } from "./PersonalizationModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { generateInitialGreeting, generateResumeOpener, summarizeRecentMessages } from "@/lib/promptGenerator";
+// Conversación desactivada temporalmente: sin generación ni prompts
 
 // Tipos simplificados
 type Message = {
@@ -68,7 +68,7 @@ export function ChatInterface({
   const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const insertedResumeRef = useRef<boolean>(false);
+  // Sin recap/insertions
 
   // Identificador estable para límites (usuario autenticado o deviceId)
   function getSubjectId(): string {
@@ -168,16 +168,8 @@ export function ChatInterface({
         const lsKey = `conv:${modelId || modelName}:${subjectId}`;
         localStorage.removeItem(lsKey);
       } catch {}
-      // Resetear mensajes con saludo inicial diverso
-      const opener = generateInitialGreeting({
-        modelName,
-        mood: preferences.mood,
-        style: preferences.style,
-        topics: preferences.topics || [],
-      }, `${subjectId}-${Date.now()}`);
-      const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-      setMessages([initialMessage]);
-      saveMessages([initialMessage]);
+      // Resetear a conversación vacía (sin generación)
+      setMessages([]);
     } catch (e) {
       console.error('❌ Error al borrar conversación:', e);
     }
@@ -302,98 +294,9 @@ export function ChatInterface({
 
   // Cargar mensajes guardados o mostrar mensaje inicial
   useEffect(() => {
-    const loadMessages = async () => {
-      if (!userId || !modelId) {
-        // Sin persistencia, generar saludo inicial diverso
-        const opener = generateInitialGreeting({
-          modelName,
-          mood: preferences.mood,
-          style: preferences.style,
-          topics: preferences.topics || [],
-        }, `${subjectId}-${modelName}-${Date.now()}`);
-        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-        setMessages([initialMessage]);
-        // Si hay persistencia disponible, guardamos también para fijar preferencias en la conversación
-        if (userId && modelId) {
-          saveMessages([initialMessage]);
-        }
-        return;
-      }
-
-      try {
-        // Cargar desde backend (service role)
-        const res = await fetch(`${API_BASE}/api/conversations/get?user_id=${encodeURIComponent(userId)}&model_id=${encodeURIComponent(String(modelId))}`);
-        if (res.ok) {
-          const { messages: serverMessages, last_summary } = await res.json();
-          if (Array.isArray(serverMessages) && serverMessages.length) {
-            const savedMessages = serverMessages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
-            setMessages(savedMessages);
-            // Insertar recap + pregunta abierta al reanudar (una sola vez)
-            if (!insertedResumeRef.current) {
-              const recap = last_summary || summarizeRecentMessages(savedMessages.map((m: any) => ({ role: m.role, content: m.content })));
-              const opener = generateResumeOpener({
-                modelName,
-                mood: preferences.mood,
-                style: preferences.style,
-                topics: preferences.topics || [],
-              }, recap, `${subjectId}-${modelId}`);
-              const resumeMsg: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-              const withOpener = [...savedMessages, resumeMsg];
-              setMessages(withOpener);
-              saveMessages(withOpener);
-              insertedResumeRef.current = true;
-            }
-            return;
-          }
-        }
-        // Fallback: intentar localStorage
-        try {
-          const lsKey = `conv:${modelId || modelName}:${subjectId}`;
-          const raw = localStorage.getItem(lsKey);
-          if (raw) {
-            const localMsgs = JSON.parse(raw).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
-            setMessages(localMsgs);
-            if (localMsgs.length && !insertedResumeRef.current) {
-              const recap = summarizeRecentMessages(localMsgs.map((m: any) => ({ role: m.role, content: m.content })));
-              const opener = generateResumeOpener({
-                modelName,
-                mood: preferences.mood,
-                style: preferences.style,
-                topics: preferences.topics || [],
-              }, recap, `${subjectId}-${modelId}`);
-              const resumeMsg: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-              const withOpener = [...localMsgs, resumeMsg];
-              setMessages(withOpener);
-              saveMessages(withOpener);
-              insertedResumeRef.current = true;
-            }
-            return;
-          }
-        } catch {}
-        // Mensaje inicial diverso
-        const opener = generateInitialGreeting({
-          modelName,
-          mood: preferences.mood,
-          style: preferences.style,
-          topics: preferences.topics || [],
-        }, `${subjectId}-${modelName}`);
-        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-        setMessages([initialMessage]);
-      } catch (error) {
-        console.error('❌ ERROR CARGANDO MENSAJES:', error);
-        const opener = generateInitialGreeting({
-          modelName,
-          mood: preferences.mood,
-          style: preferences.style,
-          topics: preferences.topics || [],
-        }, `${subjectId}-${modelName}`);
-        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-        setMessages([initialMessage]);
-      }
-    };
-
-    loadMessages();
-  }, [userId, modelId, modelName, preferences]);
+    // Conversación vacía al entrar; sin generación automática
+    setMessages([]);
+  }, [userId, modelId, modelName]);
 
   // Abort in-flight on unmount or model change
   useEffect(() => {
@@ -443,10 +346,9 @@ export function ChatInterface({
     }
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
-    setIsAITyping(true);
+    // No hay IA escribiendo
     
-    // Guardar mensajes después de agregar el mensaje del usuario
-    saveMessages(newMessages);
+    // No persistimos ni llamamos a servidor mientras rehacemos el chat
 
     // Incrementar contador de mensajes y persistir (si aplica)
     if (!isUnlimited && storageKey) {
@@ -460,153 +362,7 @@ export function ChatInterface({
       });
     }
 
-    try {
-      if ((import.meta as any).env?.DEV) {
-        console.log('Calling API...');
-      }
-      // Cancelar petición anterior si existía
-      try { abortRef.current?.abort(); } catch {}
-      abortRef.current = new AbortController();
-      const signal = abortRef.current.signal;
-
-      // Llamada al endpoint local /api/generate con streaming y cancelación
-      const response = await fetch(`${API_BASE}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: subjectId,
-          modelId: modelId,
-          userMessage: messageText,
-          messages: newMessages.slice(-16).map(m => ({ role: m.role, content: m.content })),
-          modelName,
-          modelPersona: `${modelName} es una modelo virtual con personalidad ${preferences.mood}`,
-          tone: preferences.mood,
-          topics: preferences.topics,
-          style: preferences.style,
-          stream: true,
-        }),
-        signal,
-      });
-
-      if (response.ok && (response.headers.get('content-type') || '').includes('text/event-stream')) {
-        // Crear mensaje del asistente vacío y actualizarlo según llegan chunks
-        let streamedContent = '';
-        const aiMessage: Message = { role: 'assistant', content: '', timestamp: new Date() };
-        setMessages(prev => [...prev, aiMessage]);
-
-        const reader = (response.body as ReadableStream<Uint8Array>).getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            if (trimmed.startsWith('data:')) {
-              const payload = trimmed.slice(5).trim();
-              if (payload === '[DONE]') {
-                buffer = '';
-                break;
-              }
-              try {
-                const json = JSON.parse(payload);
-                const delta = json?.choices?.[0]?.delta?.content || json?.choices?.[0]?.message?.content || '';
-                if (delta) {
-                  streamedContent += delta;
-                  const updated: Message = { role: 'assistant', content: streamedContent, timestamp: aiMessage.timestamp };
-                  setMessages(prev => {
-                    const copy = prev.slice();
-                    copy[copy.length - 1] = updated;
-                    return copy;
-                  });
-                }
-              } catch {}
-            }
-          }
-        }
-        // Guardar mensajes tras terminar el stream
-        saveMessages([...newMessages, { role: 'assistant', content: streamedContent || '...', timestamp: new Date() }]);
-      } else if (response.ok) {
-        // Fallback no-stream
-        const data = await response.json();
-        const aiMessage: Message = {
-          role: 'assistant',
-          content: data.reply || 'Lo siento, no puedo responder en este momento.',
-          timestamp: new Date(),
-        };
-        const finalMessages = [...newMessages, aiMessage];
-        setMessages(finalMessages);
-        saveMessages(finalMessages);
-      } else if (response.status === 429) {
-        // Límite alcanzado desde el servidor: activar banner y fijar contador
-        let limit = dailyLimit;
-        try {
-          const info = await response.json();
-          if (typeof info?.limit === 'number') limit = info.limit;
-        } catch {}
-        if (!isUnlimited) {
-          setLocalMessageCount(limit);
-          try { if (storageKey) localStorage.setItem(storageKey, String(limit)); } catch {}
-        }
-        setShowLimitBanner(true);
-        throw new Error('Has alcanzado el límite diario');
-      } else {
-        // Reintento rápido sin streaming para no cortar la conversación
-        try {
-          const nonStreamRes = await fetch(`${API_BASE}/api/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: subjectId,
-              modelId: modelId,
-              userMessage: messageText,
-              messages: newMessages.slice(-16).map(m => ({ role: m.role, content: m.content })),
-              modelName,
-              modelPersona: `${modelName} es una modelo virtual con personalidad ${preferences.mood}`,
-              tone: preferences.mood,
-              topics: preferences.topics,
-              style: preferences.style,
-              stream: false,
-            }),
-            signal,
-          });
-          if (nonStreamRes.ok) {
-            const data = await nonStreamRes.json();
-            const replyText = data?.reply || '';
-            const aiMessage: Message = { role: 'assistant', content: replyText || 'Estoy aquí. ¿Te va si lo miramos por pasos o prefieres que te proponga 2 opciones?', timestamp: new Date() };
-            const finalMessages = [...newMessages, aiMessage];
-            setMessages(finalMessages);
-            saveMessages(finalMessages);
-          } else {
-            throw new Error('Failed to get response');
-          }
-        } catch (e) {
-          throw e;
-        }
-      }
-    } catch (error: any) {
-      if (error?.name === 'AbortError') {
-        // Navegación o cambio de modelo: no mostrar error, solo salir
-        if ((import.meta as any).env?.DEV) console.log('Request aborted');
-      } else {
-        console.error('Error sending message:', error);
-        // Mensaje suave para no cortar la conversación
-        const softFallback: Message = {
-          role: 'assistant',
-          content: 'Estoy aquí. ¿Prefieres que lo veamos por pasos o te propongo 2 opciones rápidas?',
-          timestamp: new Date(),
-        };
-        const finalMessages = [...newMessages, softFallback];
-        setMessages(finalMessages);
-        saveMessages(finalMessages);
-      }
-    } finally {
-        setIsAITyping(false);
-      }
+    // Sin llamadas al backend: dejamos solo el mensaje del usuario (modo reconstrucción)
   };
 
   // Borrar memoria de usuario (tabla user_memory)
@@ -675,25 +431,10 @@ export function ChatInterface({
                   {currentMessageCount}/{dailyLimit}
                 </span>
                 {remainingMessages > 0 && (
-                  <span className="text-muted-foreground">
-                    ({t('chat.remaining', { count: remainingMessages })})
-                  </span>
+                  <span className="text-muted-foreground">({t('chat.remaining', { count: remainingMessages })})</span>
                 )}
               </div>
             )}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleClearConversation}>
-              {t('common.clear') || 'Borrar chat'}
-            </Button>
-            {userId && (
-              <Button variant="outline" size="sm" onClick={handleClearMemory}>
-                {t('common.clearMemory') || 'Borrar memoria'}
-              </Button>
-            )}
-            <Button variant="ghost" size="icon">
-              <Settings className="w-5 h-5" />
-            </Button>
-          </div>
           </div>
         </div>
 
@@ -856,17 +597,7 @@ export function ChatInterface({
                 isLimitReached ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             />
-            {!isLimitReached && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSuggest}
-                title={t('chat.suggestTopic') || 'Sugerir tema'}
-              >
-                <Lightbulb className="w-4 h-4 mr-2" />
-                {t('chat.suggest') || 'Sugerir'}
-              </Button>
-            )}
+            {/* Sugerencias deshabilitadas */}
             <Button 
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isAITyping || isLimitReached}
