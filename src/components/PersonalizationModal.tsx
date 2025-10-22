@@ -69,9 +69,6 @@ export function PersonalizationModal({
           <DialogTitle className="text-xl font-semibold text-center">
             {t('personalization.title', { name: modelName })}
           </DialogTitle>
-          <p className="text-muted-foreground text-center text-sm">
-            {t('personalization.subtitle')}
-          </p>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -87,9 +84,7 @@ export function PersonalizationModal({
             <h3 className="font-medium text-lg text-foreground mb-2">
               {question}
             </h3>
-            <p className="text-sm text-muted-foreground">
-              {t('personalization.step', { current: 1 })}
-            </p>
+            {/* Sin indicador de pasos */}
           </div>
 
           {/* Única pregunta: mood */}
