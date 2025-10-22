@@ -55,6 +55,7 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isAITyping, setIsAITyping] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [localMessageCount, setLocalMessageCount] = useState(dailyMessageCount);
   const [showLimitBanner, setShowLimitBanner] = useState(false);
   const [showDonationPanel, setShowDonationPanel] = useState(false);
@@ -292,11 +293,37 @@ export function ChatInterface({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey, isUnlimited]);
 
-  // Cargar mensajes guardados o mostrar mensaje inicial
+  // Iniciar conversación: obtener opener desde /api/chat/start según el trato (mood)
   useEffect(() => {
-    // Conversación vacía al entrar; sin generación automática
-    setMessages([]);
-  }, [userId, modelId, modelName]);
+    let cancelled = false;
+    (async () => {
+      try {
+        setIsAITyping(true);
+        const resp = await fetch(`${API_BASE}/api/chat/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: subjectId,
+            modelId: modelId || modelName,
+            tone: preferences.mood,
+          }),
+        });
+        if (!resp.ok) throw new Error(`start ${resp.status}`);
+        const data = await resp.json();
+        if (cancelled) return;
+        setConversationId(String(data.conversationId || ''));
+        const opener = String(data.firstAssistantMessage || 'Hola, ¿cómo estás?');
+        const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
+        setMessages([initialMessage]);
+      } catch (e) {
+        if ((import.meta as any).env?.DEV) console.error('start error', e);
+        setMessages([{ role: 'assistant', content: 'Hola, ¿cómo estás hoy?', timestamp: new Date() }]);
+      } finally {
+        setIsAITyping(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [modelId, modelName, preferences.mood]);
 
   // Abort in-flight on unmount or model change
   useEffect(() => {
@@ -348,7 +375,32 @@ export function ChatInterface({
     setMessages(newMessages);
     // No hay IA escribiendo
     
-    // No persistimos ni llamamos a servidor mientras rehacemos el chat
+    // Llamar al endpoint de envío y añadir respuesta
+    try {
+      setIsAITyping(true);
+      const resp = await fetch(`${API_BASE}/api/chat/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: conversationId || `tmp-${subjectId}-${modelId || modelName}`,
+          message: messageText,
+        }),
+      });
+      let replyText = '';
+      if (resp.ok) {
+        const data = await resp.json();
+        replyText = String(data?.reply || 'Te leo. ¿Seguimos?');
+      } else {
+        replyText = 'Estoy aquí. ¿Te va si lo vemos por pasos o prefieres que te proponga 2 opciones?';
+      }
+      const aiMessage: Message = { role: 'assistant', content: replyText, timestamp: new Date() };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (e) {
+      const aiMessage: Message = { role: 'assistant', content: 'Estoy aquí. ¿Seguimos por pasos o prefieres 2 opciones?', timestamp: new Date() };
+      setMessages(prev => [...prev, aiMessage]);
+    } finally {
+      setIsAITyping(false);
+    }
 
     // Incrementar contador de mensajes y persistir (si aplica)
     if (!isUnlimited && storageKey) {

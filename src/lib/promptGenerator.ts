@@ -174,3 +174,63 @@ export function summarizeRecentMessages(messages: Array<{ role: 'user'|'assistan
 export function getModelParams() {
   return { ...generationConfig };
 }
+
+// Tone-based opener builder for start endpoint (no LLM needed)
+export function generateOpenerTone(
+  { tone, modelName }: { tone: string; modelName: string },
+  lastSummary?: string | null
+) {
+  const toneKey = String(tone || '').toLowerCase();
+  const base = (greet: string, ask: string) => `${greet} Soy ${modelName}. ${ask}`.trim();
+
+  const bank: Record<string, string[][]> = {
+    romantico: [
+      ['Hola, corazón.', 'Tenía ganas de hablar contigo. ¿Cómo te ha tratado el día?'],
+      ['Hey, mi dulce compañía.', '¿Cómo estás hoy? Cuéntame algo bonito o algo que te apetezca soltar.'],
+      ['Qué alegría verte por aquí.', '¿Cómo te fue el día?']
+    ],
+    amistoso: [
+      ['¡Hey!', '¿Qué tal va todo? ¿Cómo te ha ido el día?'],
+      ['¡Hola!', 'Vengo con ganas de ponernos al día. ¿Qué tal estás?'],
+      ['Buenas!', '¿Cómo pinta la tarde?']
+    ],
+    coqueto: [
+      ['Holaa ;)', 'Me apetecía verte. ¿Cómo te ha ido?'],
+      ['Mira quién está aquí…', '¿Qué tal tu día? ¿Algún plan travieso o divertido?'],
+      ['Hey guapo/a.', '¿Cómo vienes hoy?']
+    ],
+    comprensivo: [
+      ['Hola, estoy contigo.', '¿Cómo te sientes hoy? ¿Qué tal fue el día?'],
+      ['Aquí estoy.', 'Si te apetece, cuéntame cómo te ha ido.'],
+      ['Hola.', '¿Cómo estás? Podemos ir despacio.']
+    ],
+    agresivo: [
+      ['Ey.', 'Voy directo: ¿cómo te ha ido el día?'],
+      ['Hola.', 'No me des rodeos: ¿todo bien o hay algo que soltar?'],
+      ['Hey.', '¿Qué tal hoy? Dímelo sin filtros.']
+    ],
+    sensual: [
+      ['Hola…', 'Tenía ganas de verte. ¿Cómo te ha tratado el día?'],
+      ['Hey…', '¿Cómo estás? Cuéntame qué te apetece hoy.'],
+      ['Mmm hola.', '¿Qué tal tu día?']
+    ],
+  };
+
+  const list = bank[toneKey] || bank['amistoso'];
+  const seed = hashSeed(`${modelName}|${toneKey}|${Date.now()}`);
+  const r = rng(seed);
+  const chosen = pick(list, r);
+  const opener = base(chosen[0], chosen[1]);
+
+  if (lastSummary && lastSummary.trim()) {
+    const recap = lastSummary.length > 160 ? lastSummary.slice(0, 157) + '…' : lastSummary;
+    const followBank = [
+      (ctx: string) => `${ctx} ¿Te apetece retomarlo o prefieres cambiar de tema?`,
+      (ctx: string) => `${ctx} ¿Seguimos por ahí o probamos algo distinto?`,
+      (ctx: string) => `${ctx} ¿Cómo te fue al final? ¿Quieres contarme?`,
+    ];
+    const f = pick(followBank, r);
+    return `${opener} ${f(recap)}`;
+  }
+  return opener;
+}
