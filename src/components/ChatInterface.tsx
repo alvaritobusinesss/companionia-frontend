@@ -158,8 +158,8 @@ export function ChatInterface({
     try {
       // Borrar en backend si hay usuario y modelo
       if (userId && modelId) {
-        await fetch(`${API_BASE}/api/conversations`, {
-          method: 'DELETE',
+        await fetch(`${API_BASE}/api/conversations-delete`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: userId, model_id: modelId })
         });
@@ -171,6 +171,7 @@ export function ChatInterface({
       } catch {}
       // Resetear a conversación vacía (sin generación)
       setMessages([]);
+      await saveMessages([]);
     } catch (e) {
       console.error('❌ Error al borrar conversación:', e);
     }
@@ -236,7 +237,7 @@ export function ChatInterface({
         timestamp: m.timestamp.toISOString(),
       }));
       if (userId && modelId) {
-        const res = await fetch(`${API_BASE}/api/conversations/upsert`, {
+        const res = await fetch(`${API_BASE}/api/conversations-upsert`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -296,6 +297,18 @@ export function ChatInterface({
   // Iniciar conversación: obtener opener desde /api/chat/start según el trato (mood)
   useEffect(() => {
     let cancelled = false;
+    // Primero intentar cargar conversación guardada localmente
+    try {
+      const lsKey = `conv:${modelId || modelName}:${subjectId}`;
+      const raw = localStorage.getItem(lsKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const restored = parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
+          setMessages(restored as Message[]);
+        }
+      }
+    } catch {}
     (async () => {
       try {
         setIsAITyping(true);
@@ -313,11 +326,27 @@ export function ChatInterface({
         if (cancelled) return;
         setConversationId(String(data.conversationId || ''));
         const opener = String(data.firstAssistantMessage || 'Hola, ¿cómo estás?');
+        // Si ya teníamos mensajes cargados de localStorage, no sobreescribir, sólo añadir opener si está vacío
         const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
-        setMessages([initialMessage]);
+        setMessages((prev): Message[] => {
+          if (prev.length === 0) {
+            const next: Message[] = [initialMessage];
+            // Guardar inmediatamente
+            saveMessages(next);
+            return next;
+          }
+          return prev;
+        });
       } catch (e) {
         if ((import.meta as any).env?.DEV) console.error('start error', e);
-        setMessages([{ role: 'assistant', content: 'Hola, ¿cómo estás hoy?', timestamp: new Date() }]);
+        setMessages((prev): Message[] => {
+          if (prev.length === 0) {
+            const next: Message[] = [{ role: 'assistant', content: 'Hola, ¿cómo estás hoy?', timestamp: new Date() }];
+            saveMessages(next);
+            return next;
+          }
+          return prev;
+        });
       } finally {
         setIsAITyping(false);
       }
@@ -373,6 +402,8 @@ export function ChatInterface({
     }
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
+    // Persistir tras añadir mensaje de usuario
+    saveMessages(newMessages);
     // No hay IA escribiendo
     
     // Llamar al endpoint de envío y añadir respuesta
@@ -394,10 +425,19 @@ export function ChatInterface({
         replyText = 'Estoy aquí. ¿Te va si lo vemos por pasos o prefieres que te proponga 2 opciones?';
       }
       const aiMessage: Message = { role: 'assistant', content: replyText, timestamp: new Date() };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev): Message[] => {
+        const next: Message[] = [...prev, aiMessage];
+        // Persistir tras respuesta de la IA
+        saveMessages(next);
+        return next;
+      });
     } catch (e) {
       const aiMessage: Message = { role: 'assistant', content: 'Estoy aquí. ¿Seguimos por pasos o prefieres 2 opciones?', timestamp: new Date() };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev): Message[] => {
+        const next: Message[] = [...prev, aiMessage];
+        saveMessages(next);
+        return next;
+      });
     } finally {
       setIsAITyping(false);
     }
