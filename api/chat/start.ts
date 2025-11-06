@@ -4,7 +4,7 @@ import { generateOpenerTone } from '../../src/lib/promptGenerator';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { userId, modelId, tone } = (req.body as any) || {};
+    const { userId, modelId, modelName, tone } = (req.body as any) || {};
     if (!userId || !modelId || !tone) return res.status(400).json({ error: 'Missing fields' });
 
     const supabaseUrl = process.env.SUPABASE_URL as string | undefined;
@@ -48,9 +48,10 @@ export default async function handler(req: any, res: any) {
     }
 
     // Build a local opener (no LLM) with tone variety
+    const modelLabel = String(modelName || modelId);
     const firstAssistantMessage = last_summary
-      ? generateOpenerTone({ tone, modelName: String(modelId) }, last_summary)
-      : generateOpenerTone({ tone, modelName: String(modelId) });
+      ? generateOpenerTone({ tone, modelName: modelLabel }, last_summary)
+      : generateOpenerTone({ tone, modelName: modelLabel });
 
     // Try to persist first assistant message when creating a new conversation
     if (supabase && conversationId && !conversationId.startsWith('tmp-')) {

@@ -327,6 +327,7 @@ export function ChatInterface({
           body: JSON.stringify({
             userId: subjectId,
             modelId: modelId || modelName,
+            modelName,
             tone: preferences.mood,
           }),
         });
