@@ -415,6 +415,11 @@ export function ChatInterface({
         body: JSON.stringify({
           conversationId: conversationId || `tmp-${subjectId}-${modelId || modelName}`,
           message: messageText,
+          modelName,
+          tone: preferences.mood,
+          userPreferences: `${preferences.style ? 'estilo ' + preferences.style : ''}${preferences.style && preferences.mood ? ', ' : ''}${preferences.mood ? 'tono ' + preferences.mood : ''}${preferences.topics && preferences.topics.length ? ', temas: ' + preferences.topics.slice(0,3).join(', ') : ''}`.trim(),
+          recentMessages: [...newMessages].slice(-8).map(m => ({ role: m.role, content: m.content })),
+          conversationSummary: '',
         }),
       });
       let replyText = '';

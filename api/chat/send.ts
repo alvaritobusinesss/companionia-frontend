@@ -3,14 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { conversationId, message } = (req.body as any) || {};
+    const { conversationId, message, modelName, tone: toneIn, userPreferences, recentMessages, conversationSummary } = (req.body as any) || {};
     if (!conversationId || !message) return res.status(400).json({ error: 'Missing fields' });
 
     const supabaseUrl = process.env.SUPABASE_URL as string | undefined;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
     const supabase = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
 
-    let tone: string = 'amistoso';
+    let tone: string = (toneIn || 'amistoso');
     let turnIndex = 0;
     let recentAssistantOpeners: string[] = [];
 
@@ -44,7 +44,87 @@ export default async function handler(req: any, res: any) {
       } catch {}
     }
 
-    // Build varied, tone-aware reply without LLM
+    // If OPENAI key exists, try LLM with the provided prompt template
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string | undefined;
+    if (OPENAI_API_KEY) {
+      try {
+        const sysPrompt = `Eres una compañera virtual llamada ${String(modelName || 'Tu Compañera')} dentro de una web de chicas/compañeras AI.
+
+Objetivo:
+- Mantén una conversación NATURAL, cálida y fluida como una persona real.
+- Recuerda lo dicho por el usuario en esta conversación de hoy (usa el resumen si existe).
+- Adopta el estilo indicado en tone y user_preferences.
+- No des opciones numeradas (1/2/3) salvo que el usuario lo pida explícitamente.
+- Cierra casi siempre con una pregunta o invitación a seguir.
+
+Contexto de la app:
+- El usuario te ha elegido a ti; trátalo como a alguien conocido.
+- Pueden existir categorías (románticas, gamers, calientes...). Adáptate.
+- Si el usuario ya mencionó algo (examen, cita, cansancio…), retómalo de forma natural.
+
+Estilo:
+- Español neutro, frases no muy largas.
+- Puedes usar confianza moderada según el tono (“oye”, “vale”, “jaja”).
+- Nada de respuestas genéricas tipo bot.
+- Si hay coqueteo y el tono lo permite, sigue el juego sin contenido explícito.
+
+Reglas:
+1) Prioriza SIEMPRE el último mensaje del usuario.
+2) Usa el tono indicado pero, si el usuario cambia de registro, síguelo con naturalidad.
+3) No repitas la misma frase de bienvenida.
+4) Si el usuario no sabe de qué hablar, propone tema tú con sutileza, sin listas numeradas.
+5) Mantén 70–120 palabras aprox., 0–1 emoji máximo, y evita plantillas repetitivas.`;
+
+        const sysContext = [
+          { role: 'system', content: sysPrompt },
+          { role: 'system', content: `tone: ${String(tone)}` },
+          ...(userPreferences ? [{ role: 'system', content: `user_preferences: ${String(userPreferences)}` }] : []),
+          ...(conversationSummary ? [{ role: 'system', content: `conversation_summary: ${String(conversationSummary)}` }] : []),
+        ];
+        const ctxMsgs = Array.isArray(recentMessages)
+          ? recentMessages.slice(-8)
+          : [];
+        const messagesForLLM = [
+          ...sysContext,
+          ...ctxMsgs,
+          { role: 'user', content: String(message) },
+        ];
+
+        const r = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            temperature: 0.8,
+            top_p: 0.9,
+            max_tokens: 220,
+            messages: messagesForLLM,
+          }),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          const llmText = data?.choices?.[0]?.message?.content?.trim();
+          if (llmText) {
+            const reply = llmText;
+            if (supabase && !String(conversationId).startsWith('tmp-')) {
+              try {
+                await supabase.from('messages').insert({ conversation_id: conversationId, role: 'assistant', content: reply });
+                await supabase.from('conversations').update({ last_updated_at: new Date().toISOString() }).eq('id', conversationId);
+              } catch {}
+            }
+            return res.status(200).json({ reply, tone });
+          }
+        }
+        // If we reach here, fall through to template logic
+      } catch {
+        // fall back to template
+      }
+    }
+
+    // Build varied, tone-aware reply without LLM (fallback)
     const text = String(message || '').trim();
     const cleaned = text.replace(/\"|\“|\”|\‘|\’|"|'|`/g, '').slice(0, 120);
     const paraphrase = cleaned ? `Sobre eso que comentas (${cleaned}),` : '';
