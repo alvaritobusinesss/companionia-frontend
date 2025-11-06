@@ -115,11 +115,11 @@ Reglas:
                 await supabase.from('conversations').update({ last_updated_at: new Date().toISOString() }).eq('id', conversationId);
               } catch {}
             }
-            return res.status(200).json({ reply, tone });
+            return res.status(200).json({ reply, tone, source: 'llm' });
           }
         }
         // If we reach here, fall through to template logic
-      } catch {
+      } catch (e) {
         // fall back to template
       }
     }
@@ -194,7 +194,7 @@ Reglas:
       } catch {}
     }
 
-    return res.status(200).json({ reply, tone });
+    return res.status(200).json({ reply, tone, source: 'template' });
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Server error' });
   }
