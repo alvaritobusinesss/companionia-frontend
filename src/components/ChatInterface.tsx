@@ -66,7 +66,16 @@ export function ChatInterface({
   // Donaciones deshabilitadas temporalmente
 
   // Use same-origin in production to avoid CORS and domain mismatches
-  const API_BASE = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
+  const API_BASE = (() => {
+    const cfg = (((import.meta as any).env?.VITE_API_URL) as string | undefined) || '';
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      const isLocal = host === 'localhost' || host === '127.0.0.1';
+      // In prod (not localhost), force same-origin serverless functions
+      if (!isLocal) return '';
+    }
+    return cfg; // local dev can use VITE_API_URL
+  })();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   // Sin recap/insertions
