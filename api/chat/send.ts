@@ -4,7 +4,7 @@ import { getPersonaByName } from '../../src/data/personas';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { conversationId, message, modelName, tone: toneIn, userPreferences, recentMessages, conversationSummary } = (req.body as any) || {};
+    const { conversationId, message, modelName, tone: toneIn, userPreferences, recentMessages, conversationSummary, language } = (req.body as any) || {};
     if (!conversationId || !message) return res.status(400).json({ error: 'Missing fields' });
 
     const supabaseUrl = process.env.SUPABASE_URL as string | undefined;
@@ -97,6 +97,7 @@ si es amistoso, mantén cercanía natural; si es comprensivo, muestra empatía.
 [ESTILO DE RESPUESTA]
 - Longitud media: 3–6 frases naturales (ni demasiado corta ni ensayo).
 - Usa un español natural, fluido, sin tono robótico.
+- Si el usuario ha seleccionado un idioma específico, RESPONDE SIEMPRE en ese idioma: ${String(language || 'es')}.
 - Puedes usar expresiones emocionales o coloquiales suaves ("jaja", "la verdad es que...", "me encanta eso").
 - Puedes añadir emojis si el usuario los usa o si encajan con tu tono, pero no abuses.
 - Usa descripciones sensoriales o emocionales cuando hables de tu entorno (luz, clima, música...).

@@ -49,7 +49,7 @@ export function ChatInterface({
   dailyLimit = 5,
   onUpgradeToPremium,
 }: ChatInterfaceProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   
   // Estado local para mensajes (sin persistencia por ahora)
   const [messages, setMessages] = useState<Message[]>([]);
@@ -430,6 +430,7 @@ export function ChatInterface({
           userPreferences: `${preferences.style ? 'estilo ' + preferences.style : ''}${preferences.style && preferences.mood ? ', ' : ''}${preferences.mood ? 'tono ' + preferences.mood : ''}${preferences.topics && preferences.topics.length ? ', temas: ' + preferences.topics.slice(0,3).join(', ') : ''}`.trim(),
           recentMessages: [...newMessages].slice(-8).map(m => ({ role: m.role, content: m.content })),
           conversationSummary: '',
+          language,
         }),
       });
       let replyText = '';
