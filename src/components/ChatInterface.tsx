@@ -282,11 +282,26 @@ export function ChatInterface({
   };
   const storageKey = `msgCount:${subjectId}:${getTodayKey()}`;
 
-  // Lógica de límite de mensajes (sin límite para premium o modelos one_time comprados)
+  // Lógica de límite de mensajes
+  // Sin límite para: usuarios premium O modelos comprados con pago único
   const isUnlimited = userIsPremium || unlimitedForThisModel;
   const currentMessageCount = isUnlimited ? 0 : localMessageCount;
   const isLimitReached = !isUnlimited && currentMessageCount >= dailyLimit;
   const remainingMessages = Math.max(0, dailyLimit - currentMessageCount);
+  
+  console.log('Estado de límite:', { 
+    userIsPremium, 
+    unlimitedForThisModel, 
+    isUnlimited, 
+    currentMessageCount, 
+    dailyLimit, 
+    isLimitReached 
+  });
+  
+  // Mostrar el contador de mensajes restantes en consola para depuración
+  useEffect(() => {
+    console.log(`Mensajes usados: ${currentMessageCount}/${dailyLimit} (${remainingMessages} restantes)`);
+  }, [currentMessageCount, dailyLimit, remainingMessages]);
 
   // Cargar contador desde localStorage al montar/cambiar de usuario
   useEffect(() => {
@@ -387,12 +402,12 @@ export function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAITyping]);
 
-  // Mostrar banner cuando se alcance el límite
+  // Mostrar banner cuando se alcance el límite o cuando se cambie de modelo
   useEffect(() => {
-    if (isLimitReached && !showLimitBanner) {
+    if (isLimitReached) {
       setShowLimitBanner(true);
     }
-  }, [isLimitReached, showLimitBanner]);
+  }, [isLimitReached, modelId]); // Añadimos modelId para que se actualice al cambiar de modelo
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLimitReached) return;
@@ -717,32 +732,72 @@ export function ChatInterface({
               <Send className="w-4 h-4" />
             </Button>
           </div>
-          {isLimitReached && (
-            <div className="mt-3 p-4 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
-              <div className="flex items-center gap-2 text-orange-800 mb-2">
-                <Crown className="w-5 h-5" />
-                <span className="text-lg font-semibold">
-                  {t('chat.limitReachedTitle')}
+          {!isUnlimited && (
+            <div className={`mt-3 p-4 rounded-lg transition-all duration-300 ${
+              isLimitReached 
+                ? 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200' 
+                : 'bg-blue-50 border border-blue-200'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className={`w-5 h-5 ${isLimitReached ? 'text-orange-500' : 'text-blue-500'}`} />
+                <span className={`text-lg font-semibold ${isLimitReached ? 'text-orange-800' : 'text-blue-800'}`}>
+                  {isLimitReached 
+                    ? t('chat.limitReachedTitle') 
+                    : t('chat.messageLimitTitle', { count: remainingMessages })}
                 </span>
               </div>
-              <p className="text-sm text-orange-700 mb-2">
-                {t('chat.limitReachedDescription')}
-              </p>
-              <p className="text-xs text-orange-700 mb-3">
-                {t('chat.premiumBenefits') || 'Mensajes ilimitados, acceso a todos los estilos y conversaciones más largas.'}
-              </p>
-              {onUpgradeToPremium && (
-                <Button 
-                  onClick={() => {
-                    setShowLimitBanner(false);
-                    onUpgradeToPremium();
-                  }}
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold px-6 py-2 rounded-lg shadow-lg"
-                >
-                  <Crown className="w-4 h-4 mr-2" />
-                  {t('chat.upgradeToPremiumCta')}
-                </Button>
+              
+              {isLimitReached ? (
+                <>
+                  <p className="text-sm text-orange-700 mb-2">
+                    {t('chat.limitReachedDescription')}
+                  </p>
+                  <p className="text-xs text-orange-700 mb-3">
+                    {t('chat.premiumBenefits') || 'Mensajes ilimitados, acceso a todos los estilos y conversaciones más largas.'}
+                  </p>
+                </>
+              ) : (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-3">
+                  <div 
+                    className={`h-2.5 rounded-full ${
+                      remainingMessages <= 2 
+                        ? 'bg-red-500' 
+                        : remainingMessages <= 5 
+                          ? 'bg-yellow-500' 
+                          : 'bg-blue-500'
+                    }`} 
+                    style={{ width: `${(currentMessageCount / dailyLimit) * 100}%`, maxWidth: '100%' }}
+                  ></div>
+                </div>
               )}
+              
+              <div className="flex items-center justify-between">
+                <span className={`text-xs ${isLimitReached ? 'text-orange-700' : 'text-blue-700'}`}>
+                  {isLimitReached 
+                    ? t('chat.upgradeForMore') 
+                    : t('chat.messagesRemaining', { count: remainingMessages, total: dailyLimit })}
+                </span>
+                
+                {onUpgradeToPremium && (
+                  <Button 
+                    onClick={() => {
+                      setShowLimitBanner(false);
+                      onUpgradeToPremium();
+                    }}
+                    size="sm"
+                    className={`font-semibold px-4 py-1 rounded-lg shadow ${
+                      isLimitReached 
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white' 
+                        : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
+                    }`}
+                  >
+                    <Crown className="w-3.5 h-3.5 mr-1.5" />
+                    {isLimitReached 
+                      ? t('chat.upgradeToPremiumCta') 
+                      : t('chat.upgradeNow')}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>

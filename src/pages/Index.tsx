@@ -612,6 +612,11 @@ const Index = () => {
   // Estado para controlar si estamos en proceso de actualización
   const [isUpgrading, setIsUpgrading] = useState(false);
 
+  // Función para verificar si un modelo ha sido comprado por el usuario
+  const isModelPurchased = (modelId: string): boolean => {
+    return user?.purchased_models?.includes(modelId) || false;
+  };
+
   const handleUpgrade = async (e?: React.MouseEvent) => {
     // Prevenir el comportamiento por defecto del botón
     e?.preventDefault();
@@ -787,7 +792,7 @@ const Index = () => {
           userEmail={user?.email}
           modelId={selectedModel.id}
           userIsPremium={user ? user.is_premium : false}
-          unlimitedForThisModel={false} // O lógica para verificar si el usuario ha comprado este modelo
+          unlimitedForThisModel={selectedModel ? isModelPurchased(selectedModel.id) : false}
           dailyMessageCount={0} // Contador de mensajes diarios
           dailyLimit={user?.is_premium ? Number.MAX_SAFE_INTEGER : 5} // Límite de mensajes diarios
           onUpgradeToPremium={handleUpgrade}
