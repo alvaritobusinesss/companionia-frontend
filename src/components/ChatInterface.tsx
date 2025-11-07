@@ -783,17 +783,25 @@ export function ChatInterface({
                 >
                   {t('common.close')}
                 </Button>
-                {onUpgradeToPremium && (
+                {onUpgradeToPremium ? (
                   <Button 
                     onClick={() => {
                       setShowLimitBanner(false);
-                      alert('El sistema de suscripciones está deshabilitado temporalmente. Próximamente habilitaremos un nuevo método.');
+                      onUpgradeToPremium();
                     }}
                     className="flex-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
                   >
                     <Crown className="w-4 h-4 mr-2" />
                     {t('chat.upgradeToPremium')}
                   </Button>
+                ) : (
+                  <a 
+                    href="/premium" 
+                    className="flex-1 flex items-center justify-center bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    {t('chat.upgradeToPremium')}
+                  </a>
                 )}
               </div>
             </div>
