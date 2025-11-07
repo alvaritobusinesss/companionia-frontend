@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Crown, Lock, Star, CreditCard, User } from "lucide-react";
 import { Model, UserAccess, User as UserType } from "@/hooks/useUserAccess";
 import { useTranslation } from "@/hooks/useTranslation";
-import { supabase } from "@/lib/supabase";
 
 interface ModelCardWithAccessProps {
   model: Model;
@@ -31,64 +30,10 @@ function ModelCardWithAccessComponent({
     return url.endsWith('.jpg') ? url.replace(/\.jpg$/i, '.webp') : url;
   });
   
-  const handleClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Si el usuario no está autenticado, abrir el modal de autenticación
-    if (!user) {
-      onPurchase(model.id);
-      return;
-    }
-
-    // Si el usuario ya tiene acceso, seleccionar el modelo
+  const handleClick = () => {
     if (userAccess.hasAccess) {
       onSelect(model.id);
-      return;
-    }
-
-    // Si es un modelo premium, redirigir directamente a la URL de pago de Stripe
-    if (model.type === 'premium') {
-      try {
-        // Obtener la sesión actual
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        // Crear la sesión de pago con Stripe
-        const response = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`
-          },
-          body: JSON.stringify({
-            type: 'premium',
-            userEmail: user.email,
-            userId: user.id,
-            returnUrl: window.location.origin + window.location.pathname
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Error en la respuesta de la API:', errorData);
-          throw new Error('Error al conectar con el servicio de pagos');
-        }
-
-        const result = await response.json();
-        
-        // Redirigir a la página de pago de Stripe
-        if (result?.url) {
-          console.log('🔗 Redirigiendo a Stripe...');
-          window.location.href = result.url;
-        } else {
-          throw new Error('No se pudo obtener la URL de pago de Stripe');
-        }
-      } catch (error) {
-        console.error('Error al procesar la actualización a premium:', error);
-        // Si hay un error, usar el método de compra normal
-        onPurchase(model.id);
-      }
     } else {
-      // Para otros tipos de compra, usar el método normal
       onPurchase(model.id);
     }
   };
