@@ -8,6 +8,7 @@ import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { ModelEditor } from "@/components/ModelEditor";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { UserMenu } from "@/components/UserMenu";
+import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -768,13 +769,10 @@ const Index = () => {
           userId={user?.id}
           userEmail={user?.email}
           modelId={selectedModel.id}
-          userIsPremium={user?.is_premium || false}
-          unlimitedForThisModel={(() => {
-            const access = checkModelAccess(selectedModel);
-            return access.hasAccess && selectedModel.type === 'one_time';
-          })()}
-          dailyMessageCount={user?.daily_message_count || 0}
-          dailyLimit={5}
+          userIsPremium={user ? user.is_premium : false}
+          unlimitedForThisModel={false} // O lógica para verificar si el usuario ha comprado este modelo
+          dailyMessageCount={0} // Contador de mensajes diarios
+          dailyLimit={user?.is_premium ? Number.MAX_SAFE_INTEGER : 5} // Límite de mensajes diarios
           onUpgradeToPremium={handleUpgrade}
         />
 
@@ -992,7 +990,7 @@ const Index = () => {
           setShowModelEditor(false);
           setEditingModel(null);
         }}
-        onSave={handleSaveModel}
+        onSave={handleCreateModel}
         model={editingModel ? {
           id: editingModel.id,
           name: editingModel.name,
