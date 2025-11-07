@@ -329,13 +329,16 @@ export function ChatInterface({
             modelId: modelId || modelName,
             modelName,
             tone: preferences.mood,
-          }),
+            language // Asegurarse de que el idioma se envía al backend
+          })
         });
         if (!resp.ok) throw new Error(`start ${resp.status}`);
         const data = await resp.json();
         if (cancelled) return;
         setConversationId(String(data.conversationId || ''));
-        const opener = String(data.firstAssistantMessage || 'Hola, ¿cómo estás?');
+        // Usar un mensaje de respaldo en el idioma correcto
+        const defaultMessage = language === 'en' ? 'Hello, how are you?' : 'Hola, ¿cómo estás?';
+        const opener = String(data.firstAssistantMessage || defaultMessage);
         // Si ya teníamos mensajes cargados de localStorage, no sobreescribir, sólo añadir opener si está vacío
         const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages((prev): Message[] => {
