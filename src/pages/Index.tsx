@@ -608,28 +608,62 @@ const Index = () => {
       setChatPreferences(null);
   };
 
-  const handleUpgrade = () => {
-    console.log('🔥 ABRIENDO MODAL PREMIUM');
-    setPurchaseType('premium');
-    setPurchaseModel({
-      id: 'premium',
-      name: 'Premium Subscription',
-      category: 'premium',
-      type: 'premium',
-      price: 19.99,
-      image_url: '/placeholder.svg',
-      description: 'Acceso ilimitado a todas las modelos',
-      tags: ['premium', 'unlimited'],
-      rating: 5,
-      conversations: 0
-    });
-    setShowPurchaseModal(true);
-  };
+  const handleUpgrade = async () => {
+    console.log('🔥 INICIANDO ACTUALIZACIÓN A PREMIUM');
+    
+    // Si el usuario no está autenticado, redirigir al inicio de sesión
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
 
-  const handleSaveModel = (model: any) => {
-    console.log("Modelo guardado:", model);
-    setShowModelEditor(false);
-    setEditingModel(null);
+    try {
+      // Obtener el token de sesión actual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('Error al obtener la sesión:', sessionError);
+        alert('Por favor, inicia sesión para continuar con la actualización a premium.');
+        setShowAuthModal(true);
+        return;
+      }
+
+      console.log('🔑 Sesión obtenida, creando sesión de pago...');
+      
+      // Crear la sesión de pago con Stripe
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          type: 'premium',
+          userEmail: user.email,
+          userId: user.id,
+          returnUrl: window.location.origin + window.location.pathname
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Error en la respuesta de la API:', errorData);
+        throw new Error('Error al conectar con el servicio de pagos');
+      }
+
+      const result = await response.json();
+      
+      // Redirigir a la página de pago de Stripe
+      if (result?.url) {
+        console.log('🔗 Redirigiendo a Stripe...');
+        window.location.href = result.url;
+      } else {
+        throw new Error('No se pudo obtener la URL de pago de Stripe');
+      }
+    } catch (error) {
+      console.error('Error al procesar la actualización a premium:', error);
+      alert(error.message || 'Ocurrió un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+    }
   };
 
   const handleEditModel = (model: UserAccessModel) => {
