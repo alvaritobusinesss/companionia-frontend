@@ -609,22 +609,36 @@ const Index = () => {
       setChatPreferences(null);
   };
 
-  const handleUpgrade = async () => {
+  // Estado para controlar si estamos en proceso de actualización
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleUpgrade = async (e?: React.MouseEvent) => {
+    // Prevenir el comportamiento por defecto del botón
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     console.log('🔥 INICIANDO ACTUALIZACIÓN A PREMIUM');
     
-    // Si el usuario no está autenticado, redirigir al inicio de sesión
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
+    // Evitar múltiples clics mientras se procesa la solicitud
+    if (isUpgrading) return;
+    
     try {
+      setIsUpgrading(true);
+      
+      // Si el usuario no está autenticado, redirigir al inicio de sesión
+      if (!user) {
+        console.log('🔐 Usuario no autenticado, mostrando modal de autenticación...');
+        setShowAuthModal(true);
+        return;
+      }
+
       // Obtener el token de sesión actual
+      console.log('🔍 Obteniendo sesión actual...');
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
-        console.error('Error al obtener la sesión:', sessionError);
-        alert('Por favor, inicia sesión para continuar con la actualización a premium.');
+        console.error('❌ Error al obtener la sesión:', sessionError);
+        console.log('🔐 Mostrando modal de autenticación...');
         setShowAuthModal(true);
         return;
       }
@@ -648,7 +662,7 @@ const Index = () => {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('Error en la respuesta de la API:', errorData);
+        console.error('❌ Error en la respuesta de la API:', errorData);
         throw new Error('Error al conectar con el servicio de pagos');
       }
 
@@ -657,13 +671,16 @@ const Index = () => {
       // Redirigir a la página de pago de Stripe
       if (result?.url) {
         console.log('🔗 Redirigiendo a Stripe...');
-        window.location.href = result.url;
+        // Usar window.location.assign para asegurar la navegación
+        window.location.assign(result.url);
       } else {
         throw new Error('No se pudo obtener la URL de pago de Stripe');
       }
     } catch (error) {
-      console.error('Error al procesar la actualización a premium:', error);
+      console.error('❌ Error al procesar la actualización a premium:', error);
       alert(error.message || 'Ocurrió un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsUpgrading(false);
     }
   };
 
