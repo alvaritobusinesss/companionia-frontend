@@ -49,9 +49,10 @@ export default async function handler(req: any, res: any) {
 
     // Build a local opener (no LLM) with tone variety
     const modelLabel = String(modelName || modelId);
+    const language = (req.body as any)?.language || 'es';
     const firstAssistantMessage = last_summary
-      ? generateOpenerTone({ tone, modelName: modelLabel }, last_summary)
-      : generateOpenerTone({ tone, modelName: modelLabel });
+      ? generateOpenerTone({ tone, modelName: modelLabel, language }, last_summary)
+      : generateOpenerTone({ tone, modelName: modelLabel, language });
 
     // Try to persist first assistant message when creating a new conversation
     if (supabase && conversationId && !conversationId.startsWith('tmp-')) {
