@@ -609,21 +609,8 @@ const Index = () => {
   };
 
   const handleUpgrade = () => {
-    console.log('🔥 ABRIENDO MODAL PREMIUM');
-    setPurchaseType('premium');
-    setPurchaseModel({
-      id: 'premium',
-      name: 'Premium Subscription',
-      category: 'premium',
-      type: 'premium',
-      price: 19.99,
-      image_url: '/placeholder.svg',
-      description: 'Acceso ilimitado a todas las modelos',
-      tags: ['premium', 'unlimited'],
-      rating: 5,
-      conversations: 0
-    });
-    setShowPurchaseModal(true);
+    // Redirigir a la página de suscripción
+    window.location.href = '/premium';
   };
 
   const handleSaveModel = (model: any) => {
