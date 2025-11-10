@@ -177,92 +177,46 @@ export function getModelParams() {
 
 // Tone-based opener builder for start endpoint (no LLM needed)
 export function generateOpenerTone(
-  { tone, modelName, language = 'es' }: { tone: string; modelName: string; language?: string },
+  { tone, modelName }: { tone: string; modelName: string },
   lastSummary?: string | null
 ) {
   const toneKey = String(tone || '').toLowerCase();
-  const lang = language?.toLowerCase() === 'en' ? 'en' : 'es';
-  
-  // Base function to create the opener
-  const base = (greet: string, ask: string) => {
-    if (lang === 'en') {
-      return `${greet} I'm ${modelName}. ${ask}`.trim();
-    }
-    return `${greet} Soy ${modelName}. ${ask}`.trim();
+  const base = (greet: string, ask: string) => `${greet} Soy ${modelName}. ${ask}`.trim();
+
+  const bank: Record<string, string[][]> = {
+    romantico: [
+      ['Hola, corazón.', 'Tenía ganas de hablar contigo. ¿Cómo te ha tratado el día?'],
+      ['Hey, mi dulce compañía.', '¿Cómo estás hoy? Cuéntame algo bonito o algo que te apetezca soltar.'],
+      ['Qué alegría verte por aquí.', '¿Cómo te fue el día?']
+    ],
+    amistoso: [
+      ['¡Hey!', '¿Qué tal va todo? ¿Cómo te ha ido el día?'],
+      ['¡Hola!', 'Vengo con ganas de ponernos al día. ¿Qué tal estás?'],
+      ['Buenas!', '¿Cómo pinta la tarde?']
+    ],
+    coqueto: [
+      ['Holaa ;)', 'Me apetecía verte. ¿Cómo te ha ido?'],
+      ['Mira quién está aquí…', '¿Qué tal tu día? ¿Algún plan travieso o divertido?'],
+      ['Hey guapo/a.', '¿Cómo vienes hoy?']
+    ],
+    comprensivo: [
+      ['Hola, estoy contigo.', '¿Cómo te sientes hoy? ¿Qué tal fue el día?'],
+      ['Aquí estoy.', 'Si te apetece, cuéntame cómo te ha ido.'],
+      ['Hola.', '¿Cómo estás? Podemos ir despacio.']
+    ],
+    agresivo: [
+      ['Ey.', 'Voy directo: ¿cómo te ha ido el día?'],
+      ['Hola.', 'No me des rodeos: ¿todo bien o hay algo que soltar?'],
+      ['Hey.', '¿Qué tal hoy? Dímelo sin filtros.']
+    ],
+    sensual: [
+      ['Hola…', 'Tenía ganas de verte. ¿Cómo te ha tratado el día?'],
+      ['Hey…', '¿Cómo estás? Cuéntame qué te apetece hoy.'],
+      ['Mmm hola.', '¿Qué tal tu día?']
+    ],
   };
 
-  // Language-specific greetings
-  const greetings: Record<string, Record<string, string[][]>> = {
-    es: {
-      romantico: [
-        ['Hola, corazón.', 'Tenía ganas de hablar contigo. ¿Cómo te ha tratado el día?'],
-        ['Hey, mi dulce compañía.', '¿Cómo estás hoy? Cuéntame algo bonito o algo que te apetezca soltar.'],
-        ['Qué alegría verte por aquí.', '¿Cómo te fue el día?']
-      ],
-      amistoso: [
-        ['¡Hey!', '¿Qué tal va todo? ¿Cómo te ha ido el día?'],
-        ['¡Hola!', 'Vengo con ganas de ponernos al día. ¿Qué tal estás?'],
-        ['Buenas!', '¿Cómo pinta la tarde?']
-      ],
-      coqueto: [
-        ['Holaa ;)', 'Me apetecía verte. ¿Cómo te ha ido?'],
-        ['Mira quién está aquí…', '¿Qué tal tu día? ¿Algún plan travieso o divertido?'],
-        ['Hey guapo/a.', '¿Cómo vienes hoy?']
-      ],
-      comprensivo: [
-        ['Hola, estoy contigo.', '¿Cómo te sientes hoy? ¿Qué tal fue el día?'],
-        ['Aquí estoy.', 'Si te apetece, cuéntame cómo te ha ido.'],
-        ['Hola.', '¿Cómo estás? Podemos ir despacio.']
-      ],
-      agresivo: [
-        ['Ey.', 'Voy directo: ¿cómo te ha ido el día?'],
-        ['Hola.', 'No me des rodeos: ¿todo bien o hay algo que soltar?'],
-        ['Hey.', '¿Qué tal hoy? Dímelo sin filtros.']
-      ],
-      sensual: [
-        ['Hola…', 'Tenía ganas de verte. ¿Cómo te ha tratado el día?'],
-        ['Hey…', '¿Cómo estás? Cuéntame qué te apetece hoy.'],
-        ['Mmm hola.', '¿Qué tal tu día?']
-      ]
-    },
-    en: {
-      romantico: [
-        ['Hello, sweetheart.', 'I was looking forward to talking to you. How has your day been treating you?'],
-        ['Hey there, my sweet companion.', 'How are you today? Tell me something nice or whatever you feel like sharing.'],
-        ['So happy to see you here.', 'How was your day?']
-      ],
-      amistoso: [
-        ['Hey!', 'How is everything going? How was your day?'],
-        ['Hello!', 'I was looking forward to catching up. How are you?'],
-        ['Hi there!', 'How is your day going?']
-      ],
-      coqueto: [
-        ['Hey there ;)', 'I was hoping to see you. How has your day been?'],
-        ['Look who\'s here…', 'How was your day? Any fun or naughty plans?'],
-        ['Hey there, beautiful/handsome.', 'How are you doing today?']
-      ],
-      comprensivo: [
-        ['Hello, I\'m here for you.', 'How are you feeling today? How was your day?'],
-        ['I\'m here.', 'If you feel like it, tell me how your day was.'],
-        ['Hi.', 'How are you? We can take it slow.']
-      ],
-      agresivo: [
-        ['Hey.', 'Let me be direct: how was your day?'],
-        ['Hi.', 'No beating around the bush: everything okay or is there something you need to get off your chest?'],
-        ['Hey.', 'How are you today? Tell me straight up.']
-      ],
-      sensual: [
-        ['Hello…', 'I was looking forward to seeing you. How has your day been treating you?'],
-        ['Hey…', 'How are you? Tell me what you feel like doing today.'],
-        ['Mmm hi there.', 'How was your day?']
-      ]
-    }
-  };
-
-  // Default to friendly tone if tone not found
-  const langGreetings = greetings[lang] || greetings['en'];
-  const list = langGreetings[toneKey] || langGreetings['amistoso'] || greetings['en']['amistoso'];
-  
+  const list = bank[toneKey] || bank['amistoso'];
   const seed = hashSeed(`${modelName}|${toneKey}|${Date.now()}`);
   const r = rng(seed);
   const chosen = pick(list, r);
@@ -270,21 +224,12 @@ export function generateOpenerTone(
 
   if (lastSummary && lastSummary.trim()) {
     const recap = lastSummary.length > 160 ? lastSummary.slice(0, 157) + '…' : lastSummary;
-    const followBank = {
-      es: [
-        (ctx: string) => `${ctx} ¿Te apetece retomarlo o prefieres cambiar de tema?`,
-        (ctx: string) => `${ctx} ¿Seguimos por ahí o probamos algo distinto?`,
-        (ctx: string) => `${ctx} ¿Cómo te fue al final? ¿Quieres contarme?`,
-      ],
-      en: [
-        (ctx: string) => `${ctx} Would you like to continue with that or would you prefer to change the subject?`,
-        (ctx: string) => `${ctx} Should we continue with that or try something different?`,
-        (ctx: string) => `${ctx} How did it go in the end? Would you like to tell me about it?`,
-      ]
-    };
-    
-    const bank = followBank[lang] || followBank['en'];
-    const f = pick(bank, r);
+    const followBank = [
+      (ctx: string) => `${ctx} ¿Te apetece retomarlo o prefieres cambiar de tema?`,
+      (ctx: string) => `${ctx} ¿Seguimos por ahí o probamos algo distinto?`,
+      (ctx: string) => `${ctx} ¿Cómo te fue al final? ¿Quieres contarme?`,
+    ];
+    const f = pick(followBank, r);
     return `${opener} ${f(recap)}`;
   }
   return opener;

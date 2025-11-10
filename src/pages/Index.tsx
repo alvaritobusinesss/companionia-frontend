@@ -8,7 +8,6 @@ import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { ModelEditor } from "@/components/ModelEditor";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { UserMenu } from "@/components/UserMenu";
-import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -609,84 +608,28 @@ const Index = () => {
       setChatPreferences(null);
   };
 
-  // Estado para controlar si estamos en proceso de actualización
-  const [isUpgrading, setIsUpgrading] = useState(false);
-
-  // Función para verificar si un modelo ha sido comprado por el usuario
-  const isModelPurchased = (modelId: string): boolean => {
-    return user?.purchased_models?.includes(modelId) || false;
+  const handleUpgrade = () => {
+    console.log('🔥 ABRIENDO MODAL PREMIUM');
+    setPurchaseType('premium');
+    setPurchaseModel({
+      id: 'premium',
+      name: 'Premium Subscription',
+      category: 'premium',
+      type: 'premium',
+      price: 19.99,
+      image_url: '/placeholder.svg',
+      description: 'Acceso ilimitado a todas las modelos',
+      tags: ['premium', 'unlimited'],
+      rating: 5,
+      conversations: 0
+    });
+    setShowPurchaseModal(true);
   };
 
-  const handleUpgrade = async (e?: React.MouseEvent) => {
-    // Prevenir el comportamiento por defecto del botón
-    e?.preventDefault();
-    e?.stopPropagation();
-    
-    console.log('🔥 INICIANDO ACTUALIZACIÓN A PREMIUM');
-    
-    // Evitar múltiples clics mientras se procesa la solicitud
-    if (isUpgrading) return;
-    
-    try {
-      setIsUpgrading(true);
-      
-      // Si el usuario no está autenticado, redirigir al inicio de sesión
-      if (!user) {
-        console.log('🔐 Usuario no autenticado, mostrando modal de autenticación...');
-        setShowAuthModal(true);
-        return;
-      }
-
-      // Obtener el token de sesión actual
-      console.log('🔍 Obteniendo sesión actual...');
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error('❌ Error al obtener la sesión:', sessionError);
-        console.log('🔐 Mostrando modal de autenticación...');
-        setShowAuthModal(true);
-        return;
-      }
-
-      console.log('🔑 Sesión obtenida, creando sesión de pago...');
-      
-      // Crear la sesión de pago con Stripe
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          type: 'premium',
-          userEmail: user.email,
-          userId: user.id,
-          returnUrl: window.location.origin + window.location.pathname
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('❌ Error en la respuesta de la API:', errorData);
-        throw new Error('Error al conectar con el servicio de pagos');
-      }
-
-      const result = await response.json();
-      
-      // Redirigir a la página de pago de Stripe
-      if (result?.url) {
-        console.log('🔗 Redirigiendo a Stripe...');
-        // Usar window.location.assign para asegurar la navegación
-        window.location.assign(result.url);
-      } else {
-        throw new Error('No se pudo obtener la URL de pago de Stripe');
-      }
-    } catch (error) {
-      console.error('❌ Error al procesar la actualización a premium:', error);
-      alert(error.message || 'Ocurrió un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
-    } finally {
-      setIsUpgrading(false);
-    }
+  const handleSaveModel = (model: any) => {
+    console.log("Modelo guardado:", model);
+    setShowModelEditor(false);
+    setEditingModel(null);
   };
 
   const handleEditModel = (model: UserAccessModel) => {
@@ -791,10 +734,13 @@ const Index = () => {
           userId={user?.id}
           userEmail={user?.email}
           modelId={selectedModel.id}
-          userIsPremium={user ? user.is_premium : false}
-          unlimitedForThisModel={selectedModel ? isModelPurchased(selectedModel.id) : false}
-          dailyMessageCount={0} // Contador de mensajes diarios
-          dailyLimit={user?.is_premium ? Number.MAX_SAFE_INTEGER : 5} // Límite de mensajes diarios
+          userIsPremium={user?.is_premium || false}
+          unlimitedForThisModel={(() => {
+            const access = checkModelAccess(selectedModel);
+            return access.hasAccess && selectedModel.type === 'one_time';
+          })()}
+          dailyMessageCount={user?.daily_message_count || 0}
+          dailyLimit={5}
           onUpgradeToPremium={handleUpgrade}
         />
 
@@ -1012,7 +958,7 @@ const Index = () => {
           setShowModelEditor(false);
           setEditingModel(null);
         }}
-        onSave={handleCreateModel}
+        onSave={handleSaveModel}
         model={editingModel ? {
           id: editingModel.id,
           name: editingModel.name,
