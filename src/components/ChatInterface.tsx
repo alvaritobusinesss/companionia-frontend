@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, ArrowLeft, Crown, Heart } from "lucide-react";
 import { ChatPreferences } from "./PersonalizationModal";
 import { useTranslation } from "@/hooks/useTranslation";
+import { checkMessageLimit, incrementMessageCount, getMessageCount } from "@/lib/messageLimiter";
 // Conversación desactivada temporalmente: sin generación ni prompts
 
 // Tipos simplificados
@@ -282,11 +283,30 @@ export function ChatInterface({
   };
   const storageKey = `msgCount:${subjectId}:${getTodayKey()}`;
 
+  // Estado para el contador de mensajes
+  const [messageLimit, setMessageLimit] = useState({
+    canSend: true,
+    currentCount: 0,
+    limit: 5
+  });
+
+  // Verificar límite de mensajes al cargar el componente y cuando cambia el usuario
+  useEffect(() => {
+    if (!userId || userIsPremium || unlimitedForThisModel) return;
+    
+    const checkLimit = async () => {
+      const limitInfo = await checkMessageLimit(userId);
+      setMessageLimit(limitInfo);
+    };
+    
+    checkLimit();
+  }, [userId, userIsPremium, unlimitedForThisModel]);
+
   // Lógica de límite de mensajes (sin límite para premium o modelos one_time comprados)
   const isUnlimited = userIsPremium || unlimitedForThisModel;
-  const currentMessageCount = isUnlimited ? 0 : localMessageCount;
-  const isLimitReached = !isUnlimited && currentMessageCount >= dailyLimit;
-  const remainingMessages = Math.max(0, dailyLimit - currentMessageCount);
+  const currentMessageCount = isUnlimited ? 0 : messageLimit.currentCount;
+  const isLimitReached = !isUnlimited && currentMessageCount >= messageLimit.limit;
+  const remainingMessages = Math.max(0, messageLimit.limit - currentMessageCount);
 
   // Estilo para el botón premium con efecto de brillo
   const premiumButtonStyle = {
@@ -307,7 +327,11 @@ export function ChatInterface({
       }
     `;
     document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+    
+    // Función de limpieza
+    return () => {
+      document.head.removeChild(style);
+    };
   }, []);
 
   // Cargar contador desde localStorage al montar/cambiar de usuario
@@ -415,6 +439,14 @@ export function ChatInterface({
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLimitReached) return;
+    
+    // Incrementar contador de mensajes si no es premium y no es modelo ilimitado
+    if (userId && !userIsPremium && !unlimitedForThisModel) {
+      await incrementMessageCount(userId);
+      // Actualizar el contador en la UI
+      const limitInfo = await checkMessageLimit(userId);
+      setMessageLimit(limitInfo);
+    }
 
     const messageText = inputMessage.trim();
     if ((import.meta as any).env?.DEV) {
