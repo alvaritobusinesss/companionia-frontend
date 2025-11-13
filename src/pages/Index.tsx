@@ -609,16 +609,8 @@ const Index = () => {
   };
 
   const handleUpgrade = () => {
-    // Encontrar un modelo premium para usar su ID
-    const premiumModel = models.find(m => m.type === 'premium');
-    if (premiumModel) {
-      handlePurchase(premiumModel.id);
-    } else {
-      // Si no hay un modelo premium, abrir el modal de compra directamente
-      setPurchaseType('premium');
-      setPurchaseModel(null);
-      setShowPurchaseModal(true);
-    }
+    // Redirigir a la página de suscripción
+    window.location.href = '/premium';
   };
 
   const handleSaveModel = (model: any) => {
@@ -729,14 +721,6 @@ const Index = () => {
           userId={user?.id}
           userEmail={user?.email}
           modelId={selectedModel.id}
-          userIsPremium={user?.is_premium || false}
-          unlimitedForThisModel={(() => {
-            const access = checkModelAccess(selectedModel);
-            return access.hasAccess && selectedModel.type === 'one_time';
-          })()}
-          dailyMessageCount={user?.daily_message_count || 0}
-          dailyLimit={5}
-          onUpgradeToPremium={handleUpgrade}
         />
 
         {/* Donaciones rápidas eliminadas del header, ahora están dentro del área de modelo */}

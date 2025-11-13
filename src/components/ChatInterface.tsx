@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, ArrowLeft, Crown, Heart } from "lucide-react";
 import { ChatPreferences } from "./PersonalizationModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { checkMessageLimit, incrementMessageCount, getMessageCount } from "@/lib/messageLimiter";
 // Conversación desactivada temporalmente: sin generación ni prompts
 
 // Tipos simplificados
@@ -27,11 +26,6 @@ interface ChatInterfaceProps {
   userId?: string;
   userEmail?: string;
   modelId?: string;
-  userIsPremium?: boolean;
-  unlimitedForThisModel?: boolean;
-  dailyMessageCount?: number;
-  dailyLimit?: number;
-  onUpgradeToPremium?: () => void;
 }
 
 export function ChatInterface({ 
@@ -44,11 +38,6 @@ export function ChatInterface({
   userId,
   userEmail,
   modelId,
-  userIsPremium = false,
-  unlimitedForThisModel = false,
-  dailyMessageCount = 0,
-  dailyLimit = 5,
-  onUpgradeToPremium,
 }: ChatInterfaceProps) {
   const { t } = useTranslation();
   
@@ -57,8 +46,6 @@ export function ChatInterface({
   const [inputMessage, setInputMessage] = useState("");
   const [isAITyping, setIsAITyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [localMessageCount, setLocalMessageCount] = useState(dailyMessageCount);
-  const [showLimitBanner, setShowLimitBanner] = useState(false);
   const [showDonationPanel, setShowDonationPanel] = useState(false);
   // Lazy video
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
@@ -273,81 +260,9 @@ export function ChatInterface({
     }
   };
   
-  // Helpers para persistir contador diario por usuario (client-side)
-  const getTodayKey = () => {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
-  const storageKey = `msgCount:${subjectId}:${getTodayKey()}`;
+  
 
-  // Estado para el contador de mensajes
-  const [messageLimit, setMessageLimit] = useState({
-    canSend: true,
-    currentCount: 0,
-    limit: 5
-  });
-
-  // Verificar límite de mensajes al cargar el componente y cuando cambia el usuario
-  useEffect(() => {
-    if (!userId || userIsPremium || unlimitedForThisModel) return;
-    
-    const checkLimit = async () => {
-      const limitInfo = await checkMessageLimit(userId);
-      setMessageLimit(limitInfo);
-    };
-    
-    checkLimit();
-  }, [userId, userIsPremium, unlimitedForThisModel]);
-
-  // Lógica de límite de mensajes (sin límite para premium o modelos one_time comprados)
-  const isUnlimited = userIsPremium || unlimitedForThisModel;
-  const currentMessageCount = isUnlimited ? 0 : messageLimit.currentCount;
-  const isLimitReached = !isUnlimited && currentMessageCount >= messageLimit.limit;
-  const remainingMessages = Math.max(0, messageLimit.limit - currentMessageCount);
-
-  // Estilo para el botón premium con efecto de brillo
-  const premiumButtonStyle = {
-    background: 'linear-gradient(45deg, #8b5cf6, #6d28d9, #8b5cf6)',
-    backgroundSize: '200% auto',
-    animation: 'shine 3s linear infinite',
-    boxShadow: '0 0 15px rgba(139, 92, 246, 0.5)'
-  };
-
-  // Añadir la animación de brillo al documento
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes shine {
-        to {
-          background-position: 200% center;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Función de limpieza
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  // Cargar contador desde localStorage al montar/cambiar de usuario
-  useEffect(() => {
-    if (isUnlimited) return; // premium o comprado: sin límites ni contadores
-    try {
-      if (storageKey) {
-        const saved = localStorage.getItem(storageKey);
-        if (saved != null) {
-          const n = Number(saved);
-          if (!Number.isNaN(n)) setLocalMessageCount(n);
-        }
-      }
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey, isUnlimited]);
+  
 
   // Iniciar conversación: obtener opener desde /api/chat/start según el trato (mood)
   useEffect(() => {
@@ -430,23 +345,10 @@ export function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAITyping]);
 
-  // Mostrar banner cuando se alcance el límite
-  useEffect(() => {
-    if (isLimitReached && !showLimitBanner) {
-      setShowLimitBanner(true);
-    }
-  }, [isLimitReached, showLimitBanner]);
+  
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLimitReached) return;
-    
-    // Incrementar contador de mensajes si no es premium y no es modelo ilimitado
-    if (userId && !userIsPremium && !unlimitedForThisModel) {
-      await incrementMessageCount(userId);
-      // Actualizar el contador en la UI
-      const limitInfo = await checkMessageLimit(userId);
-      setMessageLimit(limitInfo);
-    }
+    if (!inputMessage.trim()) return;
 
     const messageText = inputMessage.trim();
     if ((import.meta as any).env?.DEV) {
@@ -511,17 +413,7 @@ export function ChatInterface({
       setIsAITyping(false);
     }
 
-    // Incrementar contador de mensajes y persistir (si aplica)
-    if (!isUnlimited && storageKey) {
-      setLocalMessageCount(prev => {
-        const next = prev + 1;
-        try { localStorage.setItem(storageKey, String(next)); } catch {}
-        if ((import.meta as any).env?.DEV) {
-          console.log(`Mensaje enviado. Contador: ${next}/${dailyLimit}`);
-        }
-        return next;
-      });
-    }
+    
 
     // Sin llamadas al backend: dejamos solo el mensaje del usuario (modo reconstrucción)
   };
@@ -579,22 +471,9 @@ export function ChatInterface({
               </Badge>
             )}
           </div>
-          
-          <div className="flex items-center gap-3">
-            {!isUnlimited && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Mensajes usados: </span>
-                <span className={`font-medium ${
-                  remainingMessages <= 3 ? 'text-orange-500' : 
-                  remainingMessages <= 0 ? 'text-red-500' : 
-                  'text-green-500'
-                }`}>
-                  {currentMessageCount}/{dailyLimit}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        
+        <div className="flex items-center gap-3"></div>
+      </div>
 
         {/* Model Display */}
         <div className="flex-1 flex items-center justify-center p-6 min-h-0">
@@ -746,104 +625,28 @@ export function ChatInterface({
         <div className="p-4 border-t border-border bg-background shrink-0">
           <div className="flex gap-2 items-center">
             <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={isLimitReached ? t('chat.messageLimit') : t('chat.typeMessage')}
-              onKeyPress={handleKeyPress}
-              disabled={isAITyping || isLimitReached}
-              className={`flex-1 bg-input border-border ${
-                isLimitReached ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            />
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder={t('chat.typeMessage')}
+            onKeyPress={handleKeyPress}
+            disabled={isAITyping}
+            className={`flex-1 bg-input border-border ${
+                ''
+            }`}
+          />
             {/* Sugerencias deshabilitadas */}
             <Button 
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isAITyping || isLimitReached}
+              disabled={!inputMessage.trim() || isAITyping}
               className="bg-primary hover:bg-primary/90"
             >
               <Send className="w-4 h-4" />
             </Button>
           </div>
-          {isLimitReached && (
-            <div className="mt-3 p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-pink-700 mb-3">
-                <Heart className="w-5 h-5 fill-pink-500 text-pink-500" />
-                <span className="text-lg font-bold">
-                  Habla con {modelName} sin límites ❤️
-                </span>
-              </div>
-              <p className="text-sm text-pink-700 text-center mb-3">
-                Desbloquea mensajes ilimitados y disfruta de una experiencia completa con {modelName}
-              </p>
-              {onUpgradeToPremium && (
-                <Button 
-                  onClick={() => {
-                    setShowLimitBanner(false);
-                    onUpgradeToPremium();
-                  }}
-                  className="font-bold px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
-                  style={premiumButtonStyle}
-                >
-                  <span className="text-white">PASATE A PREMIUM</span>
-                </Button>
-              )}
-            </div>
-          )}
+          
         </div>
       </div>
 
-      {/* Banner gigante de límite alcanzado */}
-      {showLimitBanner && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div className="mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Crown className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {t('chat.limitReachedTitle')}
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {t('chat.limitReachedModal')}
-              </p>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">{t('premium.advantages')}:</h3>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• {t('premium.unlimitedMessages')}</li>
-                  <li>• {t('premium.accessAllModels')}</li>
-                  <li>• {t('premium.intimateConversations')}</li>
-                  <li>• {t('premium.noAds')}</li>
-                </ul>
-              </div>
-              
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowLimitBanner(false)}
-                  className="flex-1"
-                >
-                  {t('common.close')}
-                </Button>
-                {onUpgradeToPremium && (
-                  <Button 
-                    onClick={() => {
-                      setShowLimitBanner(false);
-                      alert('El sistema de suscripciones está deshabilitado temporalmente. Próximamente habilitaremos un nuevo método.');
-                    }}
-                    className="flex-1 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    {t('chat.upgradeToPremium')}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
