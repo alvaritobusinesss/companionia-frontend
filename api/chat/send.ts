@@ -13,17 +13,82 @@ export default async function handler(req: any, res: any) {
     let tone: string = (toneIn || 'amistoso');
     let turnIndex = 0;
     let recentAssistantOpeners: string[] = [];
+    let conversationUserId: string | null = null;
+    let conversationModelId: string | null = null;
+
+    function todayStr() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
 
     if (supabase && !String(conversationId).startsWith('tmp-')) {
       try {
         const { data: conv } = await supabase
           .from('conversations')
-          .select('id,tone')
+          .select('id,tone,user_id,model_id')
           .eq('id', conversationId)
           .maybeSingle();
         if (conv?.tone) tone = String(conv.tone);
+        conversationUserId = conv?.user_id ? String(conv.user_id) : null;
+        conversationModelId = conv?.model_id ? String(conv.model_id) : null;
 
-        // Save user message
+        let bypass = false;
+        if (conversationUserId) {
+          try {
+            const { data: u } = await supabase
+              .from('users')
+              .select('id,is_premium,premium_expires_at')
+              .eq('id', conversationUserId)
+              .maybeSingle();
+            if (u?.is_premium && (!u.premium_expires_at || new Date(u.premium_expires_at) > new Date())) {
+              bypass = true;
+            }
+          } catch {}
+        }
+
+        if (!bypass && conversationUserId && conversationModelId) {
+          try {
+            const { data: has } = await supabase
+              .from('user_purchased_models')
+              .select('model_id')
+              .eq('user_id', conversationUserId)
+              .eq('model_id', conversationModelId)
+              .limit(1);
+            if (Array.isArray(has) && has.length > 0) bypass = true;
+          } catch {}
+        }
+
+        if (!bypass && conversationUserId) {
+          const day = todayStr();
+          const limitEnv = parseInt(process.env.DAILY_FREE_LIMIT || '5', 10);
+          const limit = Number.isFinite(limitEnv) ? limitEnv : 5;
+
+          let used = 0;
+          try {
+            const { data } = await supabase
+              .from('user_daily_usage')
+              .select('count')
+              .eq('subject_id', conversationUserId)
+              .eq('day', day)
+              .maybeSingle();
+            used = (data && typeof (data as any).count === 'number') ? (data as any).count : 0;
+          } catch {}
+
+          if (used >= limit) {
+            return res.status(429).json({ error: 'limit_exceeded', message: 'Has alcanzado el límite diario de mensajes.', used, remaining: 0, limit, day });
+          }
+
+          try {
+            const nextCount = used + 1;
+            await supabase
+              .from('user_daily_usage')
+              .upsert({ subject_id: conversationUserId, day, count: nextCount }, { onConflict: 'subject_id,day' });
+          } catch {}
+        }
+
         await supabase.from('messages').insert({ conversation_id: conversationId, role: 'user', content: String(message) });
 
         // Fetch last 12 messages to compute turn and avoid repetition

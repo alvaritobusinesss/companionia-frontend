@@ -47,6 +47,8 @@ export function ChatInterface({
   const [isAITyping, setIsAITyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showDonationPanel, setShowDonationPanel] = useState(false);
+  const [limitExceeded, setLimitExceeded] = useState(false);
+  const [remainingInfo, setRemainingInfo] = useState<{ used: number; limit: number; day: string } | null>(null);
   // Lazy video
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
   const videoWrapperRef = useRef<HTMLDivElement>(null);
@@ -349,6 +351,10 @@ export function ChatInterface({
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
+    if (limitExceeded) {
+      alert('Has alcanzado el límite diario de mensajes. Vuelve mañana o hazte Premium.');
+      return;
+    }
 
     const messageText = inputMessage.trim();
     if ((import.meta as any).env?.DEV) {
@@ -392,6 +398,19 @@ export function ChatInterface({
       if (resp.ok) {
         const data = await resp.json();
         replyText = String(data?.reply || 'Te leo. ¿Seguimos?');
+      } else if (resp.status === 429) {
+        try {
+          const data = await resp.json();
+          if (data?.error === 'limit_exceeded') {
+            setLimitExceeded(true);
+            setRemainingInfo({ used: Number(data.used) || 0, limit: Number(data.limit) || 5, day: String(data.day || '') });
+            replyText = `Has alcanzado el límite diario de mensajes (${data.limit}). Vuelve mañana o hazte Premium para mensajes ilimitados.`;
+          } else {
+            replyText = 'Has alcanzado un límite. Vuelve más tarde o considera hacerte Premium.';
+          }
+        } catch {
+          replyText = 'Has alcanzado un límite. Vuelve más tarde o considera hacerte Premium.';
+        }
       } else {
         replyText = 'Estoy aquí. ¿Te va si lo vemos por pasos o prefieres que te proponga 2 opciones?';
       }
@@ -629,7 +648,7 @@ export function ChatInterface({
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder={t('chat.typeMessage')}
             onKeyPress={handleKeyPress}
-            disabled={isAITyping}
+            disabled={isAITyping || limitExceeded}
             className={`flex-1 bg-input border-border ${
                 ''
             }`}
@@ -637,12 +656,18 @@ export function ChatInterface({
             {/* Sugerencias deshabilitadas */}
             <Button 
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isAITyping}
+              disabled={!inputMessage.trim() || isAITyping || limitExceeded}
               className="bg-primary hover:bg-primary/90"
             >
               <Send className="w-4 h-4" />
             </Button>
           </div>
+
+          {limitExceeded && (
+            <div className="mt-3 text-sm text-muted-foreground">
+              {`Has alcanzado tu límite diario${remainingInfo ? ` (${remainingInfo.used}/${remainingInfo.limit})` : ''}. Vuelve mañana o hazte Premium.`}
+            </div>
+          )}
           
         </div>
       </div>
