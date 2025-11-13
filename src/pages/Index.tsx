@@ -609,10 +609,16 @@ const Index = () => {
   };
 
   const handleUpgrade = () => {
-    // Abrir el modal de compra de la suscripción premium
-    setPurchaseType('premium');
-    setPurchaseModel(null);
-    setShowPurchaseModal(true);
+    // Encontrar un modelo premium para usar su ID
+    const premiumModel = models.find(m => m.type === 'premium');
+    if (premiumModel) {
+      handlePurchase(premiumModel.id);
+    } else {
+      // Si no hay un modelo premium, abrir el modal de compra directamente
+      setPurchaseType('premium');
+      setPurchaseModel(null);
+      setShowPurchaseModal(true);
+    }
   };
 
   const handleSaveModel = (model: any) => {
