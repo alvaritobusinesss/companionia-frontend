@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { conversationId, message, modelName, tone: toneIn, userPreferences, recentMessages, conversationSummary } = (req.body as any) || {};
+    const { conversationId, message, modelName, tone: toneIn, userPreferences, recentMessages, conversationSummary, subjectId: subjectIdIn } = (req.body as any) || {};
     if (!conversationId || !message) return res.status(400).json({ error: 'Missing fields' });
 
     const supabaseUrl = process.env.SUPABASE_URL as string | undefined;
@@ -107,6 +107,49 @@ export default async function handler(req: any, res: any) {
             .filter(Boolean);
         }
       } catch {}
+    } else {
+      // No valid conversation row (tmp-*). Enforce limit using provided subjectId if available.
+      const fallbackUserId = typeof subjectIdIn === 'string' && subjectIdIn ? String(subjectIdIn) : null;
+      if (supabase && fallbackUserId) {
+        let bypass = false;
+        let userExists = false;
+        try {
+          const { data: u } = await supabase
+            .from('users')
+            .select('id,is_premium,premium_expires_at')
+            .eq('id', fallbackUserId)
+            .maybeSingle();
+          if (u?.id) userExists = true;
+          if (u?.is_premium && (!u.premium_expires_at || new Date(u.premium_expires_at) > new Date())) {
+            bypass = true;
+          }
+        } catch {}
+
+        if (!bypass && userExists) {
+          const day = todayStr();
+          const limitEnv = parseInt(process.env.DAILY_FREE_LIMIT || '5', 10);
+          const limit = Number.isFinite(limitEnv) ? limitEnv : 5;
+          let used = 0;
+          try {
+            const { data } = await supabase
+              .from('user_daily_usage')
+              .select('count')
+              .eq('subject_id', fallbackUserId)
+              .eq('day', day)
+              .maybeSingle();
+            used = (data && typeof (data as any).count === 'number') ? (data as any).count : 0;
+          } catch {}
+          if (used >= limit) {
+            return res.status(429).json({ error: 'limit_exceeded', message: 'Has alcanzado el límite diario de mensajes.', used, remaining: 0, limit, day });
+          }
+          try {
+            const nextCount = used + 1;
+            await supabase
+              .from('user_daily_usage')
+              .upsert({ subject_id: fallbackUserId, day, count: nextCount }, { onConflict: 'subject_id,day' });
+          } catch {}
+        }
+      }
     }
 
     // If OPENAI key exists, try LLM with the provided prompt template

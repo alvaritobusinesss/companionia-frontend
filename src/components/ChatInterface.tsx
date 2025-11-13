@@ -49,6 +49,7 @@ export function ChatInterface({
   const [showDonationPanel, setShowDonationPanel] = useState(false);
   const [limitExceeded, setLimitExceeded] = useState(false);
   const [remainingInfo, setRemainingInfo] = useState<{ used: number; limit: number; day: string } | null>(null);
+  const [usageInfo, setUsageInfo] = useState<{ used: number; remaining: number; limit: number | null; premium: boolean; day: string } | null>(null);
   // Lazy video
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
   const videoWrapperRef = useRef<HTMLDivElement>(null);
@@ -85,6 +86,35 @@ export function ChatInterface({
     }
   }
   const subjectId = getSubjectId();
+
+  // Cargar estado de uso desde el backend para mostrar contador y bloquear UI si aplica
+  const refreshUsage = useCallback(async () => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/usage-status?subjectId=${encodeURIComponent(subjectId)}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const info = {
+        used: Number(data?.used ?? 0),
+        remaining: Number(data?.remaining ?? 0),
+        limit: typeof data?.limit === 'number' ? data.limit : null,
+        premium: Boolean(data?.premium),
+        day: String(data?.day || ''),
+      } as { used: number; remaining: number; limit: number | null; premium: boolean; day: string };
+      setUsageInfo(info);
+      if (!info.premium && typeof info.limit === 'number') {
+        if (info.used >= info.limit) {
+          setLimitExceeded(true);
+          setRemainingInfo({ used: info.used, limit: info.limit, day: info.day });
+        } else {
+          setLimitExceeded(false);
+        }
+      }
+    } catch {}
+  }, [API_BASE, subjectId]);
+
+  useEffect(() => {
+    refreshUsage();
+  }, [refreshUsage]);
 
   // Sugeridor de temas según preferencias
   function buildSuggestedPrompt(): string {
@@ -392,6 +422,7 @@ export function ChatInterface({
           userPreferences: `${preferences.style ? 'estilo ' + preferences.style : ''}${preferences.style && preferences.mood ? ', ' : ''}${preferences.mood ? 'tono ' + preferences.mood : ''}${preferences.topics && preferences.topics.length ? ', temas: ' + preferences.topics.slice(0,3).join(', ') : ''}`.trim(),
           recentMessages: [...newMessages].slice(-8).map(m => ({ role: m.role, content: m.content })),
           conversationSummary: '',
+          subjectId,
         }),
       });
       let replyText = '';
@@ -421,6 +452,8 @@ export function ChatInterface({
         saveMessages(next);
         return next;
       });
+      // Actualizar contador tras cada envío (independientemente de si hubo LLM)
+      refreshUsage();
     } catch (e) {
       const aiMessage: Message = { role: 'assistant', content: 'Estoy aquí. ¿Seguimos por pasos o prefieres 2 opciones?', timestamp: new Date() };
       setMessages((prev): Message[] => {
@@ -487,6 +520,11 @@ export function ChatInterface({
               <Badge variant="premium" className="bg-premium text-premium-foreground">
                 <Crown className="w-3 h-3 mr-1" />
                 Premium
+              </Badge>
+            )}
+            {!isPremiumModel && usageInfo && !usageInfo.premium && typeof usageInfo.limit === 'number' && (
+              <Badge variant="outline" className="text-xs">
+                {usageInfo.used}/{usageInfo.limit} hoy
               </Badge>
             )}
           </div>
