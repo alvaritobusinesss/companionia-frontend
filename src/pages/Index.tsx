@@ -609,8 +609,10 @@ const Index = () => {
   };
 
   const handleUpgrade = () => {
-    // Redirigir a la página de suscripción
-    window.location.href = '/premium';
+    // Abrir el modal de compra de la suscripción premium
+    setPurchaseType('premium');
+    setPurchaseModel(null);
+    setShowPurchaseModal(true);
   };
 
   const handleSaveModel = (model: any) => {
