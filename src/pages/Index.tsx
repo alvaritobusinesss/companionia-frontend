@@ -609,8 +609,18 @@ const Index = () => {
   };
 
   const handleUpgrade = () => {
-    // Redirigir a la página de suscripción
-    window.location.href = '/premium';
+    // Usar el mismo flujo que los botones "Hazte Premium"
+    const premiumModel = models.find(m => m.type === 'premium');
+    if (premiumModel) {
+      handlePurchase(premiumModel.id);
+      return;
+    }
+    // Fallback: abrir modal de suscripción premium con cualquier modelo disponible
+    if (models.length) {
+      setPurchaseType('premium');
+      setPurchaseModel(models[0]);
+      setShowPurchaseModal(true);
+    }
   };
 
   const handleSaveModel = (model: any) => {
