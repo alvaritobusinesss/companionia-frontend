@@ -17,11 +17,16 @@ export default async function handler(req: any, res: any) {
     let conversationModelId: string | null = null;
 
     function todayStr() {
+      // Europe/Madrid day for consistent midnight reset in Spain
+      const tz = 'Europe/Madrid';
       const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(d); // en-CA -> YYYY-MM-DD
+      return parts;
     }
 
     if (supabase && !String(conversationId).startsWith('tmp-')) {
