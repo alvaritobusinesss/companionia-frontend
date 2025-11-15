@@ -39,7 +39,7 @@ export function ChatInterface({
   userEmail,
   modelId,
 }: ChatInterfaceProps) {
-  const { t, language } = useTranslation();
+  const { t, language, isLoading: transLoading } = useTranslation();
   
   // Estado local para mensajes (sin persistencia por ahora)
   const [messages, setMessages] = useState<Message[]>([]);
@@ -365,6 +365,7 @@ export function ChatInterface({
         }
       }
     } catch {}
+    if (transLoading) return; // wait for language to be ready
     (async () => {
       try {
         setIsAITyping(true);
@@ -384,12 +385,18 @@ export function ChatInterface({
         if (cancelled) return;
         setConversationId(String(data.conversationId || ''));
         const opener = String(data.firstAssistantMessage || L('Hola, ¿cómo estás?', 'Hi! How are you?', 'مرحبًا! كيف حالك؟', 'やあ！元気？'));
-        // Si ya teníamos mensajes cargados de localStorage, no sobreescribir, sólo añadir opener si está vacío
         const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages((prev): Message[] => {
+          const hasUser = prev.some(m => m.role === 'user');
           if (prev.length === 0) {
             const next: Message[] = [initialMessage];
-            // Guardar inmediatamente
+            saveMessages(next);
+            return next;
+          }
+          // If language changed and we only had an opener (no user msgs), replace it
+          if (!hasUser && prev.length >= 1 && prev[0].role === 'assistant') {
+            const next = [...prev];
+            next[0] = { ...next[0], content: opener, timestamp: new Date() };
             saveMessages(next);
             return next;
           }
@@ -410,7 +417,7 @@ export function ChatInterface({
       }
     })();
     return () => { cancelled = true; };
-  }, [modelId, modelName, preferences.mood]);
+  }, [modelId, modelName, preferences.mood, language, transLoading]);
 
   // Abort in-flight on unmount or model change
   useEffect(() => {
@@ -585,7 +592,7 @@ export function ChatInterface({
             )}
             {!isPremiumModel && usageInfo && !usageInfo.premium && typeof usageInfo.limit === 'number' && (
               <Badge variant="outline" className="text-xs">
-                {usageInfo.used}/{usageInfo.limit} hoy
+                {usageInfo.used}/{usageInfo.limit} {L('hoy','today','اليوم','今日')}
               </Badge>
             )}
           </div>
