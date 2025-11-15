@@ -53,6 +53,7 @@ export function ChatInterface({
   // Lazy video
   const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
   const videoWrapperRef = useRef<HTMLDivElement>(null);
+  const [upgrading, setUpgrading] = useState(false);
 
   // Donaciones deshabilitadas temporalmente
 
@@ -67,6 +68,58 @@ export function ChatInterface({
     }
     return cfg; // local dev can use VITE_API_URL
   })();
+  
+  // Iniciar checkout Premium (suscripción) usando el endpoint existente
+  async function handleUpgradePremium() {
+    try {
+      setUpgrading(true);
+      const payload: any = {
+        type: 'premium',
+        userId: userId || subjectId,
+        email: userEmail,
+        returnUrl: window.location.origin,
+      };
+      const endpoints = [
+        `${API_BASE}/api/create-checkout-session`,
+        // Fallback a producción por si no hay proxy local
+        `https://companionia-frontend.vercel.app/api/create-checkout-session`,
+      ];
+      let lastErr: any = null;
+      for (const ep of endpoints) {
+        try {
+          let accessToken: string | undefined;
+          try {
+            const { data: s } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+            accessToken = s?.session?.access_token as string | undefined;
+          } catch {}
+          const resp = await fetch(ep, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+            },
+            body: JSON.stringify(payload),
+          });
+          if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(txt || `HTTP ${resp.status}`);
+          }
+          const data = await resp.json();
+          if (data?.url) {
+            window.location.href = data.url;
+            return;
+          }
+          throw new Error('Respuesta inválida del servidor (sin url)');
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      console.error('Error iniciando premium checkout:', lastErr);
+      alert('No se pudo iniciar el checkout Premium. Inténtalo de nuevo.');
+    } finally {
+      setUpgrading(false);
+    }
+  }
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   // Sin recap/insertions
@@ -531,6 +584,21 @@ export function ChatInterface({
         
         <div className="flex items-center gap-3"></div>
       </div>
+
+      {/* Banner de upgrade cuando se alcanza el límite */}
+      {limitExceeded && !usageInfo?.premium && (
+        <div className="px-4 pt-3">
+          <div className="w-full rounded-xl border border-border bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 text-foreground p-3 flex items-center justify-between shadow-sm">
+            <div className="text-sm">
+              <span className="font-medium">Has alcanzado tu límite diario (5/5).</span>
+              <span className="ml-2 text-muted-foreground">Vuelve mañana o hazte Premium para mensajes ilimitados.</span>
+            </div>
+            <Button onClick={handleUpgradePremium} disabled={upgrading} className="bg-premium text-premium-foreground hover:opacity-90">
+              {upgrading ? 'Abriendo…' : 'Premium'}
+            </Button>
+          </div>
+        </div>
+      )}
 
         {/* Model Display */}
         <div className="flex-1 flex items-center justify-center p-6 min-h-0">
