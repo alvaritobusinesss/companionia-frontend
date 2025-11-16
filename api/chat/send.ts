@@ -11,8 +11,8 @@ export default async function handler(req: any, res: any) {
     const supabase = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
 
     let tone: string = (toneIn || 'amistoso');
-    function isLang(v: any): v is 'es'|'en'|'ar'|'ja' { return v === 'es' || v === 'en' || v === 'ar' || v === 'ja'; }
-    const lang: 'es'|'en'|'ar'|'ja' = isLang(langIn) ? langIn : 'es';
+    function isLang(v: any): v is 'es'|'en'|'ar'|'ja'|'pt' { return v === 'es' || v === 'en' || v === 'ar' || v === 'ja' || v === 'pt'; }
+    const lang: 'es'|'en'|'ar'|'ja'|'pt' = isLang(langIn) ? langIn : 'es';
     let turnIndex = 0;
     let recentAssistantOpeners: string[] = [];
     let conversationUserId: string | null = null;
@@ -167,6 +167,7 @@ export default async function handler(req: any, res: any) {
           lang === 'en' ? 'Answer in natural English. Avoid Spanish.' :
           lang === 'ar' ? 'أجب باللغة العربية الفصحى البسيطة وبأسلوب طبيعي.' :
           lang === 'ja' ? '日本語で自然に回答してください。' :
+          lang === 'pt' ? 'Responda em português natural. Evite espanhol.' :
           'Responde en español neutro.'
         );
 
@@ -254,52 +255,53 @@ Reglas:
       lang === 'en' ? `About what you said (${cleaned}),` :
       lang === 'ar' ? `بخصوص ما قلت (${cleaned})،` :
       lang === 'ja' ? `さっきの話（${cleaned}）について、` :
+      lang === 'pt' ? `Sobre o que você disse (${cleaned}),` :
       `Sobre eso que comentas (${cleaned}),`
     ) : '';
 
     const strategy = turnIndex % 5; // rotate 5 styles
     const byTone: Record<string, ((ctx: string) => string)[]> = {
       romantico: [
-        (c) => lang==='en'? `${c} I love hearing you. What part felt best today?` : lang==='ar'? `${c} يسعدني سماعك. ما الجزء الذي أشعرك بتحسن اليوم؟` : lang==='ja'? `${c} 聞けて嬉しいよ。今日はどの部分が一番良かった？` : `${c} me encanta escucharte. ¿Qué parte te hizo sentir mejor hoy?`,
-        (c) => lang==='en'? `${c} Want to pick: A) something sweet, B) something bold?` : lang==='ar'? `${c} هل تختار: أ) شيء لطيف، ب) شيء جريء؟` : lang==='ja'? `${c} A) 甘め B) 少し大胆、どっちにする？` : `${c} ¿te apetece elegir entre 2 opciones: A) algo dulce, B) algo atrevido?`,
-        (c) => lang==='en'? `${c} Give me a small example and we figure it out together.` : lang==='ar'? `${c} أعطني مثالًا صغيرًا ونفكر سويًا.` : lang==='ja'? `${c} 短い例を教えて。一緒に考えよう。` : `${c} dame un ejemplo pequeño y vemos juntos.`,
-        (c) => lang==='en'? `${c} If we make a tiny plan now, what would be step one?` : lang==='ar'? `${c} لو وضعنا خطة بسيطة الآن، ما أول خطوة؟` : lang==='ja'? `${c} 今ちょっとした計画を立てるなら、最初の一歩は？` : `${c} si hacemos un mini-plan ahora, ¿cuál sería el primer paso?`,
-        (c) => lang==='en'? `${c} If you were your best friend, what would you tell yourself?` : lang==='ar'? `${c} لو كنتَ/كنتِ صديقك المقرّب، ماذا ستنصح نفسك؟` : lang==='ja'? `${c} 親友なら自分に何て言うと思う？` : `${c} si fueras tu mejor amigo/a, ¿qué te aconsejarías?`,
+        (c) => lang==='en'? `${c} I love hearing you. What part felt best today?` : lang==='ar'? `${c} يسعدني سماعك. ما الجزء الذي أشعرك بتحسن اليوم؟` : lang==='ja'? `${c} 聞けて嬉しいよ。今日はどの部分が一番良かった？` : lang==='pt'? `${c} Adoro te ouvir. Que parte te fez sentir melhor hoje?` : `${c} me encanta escucharte. ¿Qué parte te hizo sentir mejor hoy?`,
+        (c) => lang==='en'? `${c} Want to pick: A) something sweet, B) something bold?` : lang==='ar'? `${c} هل تختار: أ) شيء لطيف، ب) شيء جريء؟` : lang==='ja'? `${c} A) 甘め B) 少し大胆、どっちにする？` : lang==='pt'? `${c} Quer escolher: A) algo doce, B) algo ousado?` : `${c} ¿te apetece elegir entre 2 opciones: A) algo dulce, B) algo atrevido?`,
+        (c) => lang==='en'? `${c} Give me a small example and we figure it out together.` : lang==='ar'? `${c} أعطني مثالًا صغيرًا ونفكر سويًا.` : lang==='ja'? `${c} 短い例を教えて。一緒に考えよう。` : lang==='pt'? `${c} Dá um exemplo pequeno e pensamos juntos.` : `${c} dame un ejemplo pequeño y vemos juntos.`,
+        (c) => lang==='en'? `${c} If we make a tiny plan now, what would be step one?` : lang==='ar'? `${c} لو وضعنا خطة بسيطة الآن، ما أول خطوة؟` : lang==='ja'? `${c} 今ちょっとした計画を立てるなら、最初の一歩は？` : lang==='pt'? `${c} Se fizermos um mini‑plano agora, qual seria o primeiro passo?` : `${c} si hacemos un mini-plan ahora, ¿cuál sería el primer paso?`,
+        (c) => lang==='en'? `${c} If you were your best friend, what would you tell yourself?` : lang==='ar'? `${c} لو كنتَ/كنتِ صديقك المقرّب، ماذا ستنصح نفسك؟` : lang==='ja'? `${c} 親友なら自分に何て言うと思う？` : lang==='pt'? `${c} Se fosse seu melhor amigo, o que diria para você?` : `${c} si fueras tu mejor amigo/a, ¿qué te aconsejarías?`,
       ],
       amistoso: [
-        (c) => lang==='en'? `${c} tell me how you feel now.` : lang==='ar'? `${c} حدّثني كيف تشعر الآن.` : lang==='ja'? `${c} 今どんな気分？` : `${c} cuéntame cómo te sientes ahora.`,
-        (c) => lang==='en'? `${c} A) step-by-step or B) improv—what do you prefer?` : lang==='ar'? `${c} أ) خطوة بخطوة أم ب) بعفوية؟` : lang==='ja'? `${c} A) 一歩ずつ B) 成り行き、どっちがいい？` : `${c} ¿te va A) verlo por pasos o B) improvisar?`,
-        (c) => lang==='en'? `${c} Give me a short example?` : lang==='ar'? `${c} أعطني مثالًا قصيرًا؟` : lang==='ja'? `${c} 短い例を教えて？` : `${c} ¿me das un ejemplo corto?`,
-        (c) => lang==='en'? `${c} I'd make a simple plan: step 1 today—does it fit?` : lang==='ar'? `${c} سأضع خطة بسيطة: خطوة 1 اليوم—هل تناسبك؟` : lang==='ja'? `${c} シンプルにいこう。まず今日は一歩目、どう？` : `${c} haría un plan simple: paso 1 hoy, ¿te cuadra?`,
-        (c) => lang==='en'? `${c} From the outside, what do you think you'd tell yourself?` : lang==='ar'? `${c} لو نظرت من بعيد، ماذا ستقول لنفسك؟` : lang==='ja'? `${c} 俯瞰すると、自分に何て言う？` : `${c} visto desde fuera, ¿qué crees que te dirías?`,
+        (c) => lang==='en'? `${c} tell me how you feel now.` : lang==='ar'? `${c} حدّثني كيف تشعر الآن.` : lang==='ja'? `${c} 今どんな気分？` : lang==='pt'? `${c} me conta como você se sente agora.` : `${c} cuéntame cómo te sientes ahora.`,
+        (c) => lang==='en'? `${c} A) step-by-step or B) improv—what do you prefer?` : lang==='ar'? `${c} أ) خطوة بخطوة أم ب) بعفوية؟` : lang==='ja'? `${c} A) 一歩ずつ B) 成り行き、どっちがいい？` : lang==='pt'? `${c} A) passo a passo ou B) no improviso — o que prefere?` : `${c} ¿te va A) verlo por pasos o B) improvisar?`,
+        (c) => lang==='en'? `${c} Give me a short example?` : lang==='ar'? `${c} أعطني مثالًا قصيرًا؟` : lang==='ja'? `${c} 短い例を教えて？` : lang==='pt'? `${c} Me dá um exemplo curto?` : `${c} ¿me das un ejemplo corto?`,
+        (c) => lang==='en'? `${c} I'd make a simple plan: step 1 today—does it fit?` : lang==='ar'? `${c} سأضع خطة بسيطة: خطوة 1 اليوم—هل تناسبك؟` : lang==='ja'? `${c} シンプルにいこう。まず今日は一歩目、どう？` : lang==='pt'? `${c} Eu faria um plano simples: passo 1 hoje — faz sentido?` : `${c} haría un plan simple: paso 1 hoy, ¿te cuadra?`,
+        (c) => lang==='en'? `${c} From the outside, what do you think you'd tell yourself?` : lang==='ar'? `${c} لو نظرت من بعيد، ماذا ستقول لنفسك؟` : lang==='ja'? `${c} 俯瞰すると、自分に何て言う？` : lang==='pt'? `${c} Vendo de fora, o que acha que diria para você?` : `${c} visto desde fuera, ¿qué crees que te dirías?`,
       ],
       coqueto: [
-        (c) => lang==='en'? `${c} sounds good... what would you like right now?` : lang==='ar'? `${c} يبدو رائعًا… ماذا تريد الآن؟` : lang==='ja'? `${c} いいね…今は何したい？` : `${c} suena bien... ¿qué te apetecería ahora mismo?`,
-        (c) => lang==='en'? `${c} A) quick game, B) light chat—your pick?` : lang==='ar'? `${c} أ) لعبة سريعة، ب) دردشة خفيفة—اختيارك؟` : lang==='ja'? `${c} A) ちょいゲーム B) 軽くおしゃべり、どっち？` : `${c} A) juego rápido, B) charla ligera, ¿cuál eliges?`,
-        (c) => lang==='en'? `${c} give me a spicy but brief example 😉` : lang==='ar'? `${c} أعطني مثالًا لطيفًا وقصيرًا 😉` : lang==='ja'? `${c} ちょっとスパイシーで短い例を😉` : `${c} dame un ejemplo picante pero breve 😉`,
-        (c) => lang==='en'? `${c} let's make a fun mini‑plan—first step?` : lang==='ar'? `${c} خلّينا نعمل خطة ظريفة—أول خطوة؟` : lang==='ja'? `${c} 楽しいミニ計画しよ。最初は？` : `${c} hagamos un mini-plan divertido, ¿primer paso?`,
-        (c) => lang==='en'? `${c} if you looked at yourself with affection, what would you say?` : lang==='ar'? `${c} لو نظرت لنفسك بمودة، ماذا ستقول؟` : lang==='ja'? `${c} 自分に優しく見るなら、何て言う？` : `${c} si te miraras con cariño, ¿qué te dirías?`,
+        (c) => lang==='en'? `${c} sounds good... what would you like right now?` : lang==='ar'? `${c} يبدو رائعًا… ماذا تريد الآن؟` : lang==='ja'? `${c} いいね…今は何したい？` : lang==='pt'? `${c} parece ótimo... o que você quer agora?` : `${c} suena bien... ¿qué te apetecería ahora mismo?`,
+        (c) => lang==='en'? `${c} A) quick game, B) light chat—your pick?` : lang==='ar'? `${c} أ) لعبة سريعة، ب) دردشة خفيفة—اختيارك؟` : lang==='ja'? `${c} A) ちょいゲーム B) 軽くおしゃべり、どっち？` : lang==='pt'? `${c} A) joguinho rápido, B) papo leve — qual prefere?` : `${c} A) juego rápido, B) charla ligera, ¿cuál eliges?`,
+        (c) => lang==='en'? `${c} give me a spicy but brief example 😉` : lang==='ar'? `${c} أعطني مثالًا لطيفًا وقصيرًا 😉` : lang==='ja'? `${c} ちょっとスパイシーで短い例を😉` : lang==='pt'? `${c} me dá um exemplo apimentado mas breve 😉` : `${c} dame un ejemplo picante pero breve 😉`,
+        (c) => lang==='en'? `${c} let's make a fun mini‑plan—first step?` : lang==='ar'? `${c} خلّينا نعمل خطة ظريفة—أول خطوة؟` : lang==='ja'? `${c} 楽しいミニ計画しよ。最初は？` : lang==='pt'? `${c} bora fazer um mini‑plano divertido — primeiro passo?` : `${c} hagamos un mini-plan divertido, ¿primer paso?`,
+        (c) => lang==='en'? `${c} if you looked at yourself with affection, what would you say?` : lang==='ar'? `${c} لو نظرت لنفسك بمودة، ماذا ستقول؟` : lang==='ja'? `${c} 自分に優しく見るなら、何て言う？` : lang==='pt'? `${c} se olhasse pra você com carinho, o que diria?` : `${c} si te miraras con cariño, ¿qué te dirías?`,
       ],
       comprensivo: [
-        (c) => lang==='en'? `${c} thanks for sharing. What do you need now?` : lang==='ar'? `${c} شكرًا لمشاركتك. ما الذي تحتاجه الآن؟` : lang==='ja'? `${c} 共有してくれてありがとう。今は何が必要？` : `${c} gracias por compartir. ¿Qué necesitas ahora?`,
-        (c) => lang==='en'? `${c} A) vent a bit, B) organize thoughts—what do you prefer?` : lang==='ar'? `${c} أ) نفرّغ قليلًا، ب) نرتّب الأفكار—ما الأفضل لك؟` : lang==='ja'? `${c} A) 少し吐き出す B) 頭を整理する、どっちがいい？` : `${c} A) desahogarnos un poco, B) ordenar ideas, ¿qué prefieres?`,
-        (c) => lang==='en'? `${c} could you give me a concrete example to understand better?` : lang==='ar'? `${c} ممكن مثال واضح لأفهم أكثر؟` : lang==='ja'? `${c} 具体例を一つもらえる？` : `${c} ¿podrías darme un ejemplo concreto para entender mejor?`,
-        (c) => lang==='en'? `${c} a small step today could help—what seems possible?` : lang==='ar'? `${c} خطوة صغيرة اليوم قد تساعد—ما الذي تراه ممكنًا؟` : lang==='ja'? `${c} 今日は小さな一歩が役に立つかも。何ならできそう？` : `${c} un paso pequeño hoy podría ayudar, ¿cuál ves posible?`,
-        (c) => lang==='en'? `${c} if you were your best support, what would you say?` : lang==='ar'? `${c} لو كنت أقوى دعمٍ لك، ماذا ستقول؟` : lang==='ja'? `${c} 自分がいちばんの味方なら、何て言う？` : `${c} si fueras tu mejor apoyo, ¿qué te dirías?`,
+        (c) => lang==='en'? `${c} thanks for sharing. What do you need now?` : lang==='ar'? `${c} شكرًا لمشاركتك. ما الذي تحتاجه الآن؟` : lang==='ja'? `${c} 共有してくれてありがとう。今は何が必要？` : lang==='pt'? `${c} obrigado por compartilhar. Do que você precisa agora?` : `${c} gracias por compartir. ¿Qué necesitas ahora?`,
+        (c) => lang==='en'? `${c} A) vent a bit, B) organize thoughts—what do you prefer?` : lang==='ar'? `${c} أ) نفرّغ قليلًا، ب) نرتّب الأفكار—ما الأفضل لك؟` : lang==='ja'? `${c} A) 少し吐き出す B) 頭を整理する、どっちがいい？` : lang==='pt'? `${c} A) desabafar um pouco, B) organizar ideias — o que prefere?` : `${c} A) desahogarnos un poco, B) ordenar ideas, ¿qué prefieres?`,
+        (c) => lang==='en'? `${c} could you give me a concrete example to understand better?` : lang==='ar'? `${c} ممكن مثال واضح لأفهم أكثر؟` : lang==='ja'? `${c} 具体例を一つもらえる？` : lang==='pt'? `${c} pode me dar um exemplo concreto para entender melhor?` : `${c} ¿podrías darme un ejemplo concreto para entender mejor?`,
+        (c) => lang==='en'? `${c} a small step today could help—what seems possible?` : lang==='ar'? `${c} خطوة صغيرة اليوم قد تساعد—ما الذي تراه ممكنًا؟` : lang==='ja'? `${c} 今日は小さな一歩が役に立つかも。何ならできそう？` : lang==='pt'? `${c} um passo pequeno hoje pode ajudar — o que parece possível?` : `${c} un paso pequeño hoy podría ayudar, ¿cuál ves posible?`,
+        (c) => lang==='en'? `${c} if you were your best support, what would you say?` : lang==='ar'? `${c} لو كنت أقوى دعمٍ لك، ماذا ستقول؟` : lang==='ja'? `${c} 自分がいちばんの味方なら、何て言う？` : lang==='pt'? `${c} se fosse seu melhor apoio, o que diria?` : `${c} si fueras tu mejor apoyo, ¿qué te dirías?`,
       ],
       agresivo: [
-        (c) => lang==='en'? `${c} straight to the point: what do you want to achieve?` : lang==='ar'? `${c} إلى صلب الموضوع: ما الذي تريد تحقيقه؟` : lang==='ja'? `${c} 要点だけいこう。何を達成したい？` : `${c} ve al grano: ¿qué quieres conseguir?`,
-        (c) => lang==='en'? `${c} A) act now, B) think for a minute. Choose.` : lang==='ar'? `${c} أ) نتحرك الآن، ب) نفكر دقيقة. اختر.` : lang==='ja'? `${c} A) すぐ動く B) 少し考える。選んで。` : `${c} A) actuar ya, B) pensarlo un minuto. Elige.`,
-        (c) => lang==='en'? `${c} give me a short, direct example.` : lang==='ar'? `${c} أعطني مثالًا قصيرًا ومباشرًا.` : lang==='ja'? `${c} 手短で具体的な例を。` : `${c} dame un ejemplo corto y directo.`,
-        (c) => lang==='en'? `${c} first step right now—what is it?` : lang==='ar'? `${c} ما أول خطوة الآن؟` : lang==='ja'? `${c} 今すぐの最初の一歩は？` : `${c} primer paso ahora mismo, ¿cuál?`,
-        (c) => lang==='en'? `${c} from the outside, what decision would you make now?` : lang==='ar'? `${c} لو نظرت من الخارج، ما القرار الذي ستتخذه الآن؟` : lang==='ja'? `${c} 客観的に見て、今ならどんな決断をする？` : `${c} desde fuera, ¿qué decisión tomarías ya?`,
+        (c) => lang==='en'? `${c} straight to the point: what do you want to achieve?` : lang==='ar'? `${c} إلى صلب الموضوع: ما الذي تريد تحقيقه؟` : lang==='ja'? `${c} 要点だけいこう。何を達成したい？` : lang==='pt'? `${c} direto ao ponto: o que você quer alcançar?` : `${c} ve al grano: ¿qué quieres conseguir?`,
+        (c) => lang==='en'? `${c} A) act now, B) think for a minute. Choose.` : lang==='ar'? `${c} أ) نتحرك الآن، ب) نفكر دقيقة. اختر.` : lang==='ja'? `${c} A) すぐ動く B) 少し考える。選んで。` : lang==='pt'? `${c} A) agir agora, B) pensar um minuto. Escolha.` : `${c} A) actuar ya, B) pensarlo un minuto. Elige.`,
+        (c) => lang==='en'? `${c} give me a short, direct example.` : lang==='ar'? `${c} أعطني مثالًا قصيرًا ومباشرًا.` : lang==='ja'? `${c} 手短で具体的な例を。` : lang==='pt'? `${c} me dê um exemplo curto e direto.` : `${c} dame un ejemplo corto y directo.`,
+        (c) => lang==='en'? `${c} first step right now—what is it?` : lang==='ar'? `${c} ما أول خطوة الآن؟` : lang==='ja'? `${c} 今すぐの最初の一歩は？` : lang==='pt'? `${c} primeiro passo agora — qual é?` : `${c} primer paso ahora mismo, ¿cuál?`,
+        (c) => lang==='en'? `${c} from the outside, what decision would you make now?` : lang==='ar'? `${c} لو نظرت من الخارج، ما القرار الذي ستتخذه الآن؟` : lang==='ja'? `${c} 客観的に見て、今ならどんな決断をする？` : lang==='pt'? `${c} olhando de fora, que decisão tomaria agora?` : `${c} desde fuera, ¿qué decisión tomarías ya?`,
       ],
       sensual: [
-        (c) => lang==='en'? `${c} I love hearing you… what do you want to explore today?` : lang==='ar'? `${c} يعجبني حديثك… ماذا تحب أن نستكشف اليوم؟` : lang==='ja'? `${c} 話すの、好きだよ…今日は何を楽しみたい？` : `${c} me gusta escucharte… ¿qué te apetece explorar hoy?`,
-        (c) => lang==='en'? `${c} A) go gentle, B) raise the intensity a bit—your call?` : lang==='ar'? `${c} أ) بهدوء، ب) نزيد الحدة قليلًا—اختيارك؟` : lang==='ja'? `${c} A) ゆっくり B) 少し強め、どっちがいい？` : `${c} A) ir suave, B) subir un poco la intensidad, ¿qué prefieres?`,
-        (c) => lang==='en'? `${c} give me a brief example to set the mood.` : lang==='ar'? `${c} أعطني مثالًا قصيرًا لندخل الأجواء.` : lang==='ja'? `${c} 雰囲気作りに、短い例をちょうだい。` : `${c} ponme un ejemplo breve para meternos en clima.`,
-        (c) => lang==='en'? `${c} let's make a two‑step suggestive plan—where would you start?` : lang==='ar'? `${c} لنضع خطة من خطوتين—من أين نبدأ؟` : lang==='ja'? `${c} 二段階のちょいセクシーな計画しよ。どこから始める？` : `${c} hagamos un plan sugerente de dos pasos, ¿por dónde empezarías?`,
-        (c) => lang==='en'? `${c} if you followed desire, what would you tell yourself now?` : lang==='ar'? `${c} لو اتبعت رغبتك، ماذا ستقول لنفسك الآن؟` : lang==='ja'? `${c} 欲に素直なら、今なんて言う？` : `${c} si te guiaras por el deseo, ¿qué te dirías ahora?`,
+        (c) => lang==='en'? `${c} I love hearing you… what do you want to explore today?` : lang==='ar'? `${c} يعجبني حديثك… ماذا تحب أن نستكشف اليوم؟` : lang==='ja'? `${c} 話すの、好きだよ…今日は何を楽しみたい？` : lang==='pt'? `${c} adoro te ouvir… o que quer explorar hoje?` : `${c} me gusta escucharte… ¿qué te apetece explorar hoy?`,
+        (c) => lang==='en'? `${c} A) go gentle, B) raise the intensity a bit—your call?` : lang==='ar'? `${c} أ) بهدوء، ب) نزيد الحدة قليلًا—اختيارك؟` : lang==='ja'? `${c} A) ゆっくり B) 少し強め、どっちがいい？` : lang==='pt'? `${c} A) ir de leve, B) subir um pouco a intensidade — qual prefere?` : `${c} A) ir suave, B) subir un poco la intensidad, ¿qué prefieres?`,
+        (c) => lang==='en'? `${c} give me a brief example to set the mood.` : lang==='ar'? `${c} أعطني مثالًا قصيرًا لندخل الأجواء.` : lang==='ja'? `${c} 雰囲気作りに、短い例をちょうだい。` : lang==='pt'? `${c} me dá um exemplo curto para entrarmos no clima.` : `${c} ponme un ejemplo breve para meternos en clima.`,
+        (c) => lang==='en'? `${c} let's make a two‑step suggestive plan—where would you start?` : lang==='ar'? `${c} لنضع خطة من خطوتين—من أين نبدأ؟` : lang==='ja'? `${c} 二段階のちょいセクシーな計画しよ。どこから始める？` : lang==='pt'? `${c} vamos fazer um plano em duas etapas — por onde começaria?` : `${c} hagamos un plan sugerente de dos pasos, ¿por dónde empezarías?`,
+        (c) => lang==='en'? `${c} if you followed desire, what would you tell yourself now?` : lang==='ar'? `${c} لو اتبعت رغبتك، ماذا ستقول لنفسك الآن؟` : lang==='ja'? `${c} 欲に素直なら、今なんて言う？` : lang==='pt'? `${c} se seguisse o desejo, o que diria para si agora?` : `${c} si te guiaras por el deseo, ¿qué te dirías ahora?`,
       ],
     };
 

@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
   try {
     const { userId, modelId, modelName, tone, lang: langIn } = (req.body as any) || {};
     if (!userId || !modelId || !tone) return res.status(400).json({ error: 'Missing fields' });
-    const allowed = ['es','en','ar','ja'] as const;
+    const allowed = ['es','en','ar','ja','pt'] as const;
     type Lang = typeof allowed[number];
     const isAllowed = (v: any): v is Lang => (allowed as readonly string[]).includes(String(v));
     const lang: Lang = isAllowed(langIn) ? (langIn as Lang) : 'es';
@@ -60,43 +60,49 @@ export default async function handler(req: any, res: any) {
     // Minimal localization of opener when requested language != 'es'
     if (lang !== 'es') {
       const tkey = String(tone || '').toLowerCase();
-      const base = (greet: string, ask: string) => `${greet} ${lang === 'ar' ? 'أنا' : lang === 'ja' ? '私は' : "I'm"} ${modelLabel}. ${ask}`.trim();
+      const base = (greet: string, ask: string) => `${greet} ${lang === 'ar' ? 'أنا' : lang === 'ja' ? '私は' : lang === 'pt' ? 'Sou' : "I'm"} ${modelLabel}. ${ask}`.trim();
       const banks: Record<string, Record<Lang, [string, string][]>> = {
         amistoso: {
           en: [[ 'Hey!', 'How are you doing today?' ]],
           ar: [[ 'مرحبًا!', 'كيف كان يومك؟' ]],
           ja: [[ 'やあ！', '今日はどうだった？' ]],
           es: [[ '¡Hola!', '¿Qué tal va todo?' ]],
+          pt: [[ 'Oi!', 'Como você está hoje?' ]],
         },
         romantico: {
           en: [[ 'Hi dear.', 'How did your day treat you?' ]],
           ar: [[ 'مرحبًا عزيزي/عزيزتي.', 'كيف كان يومك؟' ]],
           ja: [[ 'やあ、あなた。', '今日はどんな一日だった？' ]],
           es: [[ 'Hola, corazón.', '¿Cómo te ha tratado el día?' ]],
+          pt: [[ 'Oi, amor.', 'Como foi o seu dia?' ]],
         },
         coqueto: {
           en: [[ 'Hey ;)', 'How did your day go?' ]],
           ar: [[ 'أهلًا ;)', 'كيف مضى يومك؟' ]],
           ja: [[ 'ねえ ;)', '今日はどうだった？' ]],
           es: [[ 'Holaa ;)', '¿Cómo te ha ido?' ]],
+          pt: [[ 'Oi ;)', 'Como foi seu dia?' ]],
         },
         comprensivo: {
           en: [[ 'I’m here.', 'How do you feel today?' ]],
           ar: [[ 'أنا هنا.', 'كيف تشعر اليوم؟' ]],
           ja: [[ 'ここにいるよ。', '今日はどんな気持ち？' ]],
           es: [[ 'Aquí estoy.', '¿Cómo te sientes hoy?' ]],
+          pt: [[ 'Estou aqui.', 'Como você se sente hoje?' ]],
         },
         agresivo: {
           en: [[ 'Hey.', 'Be straight: how was your day?' ]],
           ar: [[ 'مرحبًا.', 'بشكل مباشر: كيف كان يومك؟' ]],
           ja: [[ 'やあ。', '率直にいこう。今日はどう？' ]],
           es: [[ 'Ey.', 'Voy directo: ¿cómo te ha ido el día?' ]],
+          pt: [[ 'Ei.', 'Direto ao ponto: como foi seu dia?' ]],
         },
         sensual: {
           en: [[ 'Hello…', 'What do you feel like today?' ]],
           ar: [[ 'مرحبًا…', 'ماذا تحب اليوم؟' ]],
           ja: [[ 'こんにちは…', '今日は何がしたい？' ]],
           es: [[ 'Hola…', '¿Qué te apetece hoy?' ]],
+          pt: [[ 'Olá…', 'O que você quer hoje?' ]],
         },
       };
       const list = (banks[tkey] || banks['amistoso'])[lang] || banks['amistoso'][lang];
