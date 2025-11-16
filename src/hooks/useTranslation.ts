@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type SupportedLanguage = 'es' | 'en' | 'ar' | 'ja';
+export type SupportedLanguage = 'es' | 'en' | 'ar' | 'ja' | 'pt';
 
 interface TranslationData {
   [key: string]: any;
@@ -10,7 +10,8 @@ const translations: Record<SupportedLanguage, TranslationData> = {
   es: {},
   en: {},
   ar: {},
-  ja: {}
+  ja: {},
+  pt: {}
 };
 
 // Cargar traducciones dinámicamente
@@ -32,7 +33,7 @@ export const useTranslation = () => {
   // Cargar idioma desde localStorage al inicializar
   useEffect(() => {
     const savedLanguage = localStorage.getItem('selectedLanguage') as SupportedLanguage;
-    if (savedLanguage && (savedLanguage === 'es' || savedLanguage === 'en' || savedLanguage === 'ar' || savedLanguage === 'ja')) {
+    if (savedLanguage && (savedLanguage === 'es' || savedLanguage === 'en' || savedLanguage === 'ar' || savedLanguage === 'ja' || savedLanguage === 'pt')) {
       setLanguage(savedLanguage);
     }
   }, []);

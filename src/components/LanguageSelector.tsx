@@ -32,6 +32,12 @@ const languages = [
     name: 'Japanese',
     flag: '🇯🇵',
     nativeName: '日本語'
+  },
+  {
+    code: 'pt' as SupportedLanguage,
+    name: 'Portuguese',
+    flag: '🇵🇹',
+    nativeName: 'Português'
   }
 ];
 

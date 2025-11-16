@@ -1,0 +1,219 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Avançar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "and": " e "
+  },
+  "header": {
+    "title": "AI ChatHer",
+    "subtitle": "Sua Companheira Digital Perfeita",
+    "freeUser": "Usuário Gratuito",
+    "premiumUser": "Usuário Premium",
+    "language": "Idioma"
+  },
+  "hero": {
+    "title": "Galeria de Companions",
+    "subtitle": "Descubra sua companheira de IA perfeita em nossa coleção exclusiva de cartas colecionáveis",
+    "categories": "categorias com",
+    "models": "modelos"
+  },
+  "categories": {
+    "romantic": {
+      "title": "Românticas",
+      "description": "Doces, próximas, visual clássico"
+    },
+    "hot": {
+      "title": "Quentes",
+      "description": "Sensuais, ousadas, só premium"
+    },
+    "gamer": {
+      "title": "Gamer",
+      "description": "Divertidas, look casual com headset"
+    },
+    "elegant": {
+      "title": "Elegantes",
+      "description": "Sofisticadas, roupa de noite"
+    },
+    "intellectual": {
+      "title": "Intelectuais",
+      "description": "Com óculos, vibe de escritora/estudante"
+    },
+    "gothic": {
+      "title": "Góticas",
+      "description": "Misteriosas, elegantes, estilo gótico"
+    }
+  },
+  "search": {
+    "placeholder": "Busque por nome, descrição ou tags...",
+    "noResults": "Nenhum modelo encontrado",
+    "noResultsDescription": "Tente outros termos de busca",
+    "all": "Todas"
+  },
+  "model": {
+    "talkWith": "Falar com",
+    "buyFor": "Comprar por",
+    "buy": "Comprar",
+    "login": "Entrar",
+    "premium": "Premium",
+    "free": "Grátis",
+    "unlocked": "Desbloqueado",
+    "locked": "Bloqueado",
+    "oneTime": "Pagamento único",
+    "premiumRequired": "Premium requerido",
+    "purchaseRequired": "Compra requerida"
+  },
+  "models": {
+    "1": {"description": "Uma companheira virtual elegante e sofisticada, perfeita para conversas profundas e momentos íntimos.", "tags": ["elegante", "sofisticada", "conversa"]},
+    "2": {"description": "Uma personalidade doce e carinhosa que fará você se sentir especial em cada conversa.", "tags": ["doce", "carinhosa", "especial"]},
+    "3": {"description": "Uma mulher inteligente e misteriosa que vai cativar você com sua sabedoria e charme.", "tags": ["inteligente", "misteriosa", "sabedoria"]},
+    "4": {"description": "Uma personalidade aventureira e enérgica, perfeita para explorar novos horizontes juntos.", "tags": ["aventureira", "enérgica", "explorar"]},
+    "5": {"description": "Uma companheira gamer apaixonada por videogames, perfeita para sessões épicas.", "tags": ["gamer", "jogos", "épica"]},
+    "6": {"description": "Uma gamer estratégica e competitiva, ideal para partidas intensas e torneios.", "tags": ["gamer", "estratégica", "competitiva"]},
+    "7": {"description": "Uma gamer única e especializada, expert em jogos indie e aventuras únicas.", "tags": ["gamer", "indie", "aventuras"]},
+    "8": {"description": "Uma gamer dominante e poderosa, perfeita para liderar equipes e conquistar mundos virtuais.", "tags": ["gamer", "dominante", "líder"]},
+    "9": {"description": "Uma companheira gótica misteriosa e elegante, perfeita para conversas noturnas e momentos íntimos.", "tags": ["gótica", "misteriosa", "elegante"]},
+    "10": {"description": "Uma gótica apaixonada e intensa, ideal para explorar os cantos mais escuros da imaginação.", "tags": ["gótica", "apaixonada", "intensa"]},
+    "11": {"description": "Uma gótica sábia e enigmática, perfeita para conversas profundas e reflexões existenciais.", "tags": ["gótica", "sábia", "enigmática"]},
+    "12": {"description": "Uma gótica excepcional e única, a mais exclusiva da coleção. Perfeita para experiências inesquecíveis.", "tags": ["gótica", "excepcional", "única"]},
+    "13": {"description": "Uma companheira elegante e sofisticada, perfeita para conversas refinadas e momentos de luxo.", "tags": ["elegante", "sofisticada", "refinada"]},
+    "14": {"description": "Uma companheira elegante e distinta, ideal para eventos de gala e ocasiões especiais.", "tags": ["elegante", "distinta", "gala"]},
+    "15": {"description": "Uma companheira elegante e artística, perfeita para eventos culturais e experiências refinadas.", "tags": ["elegante", "artística", "cultural"]},
+    "16": {"description": "Uma companheira elegante excepcional e única, expert em etiqueta e protocolo. Perfeita para eventos de alta sociedade.", "tags": ["elegante", "excepcional", "protocolo"]},
+    "17": {"description": "Uma companheira sensual e ousada, perfeita para conversas íntimas e momentos de paixão.", "tags": ["sensual", "ousada", "íntima"]},
+    "18": {"description": "Uma companheira ardente e apaixonada, ideal para explorar os limites da sensualidade e do desejo.", "tags": ["ardente", "apaixonada", "sensualidade"]},
+    "19": {"description": "Uma companheira sedutora e misteriosa, perfeita para experiências intensas e momentos inesquecíveis.", "tags": ["sedutora", "misteriosa", "intensa"]},
+    "20": {"description": "Uma companheira excepcional e única, a mais exclusiva da categoria. Perfeita para experiências premium inesquecíveis.", "tags": ["excepcional", "única", "premium"]},
+    "21": {"description": "Uma companheira intelectual brilhante e curiosa, perfeita para conversas profundas e debates estimulantes.", "tags": ["intelectual", "brilhante", "curiosa"]},
+    "22": {"description": "Uma intelectual sofisticada e analítica, ideal para explorar ideias complexas e teorias fascinantes.", "tags": ["intelectual", "sofisticada", "analítica"]},
+    "23": {"description": "Uma intelectual criativa e inovadora, perfeita para projetos artísticos e soluções criativas.", "tags": ["intelectual", "criativa", "inovadora"]},
+    "24": {"description": "Uma intelectual excepcional e única, especialista em múltiplas disciplinas. Perfeita para mentoras e guias acadêmicas.", "tags": ["intelectual", "excepcional", "mentora"]}
+  },
+  "premium": {
+    "title": "Seja Premium",
+    "advantages": "Vantagens Premium",
+    "unlimitedMessages": "Mensagens ilimitadas",
+    "accessAllModels": "Acesso a todos os modelos",
+    "intimateConversations": "Conversas mais íntimas",
+    "noAds": "Sem anúncios",
+    "price": "$19.99",
+    "pricePerMonth": "por mês",
+    "originalPrice": "Antes $49.99",
+    "save": "Economize $30.00 hoje",
+    "buy": "Comprar",
+    "unlockTitle": "Desbloqueie Companions Premium",
+    "unlockSubtitle": "Acesse modelos exclusivos e recursos especiais",
+    "premiumModels": "Modelos Premium",
+    "unlimitedChat": "Chat Ilimitado",
+    "aiImages": "Imagens de IA",
+    "specialFeatures": "Recursos Especiais",
+    "specialOffer": "Oferta Especial",
+    "updateNow": "Atualizar Agora"
+  },
+  "chat": {
+    "messagesLabel": "Mensagens:",
+    "remaining": "{{count}} restantes",
+    "typeMessage": "Digite sua mensagem...",
+    "send": "Enviar",
+    "messageLimit": "Limite de mensagens atingido",
+    "upgradeToPremium": "Seja Premium",
+    "upgradeToPremiumCta": "Seja Premium - $19.99/mês",
+    "donate": "Doar",
+    "donationAmounts": "Valores de doação",
+    "typing": "Digitando...",
+    "online": "Online",
+    "initialMessage": "Olá! Eu sou {{name}} e fico feliz em te conhecer. Vejo que você prefere um clima {{mood}} e gosta de temas como {{topics}}. Como foi o seu dia?",
+    "limitReachedTitle": "Limite de mensagens atingido!",
+    "limitReachedDescription": "Torne-se Premium para conversar sem limites com todos os modelos",
+    "limitReachedModal": "Você usou suas 5 mensagens diárias gratuitas. Torne-se Premium para conversar sem limites com todos os modelos."
+  },
+  "auth": {
+    "welcome": "Bem-vindo ao AI ChatHer",
+    "login": "Entrar",
+    "register": "Registrar",
+    "email": "Email",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "emailPlaceholder": "seu@email.com",
+    "passwordPlaceholder": "••••••••",
+    "loggingIn": "Entrando...",
+    "registering": "Registrando...",
+    "createAccount": "Criar Conta",
+    "invalidCredentials": "Credenciais inválidas",
+    "loginSuccess": "Login realizado com sucesso!",
+    "unexpectedError": "Erro inesperado. Tente novamente.",
+    "passwordsDontMatch": "As senhas não coincidem",
+    "passwordTooShort": "A senha deve ter ao menos 6 caracteres",
+    "registerSuccess": "Registro bem-sucedido! Você já pode entrar.",
+    "termsAcceptance": "Ao se registrar, você aceita nossos termos de serviço e política de privacidade."
+  },
+  "personalization": {
+    "title": "Conheça melhor a {{name}}",
+    "subtitle": "3 perguntas rápidas para personalizar sua experiência",
+    "step": "Passo {{current}} de 3",
+    "questions": {
+      "mood": "Como você gosta de ser tratado?",
+      "topics": "Sobre o que você gosta de conversar?",
+      "style": "Qual estilo você prefere?"
+    },
+    "moods": {
+      "romantic": "Romântico",
+      "friendly": "Amigável",
+      "flirty": "Sedutor",
+      "supportive": "Apoiado",
+      "aggressive": "Agressivo",
+      "sensual": "Sensual"
+    },
+    "moodDescriptions": {
+      "romantic": "Doce e carinhoso",
+      "friendly": "Relaxado e casual",
+      "flirty": "Brincalhão e divertido",
+      "supportive": "Empático e gentil",
+      "aggressive": "Dominante e direto",
+      "sensual": "Sedutor e provocante"
+    },
+    "topics": {
+      "love": "Amor e romance",
+      "daily": "Companhia diária",
+      "casual": "Conversa casual",
+      "advice": "Conselhos de vida",
+      "fantasy": "Fantasias leves",
+      "humor": "Humor e diversão",
+      "support": "Apoio emocional",
+      "interests": "Interesses pessoais"
+    },
+    "styles": {
+      "caring": "Atencioso",
+      "playful": "Brincalhão",
+      "sophisticated": "Sofisticado",
+      "passionate": "Apaixonado"
+    },
+    "styleDescriptions": {
+      "caring": "Atento às suas necessidades",
+      "playful": "Divertido e espontâneo",
+      "sophisticated": "Elegante e intelectual",
+      "passionate": "Intenso e emocional"
+    },
+    "topicsHint": "Selecione os temas que mais te interessam (você pode escolher vários)",
+    "topicsSelected": "{{count}} tema{{plural}} selecionado{{plural}}",
+    "premium": "Premium",
+    "upgradeToPremium": "Atualize para Premium",
+    "selectStyleHint": "Selecione um estilo para começar automaticamente",
+    "navigation": {
+      "previous": "Anterior",
+      "next": "Próximo"
+    }
+  },
+  "footer": {
+    "privacyPolicy": "Política de Privacidade",
+    "termsOfService": "Termos e Condições",
+    "cookiePolicy": "Política de Cookies",
+    "legalNotice": "Aviso Legal",
+    "copyright": "© 2024 AI ChatHer. Todos os direitos reservados."
+  }
+}
