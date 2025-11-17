@@ -38,6 +38,12 @@ const languages = [
     name: 'Portuguese',
     flag: '🇵🇹',
     nativeName: 'Português'
+  },
+  {
+    code: 'tr' as SupportedLanguage,
+    name: 'Turkish',
+    flag: '🇹🇷',
+    nativeName: 'Türkçe'
   }
 ];
 

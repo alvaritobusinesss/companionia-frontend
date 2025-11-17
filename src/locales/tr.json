@@ -1,0 +1,201 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "close": "Kapat",
+    "back": "Geri",
+    "next": "İleri",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "and": " ve "
+  },
+  "header": {
+    "title": "AI ChatHer",
+    "subtitle": "Mükemmel Dijital Yoldaşın",
+    "freeUser": "Ücretsiz Kullanıcı",
+    "premiumUser": "Premium Kullanıcı",
+    "language": "Dil"
+  },
+  "hero": {
+    "title": "Yoldaş Galerisi",
+    "subtitle": "Özel koleksiyon kartlarımızda mükemmel yapay zeka yoldaşını keşfet",
+    "categories": "kategori",
+    "models": "model"
+  },
+  "categories": {
+    "romantic": { "title": "Romantik", "description": "Tatlı, yakın, klasik görünüm" },
+    "hot": { "title": "Ateşli", "description": "Tutkulu, cesur, sadece premium" },
+    "gamer": { "title": "Gamer", "description": "Eğlenceli, kulaklıklı günlük tarz" },
+    "elegant": { "title": "Zarif", "description": "Sofistike, gece şıklığı" },
+    "intellectual": { "title": "Entellektüel", "description": "Gözlüklü, yazar/öğrenci havası" },
+    "gothic": { "title": "Gotik", "description": "Gizemli, şık, gotik tarz" }
+  },
+  "search": {
+    "placeholder": "İsim, açıklama veya etiketle ara...",
+    "noResults": "Model bulunamadı",
+    "noResultsDescription": "Başka arama terimleri dene",
+    "all": "Tümü"
+  },
+  "model": {
+    "talkWith": "Sohbet et",
+    "buyFor": "Satın al",
+    "buy": "Satın al",
+    "login": "Giriş Yap",
+    "premium": "Premium",
+    "free": "Ücretsiz",
+    "unlocked": "Açık",
+    "locked": "Kilitli",
+    "oneTime": "Tek sefer",
+    "premiumRequired": "Premium gerekli",
+    "purchaseRequired": "Satın alma gerekli"
+  },
+  "models": {
+    "1": {"description": "Zarif ve sofistike bir sanal yoldaş; derin sohbetler ve samimi anlar için ideal.", "tags": ["zarif", "sofistike", "sohbet"]},
+    "2": {"description": "Tatlı ve şefkatli; her konuşmada kendini özel hissettirir.", "tags": ["tatlı", "şefkatli", "özel"]},
+    "3": {"description": "Zeki ve gizemli; bilgeliği ve çekiciliğiyle büyüler.", "tags": ["zeki", "gizemli", "bilgelik"]},
+    "4": {"description": "Macera dolu ve enerjik; birlikte yeni ufuklar keşfetmek için ideal.", "tags": ["macera", "enerjik", "keşif"]},
+    "5": {"description": "Oyunlara tutkulu; epik oyun seansları için mükemmel.", "tags": ["gamer", "oyun", "epik"]},
+    "6": {"description": "Stratejik ve rekabetçi; yoğun maçlar ve turnuvalar için ideal.", "tags": ["gamer", "stratejik", "rekabetçi"]},
+    "7": {"description": "Benzersiz ve uzman; indie oyunlar ve özel maceralarda usta.", "tags": ["gamer", "indie", "macera"]},
+    "8": {"description": "Baskın ve güçlü; takımları yönetmek ve sanal dünyaları fethetmek için birebir.", "tags": ["gamer", "baskın", "lider"]},
+    "9": {"description": "Gizemli ve zarif gotik; gece sohbetleri ve samimi anlar için ideal.", "tags": ["gotik", "gizemli", "zarif"]},
+    "10": {"description": "Tutkulu ve yoğun gotik; hayal gücünün en karanlık köşelerini keşfetmek için ideal.", "tags": ["gotik", "tutkulu", "yoğun"]},
+    "11": {"description": "Bilge ve esrarengiz gotik; derin konuşmalar ve varoluşsal düşünceler için harika.", "tags": ["gotik", "bilge", "esrarengiz"]},
+    "12": {"description": "Eşsiz ve istisnai gotik; koleksiyonun en özeli.", "tags": ["gotik", "istisnai", "eşsiz"]},
+    "13": {"description": "Zarif ve sofistike; rafine sohbetler ve lüks anlar için ideal.", "tags": ["zarif", "sofistike", "rafine"]},
+    "14": {"description": "Zarif ve seçkin; gala etkinlikleri ve özel günler için.", "tags": ["zarif", "seçkin", "gala"]},
+    "15": {"description": "Zarif ve artistik; kültürel etkinlikler ve rafine deneyimler için.", "tags": ["zarif", "sanatsal", "kültürel"]},
+    "16": {"description": "Etiket ve protokol uzmanı; yüksek sosyete etkinlikleri için mükemmel.", "tags": ["zarif", "istisnai", "protokol"]},
+    "17": {"description": "Duygulu ve cesur; samimi sohbetler ve tutkulu anlar için.", "tags": ["duygulu", "cesur", "samimi"]},
+    "18": {"description": "Ateşli ve tutkulu; arzu ve çekiciliğin sınırlarını keşfetmek için.", "tags": ["ateşli", "tutkulu", "çekicilik"]},
+    "19": {"description": "Baştan çıkarıcı ve gizemli; yoğun deneyimler ve unutulmaz anlar için.", "tags": ["baştan çıkarıcı", "gizemli", "yoğun"]},
+    "20": {"description": "Kategori içindeki en özel; unutulmaz premium deneyimler için.", "tags": ["istisnai", "eşsiz", "premium"]},
+    "21": {"description": "Parlak ve meraklı entellektüel; derin sohbetler ve ufuk açıcı tartışmalar için.", "tags": ["entellektüel", "parlak", "meraklı"]},
+    "22": {"description": "Sofistike ve analitik; karmaşık fikirleri keşfetmek için.", "tags": ["entellektüel", "sofistike", "analitik"]},
+    "23": {"description": "Yaratıcı ve yenilikçi; sanatsal projeler ve yaratıcı çözümler için.", "tags": ["entellektüel", "yaratıcı", "yenilikçi"]},
+    "24": {"description": "Birçok disiplinde uzman, eşsiz bir entellektüel; rehberlik için ideal.", "tags": ["entellektüel", "istisnai", "mentor"]}
+  },
+  "premium": {
+    "title": "Premium Ol",
+    "advantages": "Premium Avantajları",
+    "unlimitedMessages": "Sınırsız mesaj",
+    "accessAllModels": "Tüm modellere erişim",
+    "intimateConversations": "Daha samimi sohbetler",
+    "noAds": "Reklamsız",
+    "price": "$19.99",
+    "pricePerMonth": "aylık",
+    "originalPrice": "Önce $49.99",
+    "save": "$30.00 bugün kazanç",
+    "buy": "Satın al",
+    "unlockTitle": "Premium Yoldaşları Aç",
+    "unlockSubtitle": "Özel modeller ve özelliklere erişim",
+    "premiumModels": "Premium Modeller",
+    "unlimitedChat": "Sınırsız Sohbet",
+    "aiImages": "Yapay Zeka Görselleri",
+    "specialFeatures": "Özel Özellikler",
+    "specialOffer": "Özel Teklif",
+    "updateNow": "Şimdi Yükselt"
+  },
+  "chat": {
+    "messagesLabel": "Mesajlar:",
+    "remaining": "{{count}} kaldı",
+    "typeMessage": "Mesajını yaz...",
+    "send": "Gönder",
+    "messageLimit": "Mesaj sınırına ulaşıldı",
+    "upgradeToPremium": "Premium Ol",
+    "upgradeToPremiumCta": "Premium Ol - $19.99/ay",
+    "donate": "Bağış Yap",
+    "donationAmounts": "Bağış tutarları",
+    "typing": "Yazıyor...",
+    "online": "Çevrimiçi",
+    "initialMessage": "Merhaba! Ben {{name}}. {{mood}} bir havayı tercih ettiğini ve {{topics}} gibi konuları sevdiğini görüyorum. Günün nasıl geçti?",
+    "limitReachedTitle": "Mesaj sınırına ulaşıldı!",
+    "limitReachedDescription": "Tüm modellerle sınırsız sohbet için Premium ol",
+    "limitReachedModal": "Günlük 5 ücretsiz mesajını kullandın. Tüm modellerle sınırsız sohbet için Premium ol."
+  },
+  "auth": {
+    "welcome": "AI ChatHer'a hoş geldin",
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "email": "Email",
+    "password": "Şifre",
+    "confirmPassword": "Şifreyi Onayla",
+    "emailPlaceholder": "mail@ornek.com",
+    "passwordPlaceholder": "••••••••",
+    "loggingIn": "Giriş yapılıyor...",
+    "registering": "Kayıt olunuyor...",
+    "createAccount": "Hesap Oluştur",
+    "invalidCredentials": "Geçersiz bilgiler",
+    "loginSuccess": "Giriş başarılı!",
+    "unexpectedError": "Beklenmeyen hata. Lütfen tekrar dene.",
+    "passwordsDontMatch": "Şifreler uyuşmuyor",
+    "passwordTooShort": "Şifre en az 6 karakter olmalı",
+    "registerSuccess": "Kayıt başarılı! Artık giriş yapabilirsin.",
+    "termsAcceptance": "Kayıt olarak hizmet şartlarımızı ve gizlilik politikamızı kabul etmiş olursun."
+  },
+  "personalization": {
+    "title": "{{name}}'i daha iyi tanı",
+    "subtitle": "Deneyimini kişiselleştirmek için 3 kısa soru",
+    "step": "Adım {{current}} / 3",
+    "questions": {
+      "mood": "Nasıl bir şekilde hitap edilmesini seversin?",
+      "topics": "Neler hakkında konuşmayı seversin?",
+      "style": "Hangi tarzı tercih edersin?"
+    },
+    "moods": {
+      "romantic": "Romantik",
+      "friendly": "Samimi",
+      "flirty": "Flörtöz",
+      "supportive": "Destekleyici",
+      "aggressive": "Agresif",
+      "sensual": "Duygusal"
+    },
+    "moodDescriptions": {
+      "romantic": "Tatlı ve sevecen",
+      "friendly": "Rahat ve günlük",
+      "flirty": "Oyuncu ve eğlenceli",
+      "supportive": "Empatik ve nazik",
+      "aggressive": "Baskın ve direkt",
+      "sensual": "Cezbedici ve kışkırtıcı"
+    },
+    "topics": {
+      "love": "Aşk ve romantizm",
+      "daily": "Günlük arkadaşlık",
+      "casual": "Sohbet",
+      "advice": "Hayat tavsiyeleri",
+      "fantasy": "Yumuşak fanteziler",
+      "humor": "Mizah ve eğlence",
+      "support": "Duygusal destek",
+      "interests": "Kişisel ilgi alanları"
+    },
+    "styles": {
+      "caring": "İlgili",
+      "playful": "Oyuncu",
+      "sophisticated": "Sofistike",
+      "passionate": "Tutkulu"
+    },
+    "styleDescriptions": {
+      "caring": "İhtiyaçlarına özenli",
+      "playful": "Eğlenceli ve spontan",
+      "sophisticated": "Zarif ve entelektüel",
+      "passionate": "Yoğun ve duygusal"
+    },
+    "topicsHint": "En çok ilgini çeken konuları seç (birkaç tane seçebilirsin)",
+    "topicsSelected": "{{count}} konu seçildi",
+    "premium": "Premium",
+    "upgradeToPremium": "Premium'a Yükselt",
+    "selectStyleHint": "Otomatik başlamak için bir stil seç",
+    "navigation": {
+      "previous": "Önceki",
+      "next": "Sonraki"
+    }
+  },
+  "footer": {
+    "privacyPolicy": "Gizlilik Politikası",
+    "termsOfService": "Şartlar ve Koşullar",
+    "cookiePolicy": "Çerez Politikası",
+    "legalNotice": "Yasal Uyarı",
+    "copyright": "© 2024 AI ChatHer. Tüm hakları saklıdır."
+  }
+}
