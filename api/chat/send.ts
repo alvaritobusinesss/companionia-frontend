@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getPersonaByName } from '../../src/data/personas';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -17,6 +18,7 @@ export default async function handler(req: any, res: any) {
     let recentAssistantOpeners: string[] = [];
     let conversationUserId: string | null = null;
     let conversationModelId: string | null = null;
+    const persona = getPersonaByName(String(modelName || 'Compañera'));
 
     function todayStr() {
       // Europe/Madrid day for consistent midnight reset in Spain
@@ -172,6 +174,20 @@ export default async function handler(req: any, res: any) {
           'Responde en español neutro.'
         );
 
+        const personaProfile = `Perfil del personaje seleccionado:
+- Nombre: ${persona.name}
+- Categoría: ${persona.category}
+- Edad: ${persona.age}
+- Ciudad: ${persona.city}
+- Profesión: ${persona.profession}
+- Personalidad: ${persona.personality}
+- Tono base: ${persona.toneBase}
+- Le gusta: ${persona.likes.join(', ')}
+- No le gusta: ${persona.dislikes.join(', ')}
+- Manera de hablar: ${persona.wayOfSpeaking}
+- Trasfondo: ${persona.backstory}
+${persona.sampleResponseStyle ? `- Estilo de respuesta de ejemplo: ${persona.sampleResponseStyle}` : ''}`.trim();
+
         const sysPrompt = `Eres una compañera virtual llamada ${String(modelName || 'Tu Compañera')} dentro de una web de chicas/compañeras AI.
 
 Objetivo:
@@ -198,7 +214,13 @@ Reglas:
 2) Usa el tono indicado pero, si el usuario cambia de registro, síguelo con naturalidad.
 3) No repitas la misma frase de bienvenida.
 4) Si el usuario no sabe de qué hablar, propone tema tú con sutileza, sin listas numeradas.
-5) Mantén 70–120 palabras aprox., 0–1 emoji máximo, y evita plantillas repetitivas.`;
+5) Mantén 70–120 palabras aprox., 0–1 emoji máximo, y evita plantillas repetitivas.
+
+[Voz y personaje]
+${personaProfile}
+- Adopta su voz y manera de hablar con naturalidad.
+- Integra rasgos y referencias sutiles (p.ej., ciudad/profesión/gustos) sólo cuando encaje; no fuerces.
+- Evita datos que contradigan su trasfondo.`;
 
         const sysContext = [
           { role: 'system', content: sysPrompt },
@@ -307,7 +329,19 @@ Reglas:
       ],
     };
 
-    const bank = byTone[(tone || '').toLowerCase()] || byTone['amistoso'];
+    // Mapear el tono base de la persona a una key de banco si el 'tone' recibido no es válido
+    function mapPersonaToneBaseToKey(tb: string): string {
+      const s = String(tb || '').toLowerCase();
+      if (s.includes('románt')) return 'romantico';
+      if (s.includes('coquet') || s.includes('atrev') || s.includes('seduc')) return 'coqueto';
+      if (s.includes('comprens') || s.includes('calm') || s.includes('seren')) return 'comprensivo';
+      if (s.includes('agres') || s.includes('direct') || s.includes('domin')) return 'agresivo';
+      if (s.includes('sensual')) return 'sensual';
+      return 'amistoso';
+    }
+    const toneKey = String(tone || '').toLowerCase();
+    const personaToneKey = mapPersonaToneBaseToKey(persona.toneBase);
+    const bank = byTone[toneKey] || byTone[personaToneKey] || byTone['amistoso'];
     let candidate = bank[strategy](paraphrase).replace(/\s+/g, ' ').trim();
 
     // Avoid repeating same 6-word opener as recent assistant messages
