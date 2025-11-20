@@ -34,6 +34,7 @@ function ModelCardWithAccessComponent({
   // Modelos con ficha enriquecida (atributos + nacionalidad + sin chips)
   const isEnhancedCard = (
     model.id === "1" || model.id === "2" || model.id === "3" || model.id === "4" ||
+    model.id === "5" || model.id === "6" || model.id === "7" || model.id === "8" ||
     model.id === "17" || model.id === "18" || model.id === "19" || model.id === "20"
   );
   const persona = getPersonaByName(model.name);
@@ -118,7 +119,10 @@ function ModelCardWithAccessComponent({
     if (x.includes('arte') || x.includes('pint')) return '🎨';
     if (x.includes('vino')) return '🍷';
     if (x.includes('gato')) return '🐱';
-    if (x.includes('juego')) return '🎮';
+    if (x.includes('juego') || x.includes('gamer') || x.includes('indie')) return '🎮';
+    if (x.includes('sushi')) return '🍣';
+    if (x.includes('lo-fi') || x.includes('lofi') || x.includes('auriculares') || x.includes('playlist')) return '🎧';
+    if (x.includes('estrateg')) return '♟️';
     return '✨';
   }
   
@@ -315,6 +319,14 @@ function ModelCardWithAccessComponent({
                       likePhrase = `Apasionada por ${like0}`;
                     } else if (model.id === '4') { // Beauty
                       likePhrase = `Le encantan ${like0.replace(/^las\s+/i, 'las ').replace(/^los\s+/i, 'los ').trim()}`;
+                    } else if (model.id === '5') { // Blu
+                      likePhrase = `Fan de ${like0}`;
+                    } else if (model.id === '6') { // Resha
+                      likePhrase = `Amante de ${like0}`;
+                    } else if (model.id === '7') { // Yu
+                      likePhrase = `Entusiasta del ${like0.replace(/^el\s+/i, '').trim()}`;
+                    } else if (model.id === '8') { // Reyna
+                      likePhrase = `Le inspira ${like0}`;
                     } else if (model.id === '17') { // Chloe
                       likePhrase = `Fan de ${like0}`;
                     } else if (model.id === '18') { // Sasha
