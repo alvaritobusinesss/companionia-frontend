@@ -68,9 +68,9 @@ function ModelCardWithAccessComponent({
     return String.fromCodePoint(cc.charCodeAt(0) + A) + String.fromCodePoint(cc.charCodeAt(1) + A);
   }
   const countryName = countryFromCity(persona?.city);
-  // Subdivisión especial: Escocia (emoji bandera con tag sequence: GB + SCT)
+  // Subdivisión especial: Escocia -> usar bandera negra simple por estabilidad
   const flagEmoji = countryName === 'Escocia'
-    ? '\uD83C\uDFF4\uE0067\uE0062\uE0073\uE0063\uE0074\uE007F'
+    ? '🏴'
     : (emojiFlagFromCode(countryName ? COUNTRY_TO_CODE[countryName] : undefined) || null);
 
   // Helpers para atributos mostrados (solo primeros 4)
