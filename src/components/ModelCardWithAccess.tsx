@@ -68,8 +68,10 @@ function ModelCardWithAccessComponent({
     return String.fromCodePoint(cc.charCodeAt(0) + A) + String.fromCodePoint(cc.charCodeAt(1) + A);
   }
   const countryName = countryFromCity(persona?.city);
-  const countryCode = countryName ? COUNTRY_TO_CODE[countryName] : undefined;
-  const flagEmoji = emojiFlagFromCode(countryCode) || null;
+  // Subdivisión especial: Escocia (emoji de bandera regional)
+  const flagEmoji = countryName === 'Escocia'
+    ? '🏴'
+    : (emojiFlagFromCode(countryName ? COUNTRY_TO_CODE[countryName] : undefined) || null);
 
   // Helpers para atributos mostrados (solo primeros 4)
   function capitalizeFirst(s?: string) {
