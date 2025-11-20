@@ -376,68 +376,48 @@ function ModelCardWithAccessComponent({
               {(() => {
                 const attrs: string[] = [];
                 if (persona?.profession) {
-                  const prof = `${capitalizeFirst(persona.profession)} ${emojiForPhrase(persona.profession)}`.trim();
+                  const profTr = translateProfession(persona.profession);
+                  const prof = `${capitalizeFirst(profTr)} ${emojiForPhrase(persona.profession)}`.trim();
                   attrs.push(prof);
                 }
                 if (persona?.toneBase) {
-                  const toneTxt = capitalizeFirst(feminizeTone(persona.toneBase));
+                  const toneTxt = translateTone(feminizeTone(persona.toneBase));
                   attrs.push(toneTxt);
                 }
                 if (persona?.likes && persona.likes.length) {
                   const like0 = String(persona.likes[0]).trim();
-                  let likePhrase = '';
+                  const noArticle = like0.replace(/^(el|la|los|las)\s+/i, '').trim();
+                  let connectorKey = '' as
+                    | 'amante_de' | 'enamorada_del' | 'apasionada_por' | 'le_encantan' | 'fan_de' | 'entusiasta_del' | 'le_inspira' | 'fascinada_por' | 'devota_de' | 'devota_del' | 'disfruta_de' | 'experta_en' | 'obsesionada_con' | 'enamorada_de' | 'inspirada_por';
                   if (isEnhancedCard) {
-                    if (model.id === '1') { // Victoria
-                      likePhrase = `Amante de ${like0}`;
-                    } else if (model.id === '2') { // Luna
-                      likePhrase = `Enamorada del ${like0.replace(/^el\s+/i, '').trim()}`;
-                    } else if (model.id === '3') { // Ginger
-                      likePhrase = `Apasionada por ${like0}`;
-                    } else if (model.id === '4') { // Beauty
-                      likePhrase = `Le encantan ${like0.replace(/^las\s+/i, 'las ').replace(/^los\s+/i, 'los ').trim()}`;
-                    } else if (model.id === '5') { // Blu
-                      likePhrase = `Fan de ${like0}`;
-                    } else if (model.id === '6') { // Resha
-                      likePhrase = `Amante de ${like0}`;
-                    } else if (model.id === '7') { // Yu
-                      likePhrase = `Entusiasta del ${like0.replace(/^el\s+/i, '').trim()}`;
-                    } else if (model.id === '8') { // Reyna
-                      likePhrase = `Le inspira ${like0}`;
-                    } else if (model.id === '9') { // Nocturne
-                      likePhrase = `Fascinada por ${like0}`;
-                    } else if (model.id === '10') { // Erit
-                      likePhrase = `Amante de ${like0}`;
-                    } else if (model.id === '11') { // Vanth
-                      likePhrase = `Apasionada por ${like0}`;
-                    } else if (model.id === '12') { // Belladonna
-                      likePhrase = `Devota de ${like0}`;
-                    } else if (model.id === '13') { // Renata
-                      likePhrase = `Amante de ${like0}`;
-                    } else if (model.id === '14') { // Bianca
-                      likePhrase = `Disfruta de ${like0}`;
-                    } else if (model.id === '15') { // Aiko
-                      likePhrase = `Enamorada de ${like0}`;
-                    } else if (model.id === '16') { // Paris
-                      likePhrase = `Experta en ${like0}`;
-                    } else if (model.id === '17') { // Chloe
-                      likePhrase = `Fan de ${like0}`;
-                    } else if (model.id === '18') { // Sasha
-                      likePhrase = `Devota del ${like0.replace(/^el\s+/i, '').trim()}`;
-                    } else if (model.id === '19') { // Alessia
-                      likePhrase = `Obsesionada con ${like0}`;
-                    } else if (model.id === '20') { // Rebecca
-                      likePhrase = `Enamorada de ${like0}`;
-                    } else if (model.id === '21') { // Ahri
-                      likePhrase = `Amante de ${like0}`;
-                    } else if (model.id === '22') { // Asuma
-                      likePhrase = `Devota de ${like0}`;
-                    } else if (model.id === '23') { // Raven
-                      likePhrase = `Obsesionada con ${like0}`;
-                    } else if (model.id === '24') { // Arya
-                      likePhrase = `Inspirada por ${like0}`;
-                    }
+                    if (model.id === '1') connectorKey = 'amante_de';
+                    else if (model.id === '2') connectorKey = 'enamorada_del';
+                    else if (model.id === '3') connectorKey = 'apasionada_por';
+                    else if (model.id === '4') connectorKey = 'le_encantan';
+                    else if (model.id === '5') connectorKey = 'fan_de';
+                    else if (model.id === '6') connectorKey = 'amante_de';
+                    else if (model.id === '7') connectorKey = 'entusiasta_del';
+                    else if (model.id === '8') connectorKey = 'le_inspira';
+                    else if (model.id === '9') connectorKey = 'fascinada_por';
+                    else if (model.id === '10') connectorKey = 'amante_de';
+                    else if (model.id === '11') connectorKey = 'apasionada_por';
+                    else if (model.id === '12') connectorKey = 'devota_de';
+                    else if (model.id === '13') connectorKey = 'amante_de';
+                    else if (model.id === '14') connectorKey = 'disfruta_de';
+                    else if (model.id === '15') connectorKey = 'enamorada_de';
+                    else if (model.id === '16') connectorKey = 'experta_en';
+                    else if (model.id === '17') connectorKey = 'fan_de';
+                    else if (model.id === '18') connectorKey = 'devota_del';
+                    else if (model.id === '19') connectorKey = 'obsesionada_con';
+                    else if (model.id === '20') connectorKey = 'enamorada_de';
+                    else if (model.id === '21') connectorKey = 'amante_de';
+                    else if (model.id === '22') connectorKey = 'devota_de';
+                    else if (model.id === '23') connectorKey = 'obsesionada_con';
+                    else if (model.id === '24') connectorKey = 'inspirada_por';
                   }
-                  const like = `${likePhrase || capitalizeFirst(like0)} ${emojiForPhrase(like0)}`.trim();
+                  const connector = translateConnector(connectorKey || 'amante_de');
+                  const likeTarget = language === 'es' ? (connectorKey?.endsWith('_del') ? noArticle : like0) : noArticle;
+                  const like = `${connector} ${likeTarget} ${emojiForPhrase(like0)}`.trim();
                   attrs.push(like);
                 }
                 return attrs.join(' • ');
