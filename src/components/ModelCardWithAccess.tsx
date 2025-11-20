@@ -88,8 +88,21 @@ function ModelCardWithAccessComponent({
       'coach esports': { en: 'eSports coach', pt: 'Treinadora de eSports', ar: 'مدربة رياضات إلكترونية', ja: 'eスポーツコーチ', tr: 'eSpor koçu', es: 'Coach eSports' },
       'diseñadora de moda': { en: 'Fashion designer', pt: 'Designer de moda', ar: 'مصممة أزياء', ja: 'ファッションデザイナー', tr: 'Moda tasarımcısı', es: 'Diseñadora de moda' },
       'productora de cine': { en: 'Film producer', pt: 'Produtora de cinema', ar: 'منتِجة أفلام', ja: '映画プロデューサー', tr: 'Film yapımcısı', es: 'Productora de cine' },
+      'productora de cine independiente': { en: 'Independent film producer', pt: 'Produtora de cinema independente', ar: 'منتِجة أفلام مستقلة', ja: 'インディー映画プロデューサー', tr: 'Bağımsız film yapımcısı', es: 'Productora de cine independiente' },
       'periodista': { en: 'Journalist', pt: 'Jornalista', ar: 'صحفية', ja: 'ジャーナリスト', tr: 'Gazeteci', es: 'Periodista' },
       'estudiante': { en: 'Student', pt: 'Estudante', ar: 'طالبة', ja: '学生', tr: 'Öğrenci', es: 'Estudiante' },
+      'bailarina y modelo': { en: 'Dancer and model', pt: 'Bailarina e modelo', ar: 'راقصة وعارضة', ja: 'ダンサー・モデル', tr: 'Dansçı ve model', es: 'Bailarina y modelo' },
+      'coreógrafa': { en: 'Choreographer', pt: 'Coreógrafa', ar: 'مصممة رقص', ja: '振付師', tr: 'Koreograf', es: 'Coreógrafa' },
+      'fashion designer': { en: 'Fashion designer', pt: 'Designer de moda', ar: 'مصممة أزياء', ja: 'ファッションデザイナー', tr: 'Moda tasarımcısı', es: 'Diseñadora de moda' },
+      'organizadora de eventos de moda': { en: 'Fashion event organizer', pt: 'Organizadora de eventos de moda', ar: 'منظمة فعاليات موضة', ja: 'ファッションイベント主催', tr: 'Moda etkinliği organizatörü', es: 'Organizadora de eventos de moda' },
+      'relaciones públicas en un hotel de lujo': { en: 'Public relations at a luxury hotel', pt: 'Relações públicas em hotel de luxo', ar: 'علاقات عامة في فندق فاخر', ja: '高級ホテルのPR', tr: 'Lüks otelde halkla ilişkiler', es: 'Relaciones públicas en un hotel de lujo' },
+      'pianista de jazz': { en: 'Jazz pianist', pt: 'Pianista de jazz', ar: 'عازفة بيانو جاز', ja: 'ジャズピアニスト', tr: 'Caz piyanisti', es: 'Pianista de jazz' },
+      'consultora de imagen y etiqueta': { en: 'Image and etiquette consultant', pt: 'Consultora de imagem e etiqueta', ar: 'مستشارة صورة وإتيكيت', ja: 'イメージ・マナーコンサルタント', tr: 'İmaj ve görgü danışmanı', es: 'Consultora de imagen y etiqueta' },
+      'directora artística de una galería underground': { en: 'Art director of an underground gallery', pt: 'Diretora artística de uma galeria underground', ar: 'مديرة فنية لمعرض أندرغراوند', ja: 'アンダーグラウンドギャラリーのアートディレクター', tr: 'Yeraltı galerisi sanat direktörü', es: 'Directora artística de una galería underground' },
+      'escritora y crítica literaria': { en: 'Writer and literary critic', pt: 'Escritora e crítica literária', ar: 'كاتبة وناقدة أدبية', ja: '作家・文芸評論家', tr: 'Yazar ve edebiyat eleştirmeni', es: 'Escritora y crítica literaria' },
+      'investigadora de literatura comparada': { en: 'Comparative literature researcher', pt: 'Pesquisadora de literatura comparada', ar: 'باحثة في الأدب المقارن', ja: '比較文学研究者', tr: 'Karşılaştırmalı edebiyat araştırmacısı', es: 'Investigadora de literatura comparada' },
+      'ilustradora y crítica cultural': { en: 'Illustrator and cultural critic', pt: 'Ilustradora e crítica cultural', ar: 'رسامة وناقدة ثقافية', ja: 'イラストレーター・文化批評家', tr: 'İllüstratör ve kültür eleştirmeni', es: 'Ilustradora y crítica cultural' },
+      'mentora y conferencista en innovación y pensamiento crítico': { en: 'Mentor and speaker in innovation and critical thinking', pt: 'Mentora e palestrante em inovação e pensamento crítico', ar: 'مرشدة ومحاضِرة في الابتكار والتفكير النقدي', ja: 'イノベーションと批判的思考のメンター・講演者', tr: 'İnovasyon ve eleştirel düşünce mentoru ve konuşmacı', es: 'Mentora y conferencista en innovación y pensamiento crítico' },
     };
     const translated = dict[key]?.[L];
     return translated ? translated : s;
@@ -115,9 +128,56 @@ function ModelCardWithAccessComponent({
       'misteriosa': { en: 'mysterious', pt: 'misteriosa', ar: 'غامضة', ja: 'ミステリアス', tr: 'gizemli', es: 'misteriosa' },
       'elegante': { en: 'elegant', pt: 'elegante', ar: 'أنيقة', ja: 'エレガント', tr: 'zarif', es: 'elegante' },
       'apasionada': { en: 'passionate', pt: 'apaixonada', ar: 'شغوفة', ja: '情熱的', tr: 'tutkulu', es: 'apasionada' },
+      'segura': { en: 'confident', pt: 'segura', ar: 'واثقة', ja: '自信に満ちた', tr: 'özgüvenli', es: 'segura' },
+      'motivadora': { en: 'motivating', pt: 'motivadora', ar: 'محفزة', ja: 'モチベーター', tr: 'motive edici', es: 'motivadora' },
+      'relajada': { en: 'relaxed', pt: 'relaxada', ar: 'مسترخية', ja: 'リラックス', tr: 'rahat', es: 'relajada' },
+      'técnica': { en: 'technical', pt: 'técnica', ar: 'تقنية', ja: 'テクニカル', tr: 'teknik', es: 'técnica' },
+      'poética': { en: 'poetic', pt: 'poética', ar: 'شعرية', ja: '詩的', tr: 'şiirsel', es: 'poética' },
+      'minimalista': { en: 'minimalist', pt: 'minimalista', ar: 'بسيطة', ja: 'ミニマル', tr: 'minimalist', es: 'minimalista' },
+      'racional': { en: 'rational', pt: 'racional', ar: 'عقلانية', ja: '理性的', tr: 'rasyonel', es: 'racional' },
+      'inspiradora': { en: 'inspiring', pt: 'inspiradora', ar: 'ملهمة', ja: 'インスピレーション', tr: 'ilham verici', es: 'inspiradora' },
+      'calmada': { en: 'calm', pt: 'calma', ar: 'هادئة', ja: '落ち着いた', tr: 'sakin', es: 'calmada' },
+      'visual': { en: 'visual', pt: 'visual', ar: 'بصرية', ja: 'ビジュアル', tr: 'görsel', es: 'visual' },
     };
     const localized = tokens.map(tok => toneDict[tok]?.[L] || tok).join(L === 'en' ? ' & ' : ' y ');
     return capitalizeFirst(localized);
+  }
+
+  function translateLikeTarget(s?: string): string {
+    if (!s) return '';
+    const L = language;
+    const key = s.toLowerCase().trim();
+    const dict: Record<string, Record<string, string>> = {
+      'los días de lluvia': { en: 'rainy days', pt: 'dias chuvosos', ar: 'أيام المطر', ja: '雨の日', tr: 'yağmurlu günler', es: 'los días de lluvia' },
+      'el mar': { en: 'the sea', pt: 'o mar', ar: 'البحر', ja: '海', tr: 'deniz', es: 'el mar' },
+      'la literatura': { en: 'literature', pt: 'literatura', ar: 'الأدب', ja: '文学', tr: 'edebiyat', es: 'la literatura' },
+      'las flores': { en: 'flowers', pt: 'flores', ar: 'الزهور', ja: '花', tr: 'çiçekler', es: 'las flores' },
+      'el café': { en: 'coffee', pt: 'café', ar: 'القهوة', ja: 'コーヒー', tr: 'kahve', es: 'el café' },
+      'café con canela': { en: 'coffee with cinnamon', pt: 'café com canela', ar: 'قهوة بالقرفة', ja: 'シナモンコーヒー', tr: 'tarçınlı kahve', es: 'café con canela' },
+      'la moda': { en: 'fashion', pt: 'moda', ar: 'الموضة', ja: 'ファッション', tr: 'moda', es: 'la moda' },
+      'la estética': { en: 'aesthetics', pt: 'estética', ar: 'الجماليات', ja: '美学', tr: 'estetik', es: 'la estética' },
+      'el cine clásico': { en: 'classic cinema', pt: 'cinema clássico', ar: 'السينما الكلاسيكية', ja: 'クラシック映画', tr: 'klasik sinema', es: 'el cine clásico' },
+      'los videojuegos': { en: 'video games', pt: 'videojogos', ar: 'ألعاب الفيديو', ja: 'ビデオゲーム', tr: 'video oyunları', es: 'los videojuegos' },
+      'eSports': { en: 'eSports', pt: 'eSports', ar: 'الرياضات الإلكترونية', ja: 'eスポーツ', tr: 'eSpor', es: 'eSports' },
+      'puzzles': { en: 'puzzles', pt: 'quebra-cabeças', ar: 'ألعاب الألغاز', ja: 'パズル', tr: 'bulmacalar', es: 'puzzles' },
+      'anime': { en: 'anime', pt: 'anime', ar: 'أنمي', ja: 'アニメ', tr: 'anime', es: 'anime' },
+      'arte clásico': { en: 'classical art', pt: 'arte clássico', ar: 'فن كلاسيكي', ja: '古典美術', tr: 'klasik sanat', es: 'arte clásico' },
+      'arte moderno': { en: 'modern art', pt: 'arte moderno', ar: 'فن حديث', ja: '現代アート', tr: 'modern sanat', es: 'arte moderno' },
+      'filosofía': { en: 'philosophy', pt: 'filosofia', ar: 'الفلسفة', ja: '哲学', tr: 'felsefe', es: 'filosofía' },
+      'libros': { en: 'books', pt: 'livros', ar: 'الكتب', ja: '本', tr: 'kitaplar', es: 'libros' },
+      'ensayos literarios': { en: 'literary essays', pt: 'ensaios literários', ar: 'مقالات أدبية', ja: '文学エッセイ', tr: 'edebi denemeler', es: 'ensayos literarios' },
+      'charlas': { en: 'talks', pt: 'palestras', ar: 'أحاديث', ja: 'トーク', tr: 'sohbetler', es: 'charlas' },
+      'estrategia': { en: 'strategy', pt: 'estratégia', ar: 'استراتيجية', ja: '戦略', tr: 'strateji', es: 'estrategia' },
+      'vino tinto': { en: 'red wine', pt: 'vinho tinto', ar: 'نبيذ أحمر', ja: '赤ワイン', tr: 'kırmızı şarap', es: 'vino tinto' },
+      'música': { en: 'music', pt: 'música', ar: 'الموسيقى', ja: '音楽', tr: 'müzik', es: 'música' },
+      'pintura al óleo': { en: 'oil painting', pt: 'pintura a óleo', ar: 'رسم زيتي', ja: '油絵', tr: 'yağlı boya', es: 'pintura al óleo' },
+      'retratos': { en: 'portraits', pt: 'retratos', ar: 'بورتريهات', ja: 'ポートレート', tr: 'portreler', es: 'retratos' },
+      'literatura gótica': { en: 'gothic literature', pt: 'literatura gótica', ar: 'أدب قوطي', ja: 'ゴシック文学', tr: 'gotik edebiyat', es: 'literatura gótica' },
+      'vino': { en: 'wine', pt: 'vinho', ar: 'نبيذ', ja: 'ワイン', tr: 'şarap', es: 'vino' },
+      'moda alternativa': { en: 'alternative fashion', pt: 'moda alternativa', ar: 'موضة بديلة', ja: 'オルタナ系ファッション', tr: 'alternatif moda', es: 'moda alternativa' },
+      'charlas inspiradoras': { en: 'inspiring talks', pt: 'palestras inspiradoras', ar: 'أحاديث ملهمة', ja: 'インスパイアなトーク', tr: 'ilham verici konuşmalar', es: 'charlas inspiradoras' },
+    };
+    return dict[key]?.[L] || s;
   }
   const COUNTRY_TO_CODE: Record<string, string> = {
     "Italia": "IT",
@@ -416,8 +476,9 @@ function ModelCardWithAccessComponent({
                     else if (model.id === '24') connectorKey = 'inspirada_por';
                   }
                   const connector = translateConnector(connectorKey || 'amante_de');
-                  const likeTarget = language === 'es' ? (connectorKey?.endsWith('_del') ? noArticle : like0) : noArticle;
-                  const like = `${connector} ${likeTarget} ${emojiForPhrase(like0)}`.trim();
+                  const baseTarget = language === 'es' ? (connectorKey?.endsWith('_del') ? noArticle : like0) : noArticle;
+                  const likeTargetLocalized = translateLikeTarget(baseTarget);
+                  const like = `${connector} ${likeTargetLocalized} ${emojiForPhrase(like0)}`.trim();
                   attrs.push(like);
                 }
                 return attrs.join(' • ');
