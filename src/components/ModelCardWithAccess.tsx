@@ -299,7 +299,20 @@ function ModelCardWithAccessComponent({
                   attrs.push(toneTxt);
                 }
                 if (persona?.likes && persona.likes.length) {
-                  const like = `${capitalizeFirst(persona.likes[0])} ${emojiForPhrase(persona.likes[0])}`.trim();
+                  const like0 = String(persona.likes[0]).trim();
+                  let likePhrase = '';
+                  if (isFirstFour) {
+                    if (model.id === '1') { // Victoria
+                      likePhrase = `Amante de ${like0}`;
+                    } else if (model.id === '2') { // Luna
+                      likePhrase = `Enamorada del ${like0.replace(/^el\s+/i, '').trim()}`;
+                    } else if (model.id === '3') { // Ginger
+                      likePhrase = `Apasionada por ${like0}`;
+                    } else if (model.id === '4') { // Beauty
+                      likePhrase = `Le encantan ${like0.replace(/^las\s+/i, 'las ').replace(/^los\s+/i, 'los ').trim()}`;
+                    }
+                  }
+                  const like = `${likePhrase || capitalizeFirst(like0)} ${emojiForPhrase(like0)}`.trim();
                   attrs.push(like);
                 }
                 return attrs.join(' • ');
