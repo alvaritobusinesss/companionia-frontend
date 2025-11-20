@@ -22,7 +22,7 @@ function ModelCardWithAccessComponent({
   onSelect, 
   onPurchase 
 }: ModelCardWithAccessProps) {
-  const { t, ta } = useTranslation();
+  const { t, ta, language } = useTranslation();
   const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
   const [visible, setVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -48,6 +48,76 @@ function ModelCardWithAccessComponent({
     const parts = String(cityField).split(",");
     const country = parts[1]?.trim() || null;
     return country;
+  }
+
+  // Traducciones ligeras para atributos
+  function translateConnector(key: string): string {
+    const L = language;
+    const map: Record<string, Record<string, string>> = {
+      amante_de: { es: 'Amante de', en: 'Loves', ar: 'تعشق', ja: '〜が大好き', pt: 'Amante de', tr: 'Bayılır' },
+      enamorada_del: { es: 'Enamorada del', en: 'In love with', ar: 'واقعة في حب', ja: 'に恋している', pt: 'Apaixonada por', tr: 'Aşık' },
+      enamorada_de: { es: 'Enamorada de', en: 'In love with', ar: 'واقعة في حب', ja: 'に恋している', pt: 'Apaixonada por', tr: 'Aşık' },
+      apasionada_por: { es: 'Apasionada por', en: 'Passionate about', ar: 'شغوفة بـ', ja: 'に情熱的', pt: 'Apaixonada por', tr: 'Tutkulu olduğu' },
+      le_encantan: { es: 'Le encantan', en: 'She loves', ar: 'تعشق', ja: '大好き', pt: 'Adora', tr: 'Çok sever' },
+      fan_de: { es: 'Fan de', en: 'Fan of', ar: 'من معجبي', ja: 'ファン', pt: 'Fã de', tr: 'Hayranı' },
+      devota_del: { es: 'Devota del', en: 'Devoted to', ar: 'مخلصة لـ', ja: 'に献身的', pt: 'Devota de', tr: 'Adanmış' },
+      devota_de: { es: 'Devota de', en: 'Devoted to', ar: 'مخلصة لـ', ja: 'に献身的', pt: 'Devota de', tr: 'Adanmış' },
+      entusiasta_del: { es: 'Entusiasta del', en: 'Enthusiast of', ar: 'شغوف بـ', ja: '愛好家', pt: 'Entusiasta de', tr: 'Meraklısı' },
+      le_inspira: { es: 'Le inspira', en: 'Inspired by', ar: 'تستمد الإلهام من', ja: 'にインスパイアされる', pt: 'Inspirada por', tr: 'İlham alır' },
+      fascinada_por: { es: 'Fascinada por', en: 'Fascinated by', ar: 'مفتونة بـ', ja: 'に魅了される', pt: 'Fascinada por', tr: 'Büyülenmiş' },
+      obsesionada_con: { es: 'Obsesionada con', en: 'Obsessed with', ar: 'مهووسة بـ', ja: 'に夢中', pt: 'Obcecada por', tr: 'Takıntılı' },
+      disfruta_de: { es: 'Disfruta de', en: 'Enjoys', ar: 'تستمتع بـ', ja: 'を楽しむ', pt: 'Gosta de', tr: 'Sever' },
+      experta_en: { es: 'Experta en', en: 'Expert in', ar: 'خبيرة في', ja: 'に詳しい', pt: 'Especialista em', tr: 'Uzman' },
+      inspirada_por: { es: 'Inspirada por', en: 'Inspired by', ar: 'مستوحاة من', ja: 'にインスパイア', pt: 'Inspirada por', tr: 'İlham alan' },
+    };
+    return (map[key]?.[L] || map[key]?.es || '').trim();
+  }
+
+  function translateProfession(s?: string): string {
+    if (!s) return '';
+    const L = language;
+    const key = s.toLowerCase();
+    const dict: Record<string, Record<string, string>> = {
+      'fotógrafa freelance': { en: 'Freelance photographer', pt: 'Fotógrafa freelancer', ar: 'مصورة حرة', ja: 'フリーランス写真家', tr: 'Serbest fotoğrafçı', es: 'Fotógrafa freelance' },
+      'profesora de arte': { en: 'Art teacher', pt: 'Professora de arte', ar: 'معلمة فنون', ja: '美術教師', tr: 'Sanat öğretmeni', es: 'Profesora de arte' },
+      'escritora de cuentos cortos': { en: 'Short story writer', pt: 'Escritora de contos', ar: 'كاتبة قصص قصيرة', ja: '短編作家', tr: 'Kısa öykü yazarı', es: 'Escritora de cuentos cortos' },
+      'florista': { en: 'Florist', pt: 'Florista', ar: 'بائعة زهور', ja: 'フローリスト', tr: 'Çiçekçi', es: 'Florista' },
+      'streamer': { en: 'Streamer', pt: 'Streamer', ar: 'ستريمر', ja: '配信者', tr: 'Yayıncı', es: 'Streamer' },
+      'desarrolladora indie': { en: 'Indie game developer', pt: 'Desenvolvedora indie', ar: 'مطورة ألعاب مستقلة', ja: 'インディー開発者', tr: 'Indie geliştirici', es: 'Desarrolladora indie' },
+      'artista conceptual': { en: 'Concept artist', pt: 'Artista conceitual', ar: 'فنانة مفاهيم', ja: 'コンセプトアーティスト', tr: 'Konsept sanatçısı', es: 'Artista conceptual' },
+      'coach esports': { en: 'eSports coach', pt: 'Treinadora de eSports', ar: 'مدربة رياضات إلكترونية', ja: 'eスポーツコーチ', tr: 'eSpor koçu', es: 'Coach eSports' },
+      'diseñadora de moda': { en: 'Fashion designer', pt: 'Designer de moda', ar: 'مصممة أزياء', ja: 'ファッションデザイナー', tr: 'Moda tasarımcısı', es: 'Diseñadora de moda' },
+      'productora de cine': { en: 'Film producer', pt: 'Produtora de cinema', ar: 'منتِجة أفلام', ja: '映画プロデューサー', tr: 'Film yapımcısı', es: 'Productora de cine' },
+      'periodista': { en: 'Journalist', pt: 'Jornalista', ar: 'صحفية', ja: 'ジャーナリスト', tr: 'Gazeteci', es: 'Periodista' },
+      'estudiante': { en: 'Student', pt: 'Estudante', ar: 'طالبة', ja: '学生', tr: 'Öğrenci', es: 'Estudiante' },
+    };
+    const translated = dict[key]?.[L];
+    return translated ? translated : s;
+  }
+
+  function translateTone(text?: string): string {
+    if (!text) return '';
+    const L = language;
+    const tokens = text.toLowerCase().split(/\s*y\s*/); // split by ' y '
+    const toneDict: Record<string, Record<string, string>> = {
+      'romántica': { en: 'romantic', pt: 'romântica', ar: 'رومانسية', ja: 'ロマンチック', tr: 'romantik', es: 'romántica' },
+      'romántico': { en: 'romantic', pt: 'romântico', ar: 'رومانسي', ja: 'ロマンチック', tr: 'romantik', es: 'romántico' },
+      'cálida': { en: 'warm', pt: 'calorosa', ar: 'دافئة', ja: 'あたたかい', tr: 'sıcak', es: 'cálida' },
+      'cálido': { en: 'warm', pt: 'caloroso', ar: 'دافئ', ja: 'あたたかい', tr: 'sıcak', es: 'cálido' },
+      'serena': { en: 'calm', pt: 'serena', ar: 'هادئة', ja: '穏やか', tr: 'sakin', es: 'serena' },
+      'ligera': { en: 'light', pt: 'leve', ar: 'خفيفة', ja: '軽やか', tr: 'hafif', es: 'ligera' },
+      'amable': { en: 'kind', pt: 'amável', ar: 'لطيفة', ja: '優しい', tr: 'nazik', es: 'amable' },
+      'introspectiva': { en: 'introspective', pt: 'introspectiva', ar: 'متأملة', ja: '内省的', tr: 'içe dönük', es: 'introspectiva' },
+      'sensual': { en: 'sensual', pt: 'sensual', ar: 'حسية', ja: '官能的', tr: 'tutkulu', es: 'sensual' },
+      'sofisticada': { en: 'sophisticated', pt: 'sofisticada', ar: 'راقية', ja: '洗練された', tr: 'sofistike', es: 'sofisticada' },
+      'seductora': { en: 'seductive', pt: 'sedutora', ar: 'فاتنة', ja: '魅惑的', tr: 'baştan çıkarıcı', es: 'seductora' },
+      'intelectual': { en: 'intellectual', pt: 'intelectual', ar: 'مثقفة', ja: '知的', tr: 'entelektüel', es: 'intelectual' },
+      'misteriosa': { en: 'mysterious', pt: 'misteriosa', ar: 'غامضة', ja: 'ミステリアス', tr: 'gizemli', es: 'misteriosa' },
+      'elegante': { en: 'elegant', pt: 'elegante', ar: 'أنيقة', ja: 'エレガント', tr: 'zarif', es: 'elegante' },
+      'apasionada': { en: 'passionate', pt: 'apaixonada', ar: 'شغوفة', ja: '情熱的', tr: 'tutkulu', es: 'apasionada' },
+    };
+    const localized = tokens.map(tok => toneDict[tok]?.[L] || tok).join(L === 'en' ? ' & ' : ' y ');
+    return capitalizeFirst(localized);
   }
   const COUNTRY_TO_CODE: Record<string, string> = {
     "Italia": "IT",
