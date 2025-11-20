@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Crown, Lock, Star, CreditCard, User } from "lucide-react";
 import { Model, UserAccess, User as UserType } from "@/hooks/useUserAccess";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getPersonaByName } from "@/data/personas";
 
 interface ModelCardWithAccessProps {
   model: Model;
@@ -29,6 +30,46 @@ function ModelCardWithAccessComponent({
     const url = model.image_url || '';
     return url.endsWith('.jpg') ? url.replace(/\.jpg$/i, '.webp') : url;
   });
+  
+  // Solo para los 4 primeros modelos del catálogo principal (IDs 1–4)
+  const isFirstFour = model.id === "1" || model.id === "2" || model.id === "3" || model.id === "4";
+  const persona = getPersonaByName(model.name);
+
+  // Helpers mínimos para bandera por país (ES -> ISO -> emoji)
+  function countryFromCity(cityField?: string): string | null {
+    if (!cityField) return null;
+    const parts = String(cityField).split(",");
+    const country = parts[1]?.trim() || null;
+    return country;
+  }
+  const COUNTRY_TO_CODE: Record<string, string> = {
+    "Italia": "IT",
+    "Portugal": "PT",
+    "Estados Unidos": "US",
+    "Rusia": "RU",
+    "Alemania": "DE",
+    "Canadá": "CA",
+    "Corea del Sur": "KR",
+    "España": "ES",
+    "República Checa": "CZ",
+    "Hungría": "HU",
+    "Austria": "AT",
+    "Reino Unido": "GB",
+    "Francia": "FR",
+    "Japón": "JP",
+    "Suecia": "SE",
+    "Argentina": "AR",
+  };
+  function emojiFlagFromCode(code?: string | null): string | null {
+    if (!code) return null;
+    const cc = code.toUpperCase();
+    if (cc.length !== 2) return null;
+    const A = 127397; // regional indicator base
+    return String.fromCodePoint(cc.charCodeAt(0) + A) + String.fromCodePoint(cc.charCodeAt(1) + A);
+  }
+  const countryName = countryFromCity(persona?.city);
+  const countryCode = countryName ? COUNTRY_TO_CODE[countryName] : undefined;
+  const flagEmoji = emojiFlagFromCode(countryCode) || null;
   
   const handleClick = () => {
     if (userAccess.hasAccess) {
@@ -205,23 +246,33 @@ function ModelCardWithAccessComponent({
               return localized === key ? model.description : localized;
             })()}
           </p>
+
+          {/* Línea meta: bandera + ciudad, solo para los 4 primeros */}
+          {isFirstFour && persona?.city && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 min-h-[16px]">
+              {flagEmoji && <span aria-hidden>{flagEmoji}</span>}
+              <span className="truncate">{persona.city}</span>
+            </div>
+          )}
           
-          {/* Tags traducidos */}
-          <div className="flex flex-wrap gap-1 mb-3 min-h-[28px]">
-            {(() => {
-              const localized = ta(`models.${model.id}.tags`);
-              const tags = (localized && localized.length > 0) ? localized : model.tags;
-              return (tags as string[]).slice(0, 3).map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="text-xs px-2 py-1"
-                >
-                  {tag}
-                </Badge>
-              ));
-            })()}
-          </div>
+          {/* Tags: ocultar para los 4 primeros; mantener para el resto */}
+          {!isFirstFour && (
+            <div className="flex flex-wrap gap-1 mb-3 min-h-[28px]">
+              {(() => {
+                const localized = ta(`models.${model.id}.tags`);
+                const tags = (localized && localized.length > 0) ? localized : model.tags;
+                return (tags as string[]).slice(0, 3).map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="text-xs px-2 py-1"
+                  >
+                    {tag}
+                  </Badge>
+                ));
+              })()}
+            </div>
+          )}
 
           {/* Botón de acción */}
           <Button 
