@@ -35,7 +35,10 @@ function ModelCardWithAccessComponent({
   const isEnhancedCard = (
     model.id === "1" || model.id === "2" || model.id === "3" || model.id === "4" ||
     model.id === "5" || model.id === "6" || model.id === "7" || model.id === "8" ||
-    model.id === "17" || model.id === "18" || model.id === "19" || model.id === "20"
+    model.id === "9" || model.id === "10" || model.id === "11" || model.id === "12" ||
+    model.id === "13" || model.id === "14" || model.id === "15" || model.id === "16" ||
+    model.id === "17" || model.id === "18" || model.id === "19" || model.id === "20" ||
+    model.id === "21" || model.id === "22" || model.id === "23" || model.id === "24"
   );
   const persona = getPersonaByName(model.name);
 
@@ -117,6 +120,9 @@ function ModelCardWithAccessComponent({
     if (x.includes('foto') || x.includes('fotógraf')) return '📸';
     if (x.includes('moda') || x.includes('diseñ')) return '👗';
     if (x.includes('arte') || x.includes('pint')) return '🎨';
+    if (x.includes('ópera') || x.includes('opera')) return '🎼';
+    if (x.includes('museo') || x.includes('galería') || x.includes('galeria')) return '🏛️';
+    if (x.includes('perfume')) return '💄';
     if (x.includes('vino')) return '🍷';
     if (x.includes('gato')) return '🐱';
     if (x.includes('juego') || x.includes('gamer') || x.includes('indie')) return '🎮';
@@ -327,6 +333,22 @@ function ModelCardWithAccessComponent({
                       likePhrase = `Entusiasta del ${like0.replace(/^el\s+/i, '').trim()}`;
                     } else if (model.id === '8') { // Reyna
                       likePhrase = `Le inspira ${like0}`;
+                    } else if (model.id === '9') { // Nocturne
+                      likePhrase = `Fascinada por ${like0}`;
+                    } else if (model.id === '10') { // Erit
+                      likePhrase = `Amante de ${like0}`;
+                    } else if (model.id === '11') { // Vanth
+                      likePhrase = `Apasionada por ${like0}`;
+                    } else if (model.id === '12') { // Belladonna
+                      likePhrase = `Devota de ${like0}`;
+                    } else if (model.id === '13') { // Renata
+                      likePhrase = `Amante de ${like0}`;
+                    } else if (model.id === '14') { // Bianca
+                      likePhrase = `Disfruta de ${like0}`;
+                    } else if (model.id === '15') { // Aiko
+                      likePhrase = `Enamorada de ${like0}`;
+                    } else if (model.id === '16') { // Paris
+                      likePhrase = `Experta en ${like0}`;
                     } else if (model.id === '17') { // Chloe
                       likePhrase = `Fan de ${like0}`;
                     } else if (model.id === '18') { // Sasha
@@ -335,6 +357,14 @@ function ModelCardWithAccessComponent({
                       likePhrase = `Obsesionada con ${like0}`;
                     } else if (model.id === '20') { // Rebecca
                       likePhrase = `Enamorada de ${like0}`;
+                    } else if (model.id === '21') { // Ahri
+                      likePhrase = `Amante de ${like0}`;
+                    } else if (model.id === '22') { // Asuma
+                      likePhrase = `Devota de ${like0}`;
+                    } else if (model.id === '23') { // Raven
+                      likePhrase = `Obsesionada con ${like0}`;
+                    } else if (model.id === '24') { // Arya
+                      likePhrase = `Inspirada por ${like0}`;
                     }
                   }
                   const like = `${likePhrase || capitalizeFirst(like0)} ${emojiForPhrase(like0)}`.trim();
