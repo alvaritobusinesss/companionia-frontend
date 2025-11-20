@@ -31,8 +31,11 @@ function ModelCardWithAccessComponent({
     return url.endsWith('.jpg') ? url.replace(/\.jpg$/i, '.webp') : url;
   });
   
-  // Solo para los 4 primeros modelos del catálogo principal (IDs 1–4)
-  const isFirstFour = model.id === "1" || model.id === "2" || model.id === "3" || model.id === "4";
+  // Modelos con ficha enriquecida (atributos + nacionalidad + sin chips)
+  const isEnhancedCard = (
+    model.id === "1" || model.id === "2" || model.id === "3" || model.id === "4" ||
+    model.id === "17" || model.id === "18" || model.id === "19" || model.id === "20"
+  );
   const persona = getPersonaByName(model.name);
 
   // Helpers mínimos para bandera por país (ES -> ISO -> emoji)
@@ -287,7 +290,7 @@ function ModelCardWithAccessComponent({
             {model.name}
           </h3>
           
-          {isFirstFour ? (
+          {isEnhancedCard ? (
             // Atributos compactos (profesión • tono • afición)
             <p className="text-sm text-foreground/90 mb-3 min-h-[60px] line-clamp-3">
               {(() => {
@@ -303,7 +306,7 @@ function ModelCardWithAccessComponent({
                 if (persona?.likes && persona.likes.length) {
                   const like0 = String(persona.likes[0]).trim();
                   let likePhrase = '';
-                  if (isFirstFour) {
+                  if (isEnhancedCard) {
                     if (model.id === '1') { // Victoria
                       likePhrase = `Amante de ${like0}`;
                     } else if (model.id === '2') { // Luna
@@ -312,6 +315,14 @@ function ModelCardWithAccessComponent({
                       likePhrase = `Apasionada por ${like0}`;
                     } else if (model.id === '4') { // Beauty
                       likePhrase = `Le encantan ${like0.replace(/^las\s+/i, 'las ').replace(/^los\s+/i, 'los ').trim()}`;
+                    } else if (model.id === '17') { // Chloe
+                      likePhrase = `Fan de ${like0}`;
+                    } else if (model.id === '18') { // Sasha
+                      likePhrase = `Devota del ${like0.replace(/^el\s+/i, '').trim()}`;
+                    } else if (model.id === '19') { // Alessia
+                      likePhrase = `Obsesionada con ${like0}`;
+                    } else if (model.id === '20') { // Rebecca
+                      likePhrase = `Enamorada de ${like0}`;
                     }
                   }
                   const like = `${likePhrase || capitalizeFirst(like0)} ${emojiForPhrase(like0)}`.trim();
@@ -331,15 +342,15 @@ function ModelCardWithAccessComponent({
           )}
 
           {/* Línea meta: bandera + ciudad, solo para los 4 primeros */}
-          {isFirstFour && persona?.city && (
+          {isEnhancedCard && persona?.city && (
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2 min-h-[16px]">
               {flagEmoji && <span aria-hidden>{flagEmoji}</span>}
               <span className="truncate">{persona.city}</span>
             </div>
           )}
           
-          {/* Tags: ocultar para los 4 primeros; mantener para el resto */}
-          {!isFirstFour && (
+          {/* Tags: ocultar para las tarjetas enriquecidas; mantener para el resto */}
+          {!isEnhancedCard && (
             <div className="flex flex-wrap gap-1 mb-3 min-h-[28px]">
               {(() => {
                 const localized = ta(`models.${model.id}.tags`);
