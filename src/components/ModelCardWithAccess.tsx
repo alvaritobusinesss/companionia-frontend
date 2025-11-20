@@ -70,6 +70,52 @@ function ModelCardWithAccessComponent({
   const countryName = countryFromCity(persona?.city);
   const countryCode = countryName ? COUNTRY_TO_CODE[countryName] : undefined;
   const flagEmoji = emojiFlagFromCode(countryCode) || null;
+
+  // Helpers para atributos mostrados (solo primeros 4)
+  function capitalizeFirst(s?: string) {
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function feminizeTone(text?: string) {
+    if (!text) return '';
+    const map: Record<string, string> = {
+      'romántico': 'romántica',
+      'cálido': 'cálida',
+      'sereno': 'serena',
+      'ligero': 'ligera',
+      'amable': 'amable',
+      'introspectivo': 'introspectiva',
+      'dominante': 'dominante',
+      'seguro': 'segura',
+      'profundo': 'profunda',
+      'oscuro': 'oscura',
+      'poético': 'poética',
+      'sofisticado': 'sofisticada',
+      'intelectual': 'intelectual',
+      'juguetón': 'juguetona',
+      'atractivo': 'atractiva',
+    };
+    let out = ' ' + text.toLowerCase() + ' ';
+    Object.entries(map).forEach(([k, v]) => {
+      out = out.replace(new RegExp(`\\b${k}\\b`, 'g'), v);
+    });
+    return out.trim();
+  }
+  function emojiForPhrase(s?: string) {
+    const x = (s || '').toLowerCase();
+    if (x.includes('café')) return '☕️';
+    if (x.includes('mar') || x.includes('playa')) return '🌊';
+    if (x.includes('literatura') || x.includes('libro')) return '📚';
+    if (x.includes('flores') || x.includes('flor')) return '🌸';
+    if (x.includes('música') || x.includes('jazz')) return '🎵';
+    if (x.includes('foto') || x.includes('fotógraf')) return '📸';
+    if (x.includes('moda') || x.includes('diseñ')) return '👗';
+    if (x.includes('arte') || x.includes('pint')) return '🎨';
+    if (x.includes('vino')) return '🍷';
+    if (x.includes('gato')) return '🐱';
+    if (x.includes('juego')) return '🎮';
+    return '✨';
+  }
   
   const handleClick = () => {
     if (userAccess.hasAccess) {
@@ -244,9 +290,18 @@ function ModelCardWithAccessComponent({
             <p className="text-sm text-foreground/90 mb-3 min-h-[48px] line-clamp-2">
               {(() => {
                 const attrs: string[] = [];
-                if (persona?.profession) attrs.push(persona.profession);
-                if (persona?.toneBase) attrs.push(persona.toneBase);
-                if (persona?.likes && persona.likes.length) attrs.push(persona.likes[0]);
+                if (persona?.profession) {
+                  const prof = `${capitalizeFirst(persona.profession)} ${emojiForPhrase(persona.profession)}`.trim();
+                  attrs.push(prof);
+                }
+                if (persona?.toneBase) {
+                  const toneTxt = capitalizeFirst(feminizeTone(persona.toneBase));
+                  attrs.push(toneTxt);
+                }
+                if (persona?.likes && persona.likes.length) {
+                  const like = `${capitalizeFirst(persona.likes[0])} ${emojiForPhrase(persona.likes[0])}`.trim();
+                  attrs.push(like);
+                }
                 return attrs.join(' • ');
               })()}
             </p>
