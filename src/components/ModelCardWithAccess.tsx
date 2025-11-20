@@ -287,7 +287,7 @@ function ModelCardWithAccessComponent({
           
           {isFirstFour ? (
             // Atributos compactos (profesión • tono • afición)
-            <p className="text-sm text-foreground/90 mb-3 min-h-[48px] line-clamp-2">
+            <p className="text-sm text-foreground/90 mb-3 min-h-[60px] line-clamp-3">
               {(() => {
                 const attrs: string[] = [];
                 if (persona?.profession) {
