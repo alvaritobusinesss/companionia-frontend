@@ -23,6 +23,8 @@ function ModelCardWithAccessComponent({
   onPurchase 
 }: ModelCardWithAccessProps) {
   const { t, ta, language } = useTranslation();
+  const uiLang = language;
+  const attrLang = uiLang; // usar siempre el idioma seleccionado por el usuario
   const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
   const [visible, setVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ function ModelCardWithAccessComponent({
 
   // Traducciones ligeras para atributos
   function translateConnector(key: string): string {
-    const L = language;
+    const L = attrLang;
     const map: Record<string, Record<string, string>> = {
       amante_de: { es: 'Amante de', en: 'Loves', ar: 'تعشق', ja: '〜が大好き', pt: 'Amante de', tr: 'Bayılır' },
       enamorada_del: { es: 'Enamorada del', en: 'In love with', ar: 'واقعة في حب', ja: 'に恋している', pt: 'Apaixonada por', tr: 'Aşık' },
@@ -276,6 +278,58 @@ function ModelCardWithAccessComponent({
   const flagEmoji = countryName === 'Escocia'
     ? '🏴'
     : (emojiFlagFromCode(countryName ? COUNTRY_TO_CODE[countryName] : undefined) || null);
+
+  // Localización de ciudad/país para japonés
+  const COUNTRY_JA: Record<string, string> = {
+    'Italia': 'イタリア',
+    'Portugal': 'ポルトガル',
+    'Estados Unidos': 'アメリカ合衆国',
+    'Rusia': 'ロシア',
+    'Alemania': 'ドイツ',
+    'Canadá': 'カナダ',
+    'Corea del Sur': '韓国',
+    'España': 'スペイン',
+    'República Checa': 'チェコ',
+    'Hungría': 'ハンガリー',
+    'Austria': 'オーストリア',
+    'Reino Unido': 'イギリス',
+    'Francia': 'フランス',
+    'Japón': '日本',
+    'Suecia': 'スウェーデン',
+    'Argentina': 'アルゼンチン',
+    'Escocia': 'スコットランド',
+  };
+  const CITY_JA: Record<string, string> = {
+    'Florencia': 'フィレンツェ',
+    'Lisboa': 'リスボン',
+    'Edimburgo': 'エディンバラ',
+    'Niza': 'ニース',
+    'Los Ángeles': 'ロサンゼルス',
+    'Moscú': 'モスクワ',
+    'Milán': 'ミラノ',
+    'Buenos Aires': 'ブエノスアイレス',
+    'Toronto': 'トロント',
+    'Seúl': 'ソウル',
+    'Madrid': 'マドリード',
+    'París': 'パリ',
+    'Roma': 'ローマ',
+    'Kioto': '京都',
+    'Viena': 'ウィーン',
+    'Praga': 'プラハ',
+    'Budapest': 'ブダペスト',
+    'Londres': 'ロンドン',
+    'Barcelona': 'バルセロナ',
+    'Estocolmo': 'ストックホルム',
+  };
+  function localizeCityField(cityField?: string): string | null {
+    if (!cityField) return null;
+    if (uiLang !== 'ja') return cityField;
+    const [cityRaw, countryRaw] = String(cityField).split(',');
+    const city = CITY_JA[(cityRaw || '').trim()] || (cityRaw || '').trim();
+    const country = COUNTRY_JA[(countryRaw || '').trim()] || (countryRaw || '').trim();
+    if (!city && !country) return cityField;
+    return `${city}、${country}`;
+  }
 
   // Helpers para atributos mostrados (solo primeros 4)
   function capitalizeFirst(s?: string) {
@@ -543,9 +597,9 @@ function ModelCardWithAccessComponent({
                     else if (model.id === '24') connectorKey = 'inspirada_por';
                   }
                   const connector = translateConnector(connectorKey || 'amante_de');
-                  const baseTarget = language === 'es' ? (connectorKey?.endsWith('_del') ? noArticle : like0) : noArticle;
+                  const baseTarget = attrLang === 'es' ? (connectorKey?.endsWith('_del') ? noArticle : like0) : noArticle;
                   const likeTargetLocalized = translateLikeTarget(baseTarget);
-                  const like = language === 'ja'
+                  const like = uiLang === 'ja'
                     ? `${likeTargetLocalized}${connector} ${emojiForPhrase(like0)}`.trim()
                     : `${connector} ${likeTargetLocalized} ${emojiForPhrase(like0)}`.trim();
                   attrs.push(like);
@@ -567,7 +621,7 @@ function ModelCardWithAccessComponent({
           {isEnhancedCard && persona?.city && (
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2 min-h-[16px]">
               {flagEmoji && <span aria-hidden>{flagEmoji}</span>}
-              <span className="truncate">{persona.city}</span>
+              <span className="truncate">{localizeCityField(persona.city) || persona.city}</span>
             </div>
           )}
           
