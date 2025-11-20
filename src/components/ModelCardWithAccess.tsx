@@ -239,17 +239,30 @@ function ModelCardWithAccessComponent({
             {model.name}
           </h3>
           
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3 min-h-[48px]">
-            {(() => {
-              const key = `models.${model.id}.description`;
-              const localized = t(key);
-              return localized === key ? model.description : localized;
-            })()}
-          </p>
+          {isFirstFour ? (
+            // Atributos compactos (profesión • tono • afición)
+            <p className="text-sm text-foreground/90 mb-3 min-h-[48px] line-clamp-2">
+              {(() => {
+                const attrs: string[] = [];
+                if (persona?.profession) attrs.push(persona.profession);
+                if (persona?.toneBase) attrs.push(persona.toneBase);
+                if (persona?.likes && persona.likes.length) attrs.push(persona.likes[0]);
+                return attrs.join(' • ');
+              })()}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3 min-h-[48px]">
+              {(() => {
+                const key = `models.${model.id}.description`;
+                const localized = t(key);
+                return localized === key ? model.description : localized;
+              })()}
+            </p>
+          )}
 
           {/* Línea meta: bandera + ciudad, solo para los 4 primeros */}
           {isFirstFour && persona?.city && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 min-h-[16px]">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2 min-h-[16px]">
               {flagEmoji && <span aria-hidden>{flagEmoji}</span>}
               <span className="truncate">{persona.city}</span>
             </div>
