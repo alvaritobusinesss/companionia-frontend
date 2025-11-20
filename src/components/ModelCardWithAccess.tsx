@@ -86,6 +86,7 @@ function ModelCardWithAccessComponent({
       'desarrolladora indie': { en: 'Indie game developer', pt: 'Desenvolvedora indie', ar: 'مطورة ألعاب مستقلة', ja: 'インディー開発者', tr: 'Indie geliştirici', es: 'Desarrolladora indie' },
       'artista conceptual': { en: 'Concept artist', pt: 'Artista conceitual', ar: 'فنانة مفاهيم', ja: 'コンセプトアーティスト', tr: 'Konsept sanatçısı', es: 'Artista conceptual' },
       'coach esports': { en: 'eSports coach', pt: 'Treinadora de eSports', ar: 'مدربة رياضات إلكترونية', ja: 'eスポーツコーチ', tr: 'eSpor koçu', es: 'Coach eSports' },
+      'coach de equipos esports': { en: 'eSports team coach', pt: 'Treinadora de equipe de eSports', ar: 'مدربة فريق رياضات إلكترونية', ja: 'eスポーツチームコーチ', tr: 'eSpor takım koçu', es: 'Coach de equipos eSports' },
       'diseñadora de moda': { en: 'Fashion designer', pt: 'Designer de moda', ar: 'مصممة أزياء', ja: 'ファッションデザイナー', tr: 'Moda tasarımcısı', es: 'Diseñadora de moda' },
       'productora de cine': { en: 'Film producer', pt: 'Produtora de cinema', ar: 'منتِجة أفلام', ja: '映画プロデューサー', tr: 'Film yapımcısı', es: 'Productora de cine' },
       'productora de cine independiente': { en: 'Independent film producer', pt: 'Produtora de cinema independente', ar: 'منتِجة أفلام مستقلة', ja: 'インディー映画プロデューサー', tr: 'Bağımsız film yapımcısı', es: 'Productora de cine independiente' },
@@ -103,6 +104,11 @@ function ModelCardWithAccessComponent({
       'investigadora de literatura comparada': { en: 'Comparative literature researcher', pt: 'Pesquisadora de literatura comparada', ar: 'باحثة في الأدب المقارن', ja: '比較文学研究者', tr: 'Karşılaştırmalı edebiyat araştırmacısı', es: 'Investigadora de literatura comparada' },
       'ilustradora y crítica cultural': { en: 'Illustrator and cultural critic', pt: 'Ilustradora e crítica cultural', ar: 'رسامة وناقدة ثقافية', ja: 'イラストレーター・文化批評家', tr: 'İllüstratör ve kültür eleştirmeni', es: 'Ilustradora y crítica cultural' },
       'mentora y conferencista en innovación y pensamiento crítico': { en: 'Mentor and speaker in innovation and critical thinking', pt: 'Mentora e palestrante em inovação e pensamento crítico', ar: 'مرشدة ومحاضِرة في الابتكار والتفكير النقدي', ja: 'イノベーションと批判的思考のメンター・講演者', tr: 'İnovasyon ve eleştirel düşünce mentoru ve konuşmacı', es: 'Mentora y conferencista en innovación y pensamiento crítico' },
+      'organizadora de eventos': { en: 'Event organizer', pt: 'Organizadora de eventos', ar: 'منظمة فعاليات', ja: 'イベント主催者', tr: 'Etkinlik organizatörü', es: 'Organizadora de eventos' },
+      'directora artística': { en: 'Art director', pt: 'Diretora de arte', ar: 'مديرة فنية', ja: 'アートディレクター', tr: 'Sanat direktörü', es: 'Directora artística' },
+      'estudiante de filosofía': { en: 'Philosophy student', pt: 'Estudante de filosofia', ar: 'طالبة فلسفة', ja: '哲学の学生', tr: 'Felsefe öğrencisi', es: 'Estudiante de filosofía' },
+      'investigadora': { en: 'Researcher', pt: 'Pesquisadora', ar: 'باحثة', ja: '研究者', tr: 'Araştırmacı', es: 'Investigadora' },
+      'ilustradora': { en: 'Illustrator', pt: 'Ilustradora', ar: 'رسامة', ja: 'イラストレーター', tr: 'İllüstratör', es: 'Ilustradora' },
     };
     const translated = dict[key]?.[L];
     return translated ? translated : s;
@@ -111,12 +117,22 @@ function ModelCardWithAccessComponent({
   function translateTone(text?: string): string {
     if (!text) return '';
     const L = language;
-    const tokens = text.toLowerCase().split(/\s*y\s*/); // split by ' y '
+    // Normaliza separadores: ' y ', 'pero', '&', ',', '/', '•' -> '|'
+    const normalized = text
+      .toLowerCase()
+      .replace(/\s*pero\s*/g, '|')
+      .replace(/\s*y\s*/g, '|')
+      .replace(/[,&/•]+/g, '|');
+    const rawTokens = normalized.split('|').map(s => s.trim()).filter(Boolean);
     const toneDict: Record<string, Record<string, string>> = {
       'romántica': { en: 'romantic', pt: 'romântica', ar: 'رومانسية', ja: 'ロマンチック', tr: 'romantik', es: 'romántica' },
+      'romantica': { en: 'romantic', pt: 'romântica', ar: 'رومانسية', ja: 'ロマンチック', tr: 'romantik', es: 'romántica' },
       'romántico': { en: 'romantic', pt: 'romântico', ar: 'رومانسي', ja: 'ロマンチック', tr: 'romantik', es: 'romántico' },
+      'romantico': { en: 'romantic', pt: 'romântico', ar: 'رومانسي', ja: 'ロマンチック', tr: 'romantik', es: 'romántico' },
       'cálida': { en: 'warm', pt: 'calorosa', ar: 'دافئة', ja: 'あたたかい', tr: 'sıcak', es: 'cálida' },
+      'calida': { en: 'warm', pt: 'calorosa', ar: 'دافئة', ja: 'あたたかい', tr: 'sıcak', es: 'cálida' },
       'cálido': { en: 'warm', pt: 'caloroso', ar: 'دافئ', ja: 'あたたかい', tr: 'sıcak', es: 'cálido' },
+      'calido': { en: 'warm', pt: 'caloroso', ar: 'دافئ', ja: 'あたたかい', tr: 'sıcak', es: 'cálido' },
       'serena': { en: 'calm', pt: 'serena', ar: 'هادئة', ja: '穏やか', tr: 'sakin', es: 'serena' },
       'ligera': { en: 'light', pt: 'leve', ar: 'خفيفة', ja: '軽やか', tr: 'hafif', es: 'ligera' },
       'amable': { en: 'kind', pt: 'amável', ar: 'لطيفة', ja: '優しい', tr: 'nazik', es: 'amable' },
@@ -124,6 +140,7 @@ function ModelCardWithAccessComponent({
       'sensual': { en: 'sensual', pt: 'sensual', ar: 'حسية', ja: '官能的', tr: 'tutkulu', es: 'sensual' },
       'sofisticada': { en: 'sophisticated', pt: 'sofisticada', ar: 'راقية', ja: '洗練された', tr: 'sofistike', es: 'sofisticada' },
       'seductora': { en: 'seductive', pt: 'sedutora', ar: 'فاتنة', ja: '魅惑的', tr: 'baştan çıkarıcı', es: 'seductora' },
+      'seductor': { en: 'seductive', pt: 'sedutor', ar: 'فاتن', ja: '魅惑的', tr: 'baştan çıkarıcı', es: 'seductor' },
       'intelectual': { en: 'intellectual', pt: 'intelectual', ar: 'مثقفة', ja: '知的', tr: 'entelektüel', es: 'intelectual' },
       'misteriosa': { en: 'mysterious', pt: 'misteriosa', ar: 'غامضة', ja: 'ミステリアス', tr: 'gizemli', es: 'misteriosa' },
       'elegante': { en: 'elegant', pt: 'elegante', ar: 'أنيقة', ja: 'エレガント', tr: 'zarif', es: 'elegante' },
@@ -132,32 +149,63 @@ function ModelCardWithAccessComponent({
       'motivadora': { en: 'motivating', pt: 'motivadora', ar: 'محفزة', ja: 'モチベーター', tr: 'motive edici', es: 'motivadora' },
       'relajada': { en: 'relaxed', pt: 'relaxada', ar: 'مسترخية', ja: 'リラックス', tr: 'rahat', es: 'relajada' },
       'técnica': { en: 'technical', pt: 'técnica', ar: 'تقنية', ja: 'テクニカル', tr: 'teknik', es: 'técnica' },
+      'tecnica': { en: 'technical', pt: 'técnica', ar: 'تقنية', ja: 'テクニカル', tr: 'teknik', es: 'técnica' },
       'poética': { en: 'poetic', pt: 'poética', ar: 'شعرية', ja: '詩的', tr: 'şiirsel', es: 'poética' },
+      'poetica': { en: 'poetic', pt: 'poética', ar: 'شعرية', ja: '詩的', tr: 'şiirsel', es: 'poética' },
       'minimalista': { en: 'minimalist', pt: 'minimalista', ar: 'بسيطة', ja: 'ミニマル', tr: 'minimalist', es: 'minimalista' },
       'racional': { en: 'rational', pt: 'racional', ar: 'عقلانية', ja: '理性的', tr: 'rasyonel', es: 'racional' },
       'inspiradora': { en: 'inspiring', pt: 'inspiradora', ar: 'ملهمة', ja: 'インスピレーション', tr: 'ilham verici', es: 'inspiradora' },
       'calmada': { en: 'calm', pt: 'calma', ar: 'هادئة', ja: '落ち着いた', tr: 'sakin', es: 'calmada' },
       'visual': { en: 'visual', pt: 'visual', ar: 'بصرية', ja: 'ビジュアル', tr: 'görsel', es: 'visual' },
+      'oscura': { en: 'dark', pt: 'sombria', ar: 'داكنة', ja: 'ダーク', tr: 'karanlık', es: 'oscura' },
+      'profunda': { en: 'profound', pt: 'profunda', ar: 'عميقة', ja: '深い', tr: 'derin', es: 'profunda' },
+      'emocional': { en: 'emotional', pt: 'emocional', ar: 'عاطفية', ja: 'エモーショナル', tr: 'duygusal', es: 'emocional' },
+      'sabia': { en: 'wise', pt: 'sábia', ar: 'حكيمة', ja: '賢い', tr: 'bilge', es: 'sabia' },
+      'enigmática': { en: 'enigmatic', pt: 'enigmática', ar: 'غامضة', ja: '謎めいた', tr: 'gizemli', es: 'enigmática' },
+      'dominante': { en: 'dominant', pt: 'dominante', ar: 'مهيمنة', ja: 'ドミナント', tr: 'baskın', es: 'dominante' },
+      'encantadora': { en: 'charming', pt: 'encantadora', ar: 'ساحرة', ja: '魅力的', tr: 'çekici', es: 'encantadora' },
+      'encantador': { en: 'charming', pt: 'encantador', ar: 'ساحر', ja: '魅力的', tr: 'çekici', es: 'encantador' },
+      'joven': { en: 'young', pt: 'jovem', ar: 'شابّة', ja: '若々しい', tr: 'genç', es: 'joven' },
+      'enérgica': { en: 'energetic', pt: 'energética', ar: 'نشيطة', ja: 'エネルギッシュ', tr: 'enerjik', es: 'enérgica' },
+      'energica': { en: 'energetic', pt: 'energética', ar: 'نشيطة', ja: 'エネルギッシュ', tr: 'enerjik', es: 'enérgica' },
+      'tranquila': { en: 'calm', pt: 'tranquila', ar: 'هادئة', ja: '落ち着いた', tr: 'sakin', es: 'tranquila' },
+      'reflexiva': { en: 'reflective', pt: 'reflexiva', ar: 'تأملية', ja: '思慮深い', tr: 'düşünceli', es: 'reflexiva' },
+      'positiva': { en: 'positive', pt: 'positiva', ar: 'إيجابية', ja: '前向き', tr: 'pozitif', es: 'positiva' },
+      'directa': { en: 'direct', pt: 'direta', ar: 'مباشرة', ja: '率直', tr: 'doğrudan', es: 'directa' },
+      'atrevido': { en: 'bold', pt: 'ousado', ar: 'جريء', ja: '大胆', tr: 'cesur', es: 'atrevido' },
+      'jugueton': { en: 'playful', pt: 'brincalhão', ar: 'لعوب', ja: 'おちゃめ', tr: 'oyuncu', es: 'juguetón' },
+      'juguetón': { en: 'playful', pt: 'brincalhão', ar: 'لعوب', ja: 'おちゃめ', tr: 'oyuncu', es: 'juguetón' },
     };
-    const localized = tokens.map(tok => toneDict[tok]?.[L] || tok).join(L === 'en' ? ' & ' : ' y ');
+    const joiner = L === 'en' ? ' & ' : L === 'pt' ? ' e ' : L === 'tr' ? ' ve ' : L === 'ja' ? ' ・ ' : L === 'ar' ? ' و ' : ' y ';
+    const localized = rawTokens.map(tok => toneDict[tok]?.[L] || tok).join(joiner);
     return capitalizeFirst(localized);
   }
 
   function translateLikeTarget(s?: string): string {
     if (!s) return '';
     const L = language;
-    const key = s.toLowerCase().trim();
+    const raw = s.toLowerCase().trim();
+    const key = raw.replace(/^(el|la|los|las)\s+/i, '').trim();
     const dict: Record<string, Record<string, string>> = {
       'los días de lluvia': { en: 'rainy days', pt: 'dias chuvosos', ar: 'أيام المطر', ja: '雨の日', tr: 'yağmurlu günler', es: 'los días de lluvia' },
       'el mar': { en: 'the sea', pt: 'o mar', ar: 'البحر', ja: '海', tr: 'deniz', es: 'el mar' },
+      'mar': { en: 'sea', pt: 'mar', ar: 'بحر', ja: '海', tr: 'deniz', es: 'mar' },
       'la literatura': { en: 'literature', pt: 'literatura', ar: 'الأدب', ja: '文学', tr: 'edebiyat', es: 'la literatura' },
+      'literatura': { en: 'literature', pt: 'literatura', ar: 'الأدب', ja: '文学', tr: 'edebiyat', es: 'literatura' },
       'las flores': { en: 'flowers', pt: 'flores', ar: 'الزهور', ja: '花', tr: 'çiçekler', es: 'las flores' },
+      'flores': { en: 'flowers', pt: 'flores', ar: 'زهور', ja: '花', tr: 'çiçekler', es: 'flores' },
       'el café': { en: 'coffee', pt: 'café', ar: 'القهوة', ja: 'コーヒー', tr: 'kahve', es: 'el café' },
+      'café': { en: 'coffee', pt: 'café', ar: 'قهوة', ja: 'コーヒー', tr: 'kahve', es: 'café' },
+      'café fuerte': { en: 'strong coffee', pt: 'café forte', ar: 'قهوة قوية', ja: '濃いコーヒー', tr: 'sert kahve', es: 'café fuerte' },
       'café con canela': { en: 'coffee with cinnamon', pt: 'café com canela', ar: 'قهوة بالقرفة', ja: 'シナモンコーヒー', tr: 'tarçınlı kahve', es: 'café con canela' },
       'la moda': { en: 'fashion', pt: 'moda', ar: 'الموضة', ja: 'ファッション', tr: 'moda', es: 'la moda' },
+      'moda': { en: 'fashion', pt: 'moda', ar: 'موضة', ja: 'ファッション', tr: 'moda', es: 'moda' },
       'la estética': { en: 'aesthetics', pt: 'estética', ar: 'الجماليات', ja: '美学', tr: 'estetik', es: 'la estética' },
+      'estética': { en: 'aesthetics', pt: 'estética', ar: 'الجماليات', ja: '美学', tr: 'estetik', es: 'estética' },
       'el cine clásico': { en: 'classic cinema', pt: 'cinema clássico', ar: 'السينما الكلاسيكية', ja: 'クラシック映画', tr: 'klasik sinema', es: 'el cine clásico' },
+      'cine clásico': { en: 'classic cinema', pt: 'cinema clássico', ar: 'السينما الكلاسيكية', ja: 'クラシック映画', tr: 'klasik sinema', es: 'cine clásico' },
       'los videojuegos': { en: 'video games', pt: 'videojogos', ar: 'ألعاب الفيديو', ja: 'ビデオゲーム', tr: 'video oyunları', es: 'los videojuegos' },
+      'videojuegos': { en: 'video games', pt: 'videojogos', ar: 'ألعاب الفيديو', ja: 'ビデオゲーム', tr: 'video oyunları', es: 'videojuegos' },
       'eSports': { en: 'eSports', pt: 'eSports', ar: 'الرياضات الإلكترونية', ja: 'eスポーツ', tr: 'eSpor', es: 'eSports' },
       'puzzles': { en: 'puzzles', pt: 'quebra-cabeças', ar: 'ألعاب الألغاز', ja: 'パズル', tr: 'bulmacalar', es: 'puzzles' },
       'anime': { en: 'anime', pt: 'anime', ar: 'أنمي', ja: 'アニメ', tr: 'anime', es: 'anime' },
@@ -167,17 +215,36 @@ function ModelCardWithAccessComponent({
       'libros': { en: 'books', pt: 'livros', ar: 'الكتب', ja: '本', tr: 'kitaplar', es: 'libros' },
       'ensayos literarios': { en: 'literary essays', pt: 'ensaios literários', ar: 'مقالات أدبية', ja: '文学エッセイ', tr: 'edebi denemeler', es: 'ensayos literarios' },
       'charlas': { en: 'talks', pt: 'palestras', ar: 'أحاديث', ja: 'トーク', tr: 'sohbetler', es: 'charlas' },
+      'charlas ted': { en: 'TED talks', pt: 'palestras TED', ar: 'أحاديث TED', ja: 'TEDトーク', tr: 'TED konuşmaları', es: 'charlas TED' },
       'estrategia': { en: 'strategy', pt: 'estratégia', ar: 'استراتيجية', ja: '戦略', tr: 'strateji', es: 'estrategia' },
       'vino tinto': { en: 'red wine', pt: 'vinho tinto', ar: 'نبيذ أحمر', ja: '赤ワイン', tr: 'kırmızı şarap', es: 'vino tinto' },
       'música': { en: 'music', pt: 'música', ar: 'الموسيقى', ja: '音楽', tr: 'müzik', es: 'música' },
       'pintura al óleo': { en: 'oil painting', pt: 'pintura a óleo', ar: 'رسم زيتي', ja: '油絵', tr: 'yağlı boya', es: 'pintura al óleo' },
+      'óleo': { en: 'oil painting', pt: 'óleo', ar: 'زيتي', ja: '油絵', tr: 'yağlıboya', es: 'óleo' },
       'retratos': { en: 'portraits', pt: 'retratos', ar: 'بورتريهات', ja: 'ポートレート', tr: 'portreler', es: 'retratos' },
       'literatura gótica': { en: 'gothic literature', pt: 'literatura gótica', ar: 'أدب قوطي', ja: 'ゴシック文学', tr: 'gotik edebiyat', es: 'literatura gótica' },
       'vino': { en: 'wine', pt: 'vinho', ar: 'نبيذ', ja: 'ワイン', tr: 'şarap', es: 'vino' },
       'moda alternativa': { en: 'alternative fashion', pt: 'moda alternativa', ar: 'موضة بديلة', ja: 'オルタナ系ファッション', tr: 'alternatif moda', es: 'moda alternativa' },
       'charlas inspiradoras': { en: 'inspiring talks', pt: 'palestras inspiradoras', ar: 'أحاديث ملهمة', ja: 'インスパイアなトーク', tr: 'ilham verici konuşmalar', es: 'charlas inspiradoras' },
+      'champagne': { en: 'champagne', pt: 'champanhe', ar: 'شمبانيا', ja: 'シャンパン', tr: 'şampanya', es: 'champagne' },
+      'poesía': { en: 'poetry', pt: 'poesia', ar: 'شعر', ja: '詩', tr: 'şiir', es: 'poesía' },
+      'ensayos': { en: 'essays', pt: 'ensaios', ar: 'مقالات', ja: 'エッセイ', tr: 'denemeler', es: 'ensayos' },
+      'cenas formales': { en: 'formal dinners', pt: 'jantares formais', ar: 'عشاء رسمي', ja: 'フォーマルディナー', tr: 'resmî yemekler', es: 'cenas formales' },
     };
-    return dict[key]?.[L] || s;
+    if (dict[raw]?.[L]) return dict[raw][L];
+    if (dict[key]?.[L]) return dict[key][L];
+    // Fallback de palabras sueltas comunes
+    const singleMap: Record<string, Record<string,string>> = {
+      'mar': { ja: '海', en: 'sea', pt: 'mar', ar: 'بحر', tr: 'deniz', es: 'mar' },
+      'literatura': { ja: '文学', en: 'literature', pt: 'literatura', ar: 'الأدب', tr: 'edebiyat', es: 'literatura' },
+      'flores': { ja: '花', en: 'flowers', pt: 'flores', ar: 'زهور', tr: 'çiçekler', es: 'flores' },
+      'café': { ja: 'コーヒー', en: 'coffee', pt: 'café', ar: 'قهوة', tr: 'kahve', es: 'café' },
+      'videojuegos': { ja: 'ビデオゲーム', en: 'video games', pt: 'videojogos', ar: 'ألعاب الفيديو', tr: 'video oyunları', es: 'videojuegos' },
+      'música': { ja: '音楽', en: 'music', pt: 'música', ar: 'الموسيقى', tr: 'müzik', es: 'música' },
+      'moda': { ja: 'ファッション', en: 'fashion', pt: 'moda', ar: 'موضة', tr: 'moda', es: 'moda' },
+      'estética': { ja: '美学', en: 'aesthetics', pt: 'estética', ar: 'الجماليات', tr: 'estetik', es: 'estética' },
+    };
+    return singleMap[key]?.[L] || s;
   }
   const COUNTRY_TO_CODE: Record<string, string> = {
     "Italia": "IT",
@@ -478,7 +545,9 @@ function ModelCardWithAccessComponent({
                   const connector = translateConnector(connectorKey || 'amante_de');
                   const baseTarget = language === 'es' ? (connectorKey?.endsWith('_del') ? noArticle : like0) : noArticle;
                   const likeTargetLocalized = translateLikeTarget(baseTarget);
-                  const like = `${connector} ${likeTargetLocalized} ${emojiForPhrase(like0)}`.trim();
+                  const like = language === 'ja'
+                    ? `${likeTargetLocalized}${connector} ${emojiForPhrase(like0)}`.trim()
+                    : `${connector} ${likeTargetLocalized} ${emojiForPhrase(like0)}`.trim();
                   attrs.push(like);
                 }
                 return attrs.join(' • ');
