@@ -44,6 +44,12 @@ const languages = [
     name: 'Turkish',
     flag: '🇹🇷',
     nativeName: 'Türkçe'
+  },
+  {
+    code: 'hi' as SupportedLanguage,
+    name: 'Hindi',
+    flag: '🇮🇳',
+    nativeName: 'हिन्दी'
   }
 ];
 

@@ -139,12 +139,13 @@ export function ChatInterface({
     }
   }
   const subjectId = getSubjectId();
-  const L = (es: string, en: string, ar: string, ja: string, pt?: string, tr?: string) =>
+  const L = (es: string, en: string, ar: string, ja: string, pt?: string, tr?: string, hi?: string) =>
     language === 'en' ? en :
     language === 'ar' ? ar :
     language === 'ja' ? ja :
     language === 'pt' && pt ? pt :
     language === 'tr' && tr ? tr :
+    language === 'hi' && hi ? hi :
     es;
 
   // Cargar estado de uso desde el backend para mostrar contador y bloquear UI si aplica
@@ -248,7 +249,8 @@ export function ChatInterface({
       'هل أنت متأكد أنك تريد حذف الدردشة؟ هذا الإجراء لا يمكن التراجع عنه.',
       'チャットを削除しますか？この操作は元に戻せません。',
       'Tem certeza de que deseja apagar o chat? Esta ação não pode ser desfeita.',
-      'Sohbeti silmek istediğinden emin misin? Bu işlem geri alınamaz.'
+      'Sohbeti silmek istediğinden emin misin? Bu işlem geri alınamaz.',
+      'क्या आप वाकई चैट हटाना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।'
     ));
     if (!confirmClear) return;
     try {
@@ -397,7 +399,7 @@ export function ChatInterface({
         const data = await resp.json();
         if (cancelled) return;
         setConversationId(String(data.conversationId || ''));
-        const opener = String(data.firstAssistantMessage || L('Hola, ¿cómo estás?', 'Hi! How are you?', 'مرحبًا! كيف حالك؟', 'やあ！元気？', 'Oi! Como você está?', 'Selam! Nasılsın?'));
+        const opener = String(data.firstAssistantMessage || L('Hola, ¿cómo estás?', 'Hi! How are you?', 'مرحبًا! كيف حالك؟', 'やあ！元気？', 'Oi! Como você está?', 'Selam! Nasılsın?', 'हाय! कैसे हो?'));
         const initialMessage: Message = { role: 'assistant', content: opener, timestamp: new Date() };
         setMessages((prev): Message[] => {
           const hasUser = prev.some(m => m.role === 'user');
@@ -419,7 +421,7 @@ export function ChatInterface({
         if ((import.meta as any).env?.DEV) console.error('start error', e);
         setMessages((prev): Message[] => {
           if (prev.length === 0) {
-            const next: Message[] = [{ role: 'assistant', content: L('Hola, ¿cómo estás hoy?', 'Hey, how are you today?', 'مرحبًا، كيف حالك اليوم؟', '今日はどう？', 'Oi, como você está hoje?', 'Merhaba, bugün nasılsın?'), timestamp: new Date() }];
+            const next: Message[] = [{ role: 'assistant', content: L('Hola, ¿cómo estás hoy?', 'Hey, how are you today?', 'مرحبًا، كيف حالك اليوم؟', '今日はどう？', 'Oi, como você está hoje?', 'Merhaba, bugün nasılsın?', 'हाय, आज आप कैसे हैं?'), timestamp: new Date() }];
             saveMessages(next);
             return next;
           }
@@ -463,7 +465,8 @@ export function ChatInterface({
         'لقد وصلت إلى الحد اليومي. عد غدًا أو اشترك في بريميوم.',
         '本日の上限に達しました。明日またはプレミアムで。',
         'Você atingiu seu limite diário. Volte amanhã ou torne-se Premium.',
-        'Günlük mesaj limitine ulaştın. Yarın tekrar gel veya Premium ol.'
+        'Günlük mesaj limitine ulaştın. Yarın tekrar gel veya Premium ol.',
+        'आप अपने दैनिक संदेश सीमा तक पहुँच गए हैं। कल वापस आएँ या प्रीमियम लें।'
       ));
       return;
     }
@@ -511,7 +514,7 @@ export function ChatInterface({
       let replyText = '';
       if (resp.ok) {
         const data = await resp.json();
-        replyText = String(data?.reply || L('Te leo. ¿Seguimos?', "I'm here. Shall we continue?", 'أنا معك. نكمل؟', 'いるよ。続けようか？', 'Estou aqui. Seguimos?', 'Buradayım. Devam edelim mi?'));
+        replyText = String(data?.reply || L('Te leo. ¿Seguimos?', "I'm here. Shall we continue?", 'أنا معك. نكمل؟', 'いるよ。続けようか？', 'Estou aqui. Seguimos?', 'Buradayım. Devam edelim mi?', 'मैं यहाँ हूँ। जारी रखें?'));
       } else if (resp.status === 429) {
         try {
           const data = await resp.json();
@@ -524,16 +527,17 @@ export function ChatInterface({
               `لقد وصلت إلى حد اليوم (${data.limit}). عد غدًا أو اشترك في بريميوم لرسائل غير محدودة.`,
               `本日の上限（${data.limit}）に達しました。明日またはプレミアムで無制限に。`,
               `Você atingiu o limite diário (${data.limit}). Volte amanhã ou torne‑se Premium para mensagens ilimitadas.`,
-              `Bugünün limiti (${data.limit}) doldu. Yarın tekrar gel ya da sınırsız mesaj için Premium ol.`
+              `Bugünün limiti (${data.limit}) doldu. Yarın tekrar gel ya da sınırsız mesaj için Premium ol.`,
+              `आप आज की सीमा (${data.limit}) तक पहुँच गए हैं। कल वापस आएँ या अनलिमिटेड संदेशों के लिए प्रीमियम लें।`
             );
           } else {
-            replyText = L('Has alcanzado un límite. Vuelve más tarde o considera hacerte Premium.', 'You hit a limit. Try later or consider Premium.', 'لقد وصلت إلى حد. جرّب لاحقًا أو فكّر في بريميوم.', '制限に達しました。後でもう一度か、プレミアムをご検討ください。', 'Atingiu um limite. Tente mais tarde ou considere o Premium.', 'Bir sınıra ulaştın. Daha sonra dene veya Premium’u düşün.');
+            replyText = L('Has alcanzado un límite. Vuelve más tarde o considera hacerte Premium.', 'You hit a limit. Try later or consider Premium.', 'لقد وصلت إلى حد. جرّب لاحقًا أو فكّر في بريميوم.', '制限に達しました。後でもう一度か、プレミアムをご検討ください。', 'Atingiu um limite. Tente mais tarde ou considere o Premium.', 'Bir sınıra ulaştın. Daha sonra dene veya Premium’u düşün.', 'आप एक सीमा तक पहुँच गए हैं। बाद में प्रयास करें या प्रीमियम पर विचार करें।');
           }
         } catch {
-          replyText = L('Has alcanzado un límite. Vuelve más tarde o considera hacerte Premium.', 'You hit a limit. Try later or consider Premium.', 'لقد وصلت إلى حد. جرّب لاحقًا أو فكّر في بريميوم.', '制限に達しました。後でもう一度か、プレミアムをご検討ください。', 'Atingiu um limite. Tente mais tarde ou considere o Premium.', 'Bir sınıra ulaştın. Daha sonra dene veya Premium’u düşün.');
+          replyText = L('Has alcanzado un límite. Vuelve más tarde o considera hacerte Premium.', 'You hit a limit. Try later or consider Premium.', 'لقد وصلت إلى حد. جرّب لاحقًا أو فكّر في بريميوم.', '制限に達しました。後でもう一度か、プレミアムをご検討ください。', 'Atingiu um limite. Tente mais tarde ou considere o Premium.', 'Bir sınıra ulaştın. Daha sonra dene veya Premium’u düşün.', 'आप एक सीमा तक पहुँच गए हैं। बाद में प्रयास करें या प्रीमियम पर विचार करें।');
         }
       } else {
-        replyText = L('Estoy aquí. ¿Te va si lo vemos por pasos o prefieres que te proponga 2 opciones?', "I'm here. Want to go step by step or prefer I suggest two options?", 'أنا هنا. هل نذهب خطوة بخطوة أم أقترح خيارين؟', 'ここにいるよ。段階的に進める？それとも2つ提案しようか？', 'Estou aqui. Quer ir passo a passo ou prefere que eu sugira duas opções?', 'Buradayım. Adım adım gidelim mi yoksa iki seçenek önereyim mi?');
+        replyText = L('Estoy aquí. ¿Te va si lo vemos por pasos o prefieres que te proponga 2 opciones?', "I'm here. Want to go step by step or prefer I suggest two options?", 'أنا هنا. هل نذهب خطوة بخطوة أم أقترح خيارين؟', 'ここにいるよ。段階的に進める？それとも2つ提案しようか？', 'Estou aqui. Quer ir passo a passo ou prefere que eu sugira duas opções?', 'Buradayım. Adım adım gidelim mi yoksa iki seçenek önereyim mi?', 'मैं यहाँ हूँ। क्या कदम-दर-कदम चलें या मैं दो विकल्प सुझाऊँ?');
       }
       const aiMessage: Message = { role: 'assistant', content: replyText, timestamp: new Date() };
       setMessages((prev): Message[] => {
@@ -545,7 +549,7 @@ export function ChatInterface({
       // Actualizar contador tras cada envío (independientemente de si hubo LLM)
       refreshUsage();
     } catch (e) {
-      const aiMessage: Message = { role: 'assistant', content: L('Estoy aquí. ¿Seguimos por pasos o prefieres 2 opciones?', "I'm here. Step by step or two options?", 'أنا هنا. خطوة بخطوة أم خياران؟', 'ここにいるよ。段階的？それとも2つの案？', 'Estou aqui. Passo a passo ou duas opções?', 'Buradayım. Adım adım mı yoksa iki seçenek mi?'), timestamp: new Date() };
+      const aiMessage: Message = { role: 'assistant', content: L('Estoy aquí. ¿Seguimos por pasos o prefieres 2 opciones?', "I'm here. Step by step or two options?", 'أنا هنا. خطوة بخطوة أم خياران؟', 'ここにいるよ。段階的？それとも2つの案？', 'Estou aqui. Passo a passo ou duas opções?', 'Buradayım. Adım adım mı yoksa iki seçenek mi?', 'मैं यहाँ हूँ। कदम-दर-कदम या दो विकल्प?'), timestamp: new Date() };
       setMessages((prev): Message[] => {
         const next: Message[] = [...prev, aiMessage];
         saveMessages(next);
@@ -575,10 +579,10 @@ export function ChatInterface({
         const txt = await res.text();
         throw new Error(txt || 'Error al borrar memoria');
       }
-      alert(L('Memoria borrada correctamente', 'Memory cleared successfully', 'تم مسح الذاكرة بنجاح', 'メモリを削除しました', 'Memória apagada com sucesso', 'Bellek başarıyla silindi'));
+      alert(L('Memoria borrada correctamente', 'Memory cleared successfully', 'تم مسح الذاكرة بنجاح', 'メモリを削除しました', 'Memória apagada com sucesso', 'Bellek başarıyla silindi', 'मेमोरी सफलतापूर्वक हटा दी गई'));
     } catch (e: any) {
       console.error('❌ Error borrando memoria:', e);
-      alert(e?.message || L('No se pudo borrar la memoria', 'Could not clear memory', 'تعذّر مسح الذاكرة', 'メモリを削除できませんでした', 'Não foi possível apagar a memória', 'Bellek silinemedi'));
+      alert(e?.message || L('No se pudo borrar la memoria', 'Could not clear memory', 'تعذّر مسح الذاكرة', 'メモリを削除できませんでした', 'Não foi possível apagar a memória', 'Bellek silinemedi', 'मेमोरी हटाई नहीं जा सकी'));
     }
   };
 
@@ -614,7 +618,7 @@ export function ChatInterface({
             )}
             {!isPremiumModel && usageInfo && !usageInfo.premium && typeof usageInfo.limit === 'number' && (
               <Badge variant="outline" className="text-xs">
-                {usageInfo.used}/{usageInfo.limit} {L('hoy','today','اليوم','今日','hoje','bugün')}
+                {usageInfo.used}/{usageInfo.limit} {L('hoy','today','اليوم','今日','hoje','bugün','आज')}
               </Badge>
             )}
           </div>
