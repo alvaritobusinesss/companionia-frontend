@@ -12,8 +12,8 @@ export default async function handler(req: any, res: any) {
     const supabase = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
 
     let tone: string = (toneIn || 'amistoso');
-    function isLang(v: any): v is 'es'|'en'|'ar'|'ja'|'pt'|'tr'|'hi' { return v === 'es' || v === 'en' || v === 'ar' || v === 'ja' || v === 'pt' || v === 'tr' || v === 'hi'; }
-    const lang: 'es'|'en'|'ar'|'ja'|'pt'|'tr'|'hi' = isLang(langIn) ? langIn : 'es';
+    function isLang(v: any): v is 'es'|'en'|'ar'|'ja'|'pt'|'tr' { return v === 'es' || v === 'en' || v === 'ar' || v === 'ja' || v === 'pt' || v === 'tr'; }
+    const lang: 'es'|'en'|'ar'|'ja'|'pt'|'tr' = isLang(langIn) ? langIn : 'es';
     let turnIndex = 0;
     let recentAssistantOpeners: string[] = [];
     let conversationUserId: string | null = null;
@@ -171,7 +171,6 @@ export default async function handler(req: any, res: any) {
           lang === 'ja' ? '日本語で自然に回答してください。' :
           lang === 'pt' ? 'Responda em português natural. Evite espanhol.' :
           lang === 'tr' ? 'Doğal Türkçe ile cevap ver. İspanyolcadan kaçın.' :
-          lang === 'hi' ? 'स्वाभाविक हिंदी में उत्तर दें। स्पैनिश से बचें।' :
           'Responde en español neutro.'
         );
 
@@ -281,7 +280,6 @@ ${personaProfile}
       lang === 'ja' ? `さっきの話（${cleaned}）について、` :
       lang === 'pt' ? `Sobre o que você disse (${cleaned}),` :
       lang === 'tr' ? `Söylediğin (${cleaned}) hakkında,` :
-      lang === 'hi' ? `तुमने जो कहा (${cleaned}) उसके बारे में,` :
       `Sobre eso que comentas (${cleaned}),`
     ) : '';
 

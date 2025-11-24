@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
   try {
     const { userId, modelId, modelName, tone, lang: langIn } = (req.body as any) || {};
     if (!userId || !modelId || !tone) return res.status(400).json({ error: 'Missing fields' });
-    const allowed = ['es','en','ar','ja','pt','tr','hi'] as const;
+    const allowed = ['es','en','ar','ja','pt','tr'] as const;
     type Lang = typeof allowed[number];
     const isAllowed = (v: any): v is Lang => (allowed as readonly string[]).includes(String(v));
     const lang: Lang = isAllowed(langIn) ? (langIn as Lang) : 'es';
@@ -60,7 +60,7 @@ export default async function handler(req: any, res: any) {
     // Minimal localization of opener when requested language != 'es'
     if (lang !== 'es') {
       const tkey = String(tone || '').toLowerCase();
-      const base = (greet: string, ask: string) => `${greet} ${lang === 'ar' ? 'أنا' : lang === 'ja' ? '私は' : lang === 'pt' ? 'Sou' : lang === 'tr' ? 'Ben' : lang === 'hi' ? 'मैं' : "I'm"} ${modelLabel}. ${ask}`.trim();
+      const base = (greet: string, ask: string) => `${greet} ${lang === 'ar' ? 'أنا' : lang === 'ja' ? '私は' : lang === 'pt' ? 'Sou' : lang === 'tr' ? 'Ben' : "I'm"} ${modelLabel}. ${ask}`.trim();
       const banks: Record<string, Record<Lang, [string, string][]>> = {
         amistoso: {
           en: [[ 'Hey!', 'How are you doing today?' ]],
@@ -69,7 +69,6 @@ export default async function handler(req: any, res: any) {
           es: [[ '¡Hola!', '¿Qué tal va todo?' ]],
           pt: [[ 'Oi!', 'Como você está hoje?' ]],
           tr: [[ 'Selam!', 'Bugün nasılsın?' ]],
-          hi: [[ 'हाय!', 'आज कैसा चल रहा है?' ]],
         },
         romantico: {
           en: [[ 'Hi dear.', 'How did your day treat you?' ]],
@@ -78,7 +77,6 @@ export default async function handler(req: any, res: any) {
           es: [[ 'Hola, corazón.', '¿Cómo te ha tratado el día?' ]],
           pt: [[ 'Oi, amor.', 'Como foi o seu dia?' ]],
           tr: [[ 'Merhaba canım.', 'Günün nasıl geçti?' ]],
-          hi: [[ 'हाय प्रिय।', 'आज दिन कैसा रहा?' ]],
         },
         coqueto: {
           en: [[ 'Hey ;)', 'How did your day go?' ]],
@@ -87,7 +85,6 @@ export default async function handler(req: any, res: any) {
           es: [[ 'Holaa ;)', '¿Cómo te ha ido?' ]],
           pt: [[ 'Oi ;)', 'Como foi seu dia?' ]],
           tr: [[ 'Hey ;)', 'Günün nasıl geçti?' ]],
-          hi: [[ 'हे ;)', 'आज दिन कैसा गया?' ]],
         },
         comprensivo: {
           en: [[ 'I’m here.', 'How do you feel today?' ]],
@@ -96,7 +93,6 @@ export default async function handler(req: any, res: any) {
           es: [[ 'Aquí estoy.', '¿Cómo te sientes hoy?' ]],
           pt: [[ 'Estou aqui.', 'Como você se sente hoje?' ]],
           tr: [[ 'Buradayım.', 'Bugün nasıl hissediyorsun?' ]],
-          hi: [[ 'मैं यहाँ हूँ।', 'आज आप कैसा महसूस कर रहे हैं?' ]],
         },
         agresivo: {
           en: [[ 'Hey.', 'Be straight: how was your day?' ]],
@@ -105,7 +101,6 @@ export default async function handler(req: any, res: any) {
           es: [[ 'Ey.', 'Voy directo: ¿cómo te ha ido el día?' ]],
           pt: [[ 'Ei.', 'Direto ao ponto: como foi seu dia?' ]],
           tr: [[ 'Hey.', 'Direkt soruyorum: günün nasıl geçti?' ]],
-          hi: [[ 'सुनो।', 'सीधे बताओ: आज दिन कैसा रहा?' ]],
         },
         sensual: {
           en: [[ 'Hello…', 'What do you feel like today?' ]],
@@ -114,7 +109,6 @@ export default async function handler(req: any, res: any) {
           es: [[ 'Hola…', '¿Qué te apetece hoy?' ]],
           pt: [[ 'Olá…', 'O que você quer hoje?' ]],
           tr: [[ 'Merhaba…', 'Bugün ne istersin?' ]],
-          hi: [[ 'हेलो…', 'आज आपका मन किस चीज़ का है?' ]],
         },
       };
       const list = (banks[tkey] || banks['amistoso'])[lang] || banks['amistoso'][lang];
