@@ -745,7 +745,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/favicon-180x180-0.png" alt="Logo" className="w-9 h-9 rounded-md object-contain" />
+              <img src="/favicon-180x180-3.png" alt="Logo" className="w-9 h-9 rounded-md object-contain" />
               <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 {t('header.title')}
               </h1>
@@ -793,7 +793,7 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center space-y-4 py-8">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent inline-flex items-center gap-3">
-            <img src="/favicon-180x180-0.png" alt="Logo" className="w-12 h-12 md:w-16 md:h-16 inline-block object-contain" />
+            <img src="/favicon-180x180-3.png" alt="Logo" className="w-12 h-12 md:w-16 md:h-16 inline-block object-contain" />
             {t('hero.title')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">

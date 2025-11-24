@@ -87,7 +87,7 @@ export function LanguageSelector({ onLanguageSelected }: LanguageSelectorProps) 
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-              <img src="/og.png" alt="Logo" className="w-14 h-14 object-contain" />
+              <img src="/favicon-180x180-3.png" alt="Logo" className="w-14 h-14 object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">
               AI ChatHer
